@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   title: string;
@@ -11,6 +12,7 @@ interface HeaderProps {
 
 export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
@@ -30,7 +32,10 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
       </div>
       
       <div className="mt-4 sm:mt-0">
-        <Button className="bg-violet hover:bg-violet/90">
+        <Button 
+          className="bg-violet hover:bg-violet/90"
+          onClick={() => navigate("/invoicing")}
+        >
           <PlusCircle className="mr-2 h-4 w-4" />
           Nouvelle facture
         </Button>
