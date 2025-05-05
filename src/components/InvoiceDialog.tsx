@@ -19,6 +19,7 @@ import { generateInvoicePreview } from "@/services/pdfGenerator";
 import { createStripeCheckoutSession, generateQRCodeUrl } from "@/services/stripe";
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { InvoicePaymentLink } from "@/components/InvoicePaymentLink";
+import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile } from "@/types/invoice";
 
 // Define invoice template types
 const invoiceTemplates = [
@@ -116,6 +117,12 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
   const [taxTotal, setTaxTotal] = useState(0);
   const [total, setTotal] = useState(0);
 
+  // Add missing state required by InvoiceData
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodDetails[]>([
+    { type: "card", enabled: true, details: "" }
+  ]);
+
   // Generate a default invoice number on component mount
   useEffect(() => {
     // Format: INV-YYYYMMDD-XX (where XX is a random number)
@@ -126,6 +133,19 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
     const random = Math.floor(Math.random() * 90 + 10);
     
     setInvoiceNumber(`INV-${year}${month}${day}-${random}`);
+  }, []);
+
+  // Load company profile on component mount
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('companyProfile');
+    if (savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        setCompanyProfile(profile);
+      } catch (e) {
+        console.error("Erreur lors du parsing du profil d'entreprise", e);
+      }
+    }
   }, []);
 
   // Calculate totals when service lines change
@@ -221,25 +241,69 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
     navigate("/invoices");
   };
 
-  // Generate invoice preview
+  // Updated function to handle preview
   const handlePreviewInvoice = async () => {
     setIsLoading(true);
     
     try {
-      // Prepare invoice data for preview
-      const invoiceData = {
+      // Check if company profile exists
+      if (!companyProfile) {
+        // Attempt to load from localStorage
+        const savedProfile = localStorage.getItem('companyProfile');
+        if (savedProfile) {
+          try {
+            setCompanyProfile(JSON.parse(savedProfile));
+          } catch (e) {
+            console.error("Error parsing company profile", e);
+            toast({
+              title: "Erreur",
+              description: "Impossible de charger le profil d'entreprise",
+              variant: "destructive"
+            });
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          toast({
+            title: "Profil manquant",
+            description: "Veuillez configurer votre profil d'entreprise dans les paramètres",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      // Prepare invoice data for preview with all required properties
+      const invoiceData: InvoiceData = {
         invoiceNumber,
         invoiceDate,
+        dueDate: "",
         clientName,
         clientEmail,
         clientAddress,
+        clientPhone: "",
+        issuerInfo: companyProfile || {
+          name: "",
+          address: "",
+          email: "",
+          phone: "",
+          bankAccount: "",
+          bankName: "",
+          accountHolder: "",
+          taxRate: "20",
+          termsAndConditions: "",
+          thankYouMessage: "",
+          defaultCurrency: "EUR"
+        },
         serviceLines,
         subtotal,
         taxTotal,
         total,
         paymentDelay,
-        paymentMethod,
+        paymentMethods,
         notes,
+        templateId: selectedTemplate
       };
       
       const result = await generateInvoicePreview(invoiceData, selectedTemplate);
@@ -284,23 +348,64 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
       return;
     }
 
+    // Load company profile if not already loaded
+    if (!companyProfile) {
+      const savedProfile = localStorage.getItem('companyProfile');
+      if (savedProfile) {
+        try {
+          setCompanyProfile(JSON.parse(savedProfile));
+        } catch (e) {
+          console.error("Error parsing company profile", e);
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger le profil d'entreprise",
+            variant: "destructive"
+          });
+          return;
+        }
+      } else {
+        toast({
+          title: "Profil manquant",
+          description: "Veuillez configurer votre profil d'entreprise dans les paramètres",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
     
     try {
-      // Prepare invoice data
-      const invoiceData = {
+      // Prepare complete invoice data
+      const invoiceData: InvoiceData = {
         invoiceNumber,
         invoiceDate,
+        dueDate: "",
         clientName,
         clientEmail,
         clientAddress,
+        clientPhone: "",
+        issuerInfo: companyProfile || {
+          name: "",
+          address: "",
+          email: "",
+          phone: "",
+          bankAccount: "",
+          bankName: "",
+          accountHolder: "",
+          taxRate: "20",
+          termsAndConditions: "",
+          thankYouMessage: "",
+          defaultCurrency: "EUR"
+        },
         serviceLines,
         subtotal,
         taxTotal,
         total,
         paymentDelay,
-        paymentMethod,
+        paymentMethods: [{ type: paymentMethod as "card" | "transfer" | "paypal" | "check" | "cash" | "payoneer" | "other", enabled: true, details: "" }],
         notes,
+        templateId: selectedTemplate
       };
       
       // Create Stripe checkout session
@@ -636,20 +741,36 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
   const renderPreviewContent = () => {
     if (!previewData) return null;
     
-    // Create the invoice data object to pass to the preview component
-    const currentInvoiceData = {
+    // Create the complete invoice data object to pass to the preview component
+    const currentInvoiceData: InvoiceData = {
       invoiceNumber,
       invoiceDate,
+      dueDate: "",
       clientName,
       clientEmail,
       clientAddress,
+      clientPhone: "",
+      issuerInfo: companyProfile || {
+        name: "",
+        address: "",
+        email: "",
+        phone: "",
+        bankAccount: "",
+        bankName: "",
+        accountHolder: "",
+        taxRate: "20",
+        termsAndConditions: "",
+        thankYouMessage: "",
+        defaultCurrency: "EUR"
+      },
       serviceLines,
       subtotal,
       taxTotal,
       total,
       paymentDelay,
-      paymentMethod,
+      paymentMethods: [{ type: paymentMethod as "card" | "transfer" | "paypal" | "check" | "cash" | "payoneer" | "other", enabled: true, details: "" }],
       notes,
+      templateId: selectedTemplate
     };
     
     return (
