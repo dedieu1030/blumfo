@@ -3,11 +3,12 @@
 import { formatMoney } from './stripe';
 
 // Template preview image URLs
-const TEMPLATE_PREVIEWS = {
+const TEMPLATE_PREVIATES = {
   classic: "/templates/classic-preview.png",
   modern: "/templates/modern-preview.png",
   elegant: "/templates/elegant-preview.png",
-  colorful: "/templates/colorful-preview.png"
+  colorful: "/templates/colorful-preview.png",
+  "poppins-orange": "/templates/poppins-orange-preview.png"
 };
 
 // A4 paper dimensions in CSS pixels (96 dpi)
@@ -19,7 +20,8 @@ const FALLBACK_PREVIEWS = {
   classic: "https://via.placeholder.com/600x800/f5f5f5/333?text=Classic+Template",
   modern: "https://via.placeholder.com/600x800/ffffff/333?text=Modern+Template", 
   elegant: "https://via.placeholder.com/600x800/fafafa/333?text=Elegant+Template",
-  colorful: "https://via.placeholder.com/600x800/f0f0ff/333?text=Colorful+Template"
+  colorful: "https://via.placeholder.com/600x800/f0f0ff/333?text=Colorful+Template",
+  "poppins-orange": "https://via.placeholder.com/600x800/fff5f0/333?text=Poppins+Orange"
 };
 
 /**
@@ -70,6 +72,250 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
   // This would be more complex in a real implementation with proper HTML templates
   // Here's a simplified version for demo purposes
   switch(template) {
+    case 'poppins-orange':
+      html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+        <style>
+          ${commonStyles}
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: 'Poppins', sans-serif;
+            background: #fff;
+            padding: 30px;
+            color: #1a1a1a;
+          }
+          .invoice-box {
+            width: ${A4_WIDTH_PX - 80}px;
+            margin: auto;
+            padding: 40px;
+          }
+          h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 40px;
+          }
+          .top-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+          }
+          .left h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+          }
+          .left p {
+            font-weight: 700;
+            font-size: 16px;
+            color: #2c2c64;
+            border-bottom: 2px solid #2c2c64;
+            display: inline-block;
+          }
+          .right {
+            text-align: right;
+            font-size: 14px;
+          }
+          .right .total-due {
+            font-weight: 700;
+            color: #2c2c64;
+            font-size: 18px;
+          }
+          .invoice-no {
+            margin-top: 10px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+          }
+          th {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 12px;
+            text-align: left;
+          }
+          td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+          }
+          tr:nth-child(even) td {
+            background: #f2f2f2;
+          }
+          .summary {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+          }
+          .summary-box {
+            text-align: right;
+            font-size: 14px;
+          }
+          .summary-box p {
+            margin-bottom: 8px;
+          }
+          .total-box {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 10px 20px;
+            margin-top: 10px;
+            display: inline-block;
+            font-weight: 700;
+            font-size: 16px;
+          }
+          .payment, .terms {
+            margin-top: 40px;
+            font-size: 13px;
+          }
+          .payment strong {
+            display: block;
+            margin-bottom: 4px;
+          }
+          .terms p {
+            margin-top: 10px;
+            font-style: italic;
+          }
+          .signature {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+          }
+          .signature .name {
+            font-weight: 600;
+            color: #1a1a1a;
+          }
+          .footer-bar {
+            margin-top: 60px;
+            background: #ff914d;
+            height: 30px;
+            position: relative;
+          }
+          .footer-arrow {
+            position: absolute;
+            top: 0;
+            left: 40px;
+            width: 0;
+            height: 0;
+            border-top: 30px solid transparent;
+            border-left: 40px solid #1a1a1a;
+          }
+          .payment-link {
+            margin-top: 20px;
+            background: #f8f8f8;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 5px;
+          }
+          .payment-link h4 {
+            color: #2c2c64;
+            margin-bottom: 10px;
+          }
+          .payment-link .link {
+            color: #ff914d;
+            font-weight: 600;
+            word-break: break-all;
+          }
+          .payment-qr {
+            text-align: center;
+            margin-top: 10px;
+          }
+          .payment-qr img {
+            max-width: 150px;
+            max-height: 150px;
+            border: 1px solid #eee;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-box">
+          <h1>INVOICE</h1>
+          <div class="top-section">
+            <div class="left">
+              <h4>INVOICE TO :</h4>
+              <p>${invoiceData.clientName}</p>
+            </div>
+            <div class="right">
+              <div><strong>Date :</strong> ${invoiceDate}</div>
+              <div><strong>Due Date :</strong> ${formattedDueDate}</div>
+              <div><strong>TOTAL DUE :</strong></div>
+              <div class="total-due">${formatMoney(invoiceData.total)}</div>
+              <div class="invoice-no">Invoice No : ${invoiceData.invoiceNumber}</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>TVA</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoiceData.serviceLines.map((line: any) => `
+                <tr>
+                  <td>${line.description}</td>
+                  <td>${line.quantity}</td>
+                  <td>${formatMoney(parseFloat(line.unitPrice))}</td>
+                  <td>${line.tva}%</td>
+                  <td>${formatMoney(parseFloat(line.total))}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="summary">
+            <div class="summary-box">
+              <p>Sous-total : ${formatMoney(invoiceData.subtotal)}</p>
+              <p>TVA : ${formatMoney(invoiceData.taxTotal)}</p>
+              <div class="total-box">Total : ${formatMoney(invoiceData.total)}</div>
+            </div>
+          </div>
+
+          <div class="payment">
+            <strong>Modalités de paiement</strong>
+            <div>
+              <em>Méthode : ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
+                invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</em>
+            </div>
+            ${invoiceData.paymentMethod === 'transfer' ? `
+              <div><em>Compte bancaire : FR76 3000 1007 0000 0000 0000 000</em></div>
+              <div><em>BIC : BNPAFRPP</em></div>
+            ` : ''}
+          </div>
+
+          ${invoiceData.notes ? `
+            <div class="terms">
+              <strong>Termes et conditions</strong>
+              <p>${invoiceData.notes}</p>
+            </div>
+          ` : ''}
+          
+          <div class="signature">
+            <div></div>
+            <div>
+              <p class="name">Votre Entreprise</p>
+              <p>Administrator</p>
+            </div>
+          </div>
+
+          <div class="footer-bar">
+            <div class="footer-arrow"></div>
+          </div>
+        </div>
+      </body>
+      </html>
+      `;
+      break;
+      
     case 'modern':
       html = `
       <style>
@@ -444,7 +690,7 @@ export const generateInvoicePreview = async (invoiceData: any, templateId: strin
     await new Promise(resolve => setTimeout(resolve, 700));
     
     // Try to use the local template preview image, fall back to placeholder if not found
-    const templatePreviewUrl = TEMPLATE_PREVIEWS[templateId as keyof typeof TEMPLATE_PREVIEWS] || 
+    const templatePreviewUrl = TEMPLATE_PREVIATES[templateId as keyof typeof TEMPLATE_PREVIATES] || 
                                FALLBACK_PREVIEWS[templateId as keyof typeof FALLBACK_PREVIEWS];
     
     return {

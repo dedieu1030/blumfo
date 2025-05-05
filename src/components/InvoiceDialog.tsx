@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -50,6 +49,13 @@ const invoiceTemplates = [
     description: "Utilisation audacieuse des couleurs",
     previewBg: "bg-white",
     accent: "border-vertlime",
+  },
+  {
+    id: "poppins-orange",
+    name: "Poppins Orange",
+    description: "Un style contrasté avec touches d'orange",
+    previewBg: "bg-orange-50",
+    accent: "border-orange-500",
   }
 ];
 

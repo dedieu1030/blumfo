@@ -72,7 +72,12 @@ To deploy as a Supabase Edge Function:
        });
        
        const page = await browser.newPage();
-       await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+       
+       // Make sure external Google Fonts are loaded when using templates that need them
+       const waitForNetworkIdle = templateId === 'poppins-orange';
+       await page.setContent(htmlContent, { 
+         waitUntil: waitForNetworkIdle ? 'networkidle0' : 'domcontentloaded' 
+       });
 
        // Generate PDF
        const pdfBuffer = await page.pdf({
@@ -113,16 +118,35 @@ To deploy as a Supabase Edge Function:
      }
    });
 
-   // Simple HTML generation function - in production, import your actual HTML generator
+   // HTML generation function - in production, import your actual HTML generator or use a template engine
    function generateInvoiceHtml(invoiceData, templateId) {
+     // This would be replaced by your actual template system
+     const template = templateId || 'classic';
+     
+     // For Poppins Orange template, include Google Fonts
+     let fontImport = '';
+     if (template === 'poppins-orange') {
+       fontImport = '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">';
+     }
+     
      return `
+       <!DOCTYPE html>
        <html>
          <head>
+           <meta charset="UTF-8">
+           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+           ${fontImport}
            <style>
-             body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-             h1 { color: #333; }
-             table { width: 100%; border-collapse: collapse; }
-             th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+             @page {
+               size: A4;
+               margin: 0;
+             }
+             body {
+               margin: 0;
+               padding: 20px;
+               font-family: ${template === 'poppins-orange' ? "'Poppins', sans-serif" : "Arial, sans-serif"};
+             }
+             /* Template-specific styles would be applied here */
            </style>
          </head>
          <body>
@@ -130,7 +154,8 @@ To deploy as a Supabase Edge Function:
            <p>Client: ${invoiceData.clientName}</p>
            <p>Date: ${invoiceData.invoiceDate}</p>
            
-           <table>
+           <!-- Invoice items table -->
+           <table style="width: 100%; border-collapse: collapse;">
              <thead>
                <tr>
                  <th>Description</th>
@@ -158,6 +183,13 @@ To deploy as a Supabase Edge Function:
              <p>TVA: ${invoiceData.taxTotal} €</p>
              <p><strong>Total: ${invoiceData.total} €</strong></p>
            </div>
+           
+           <!-- Payment information -->
+           <div style="margin-top: 30px;">
+             <p><strong>Modalités de paiement:</strong> ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
+               invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
+             ${invoiceData.notes ? `<p><strong>Notes:</strong> ${invoiceData.notes}</p>` : ''}
+           </div>
          </body>
        </html>
      `;
@@ -181,6 +213,7 @@ For Vercel deployment, use the code in `generate-pdf.js` as a template for your 
 1. Create a Next.js API route in `pages/api/generate-invoice-pdf.js`
 2. Install puppeteer: `npm install puppeteer`
 3. Copy and adapt the code from `generate-pdf.js`
+4. Make sure to handle Google Fonts loading for templates like Poppins Orange
 
 ### 3. AWS Lambda
 
@@ -189,6 +222,7 @@ For AWS Lambda deployment:
 1. Create a Lambda function with Node.js runtime
 2. Use a Lambda layer that includes Chromium
 3. Adapt the handler function from `generate-pdf.js`
+4. Configure the Lambda to have sufficient memory and timeout settings to handle PDF rendering with fonts
 
 ## Usage
 
@@ -211,9 +245,11 @@ Make a POST request with the following JSON body:
     ],
     "subtotal": 100,
     "taxTotal": 20,
-    "total": 120
+    "total": 120,
+    "paymentMethod": "card",
+    "notes": "Thank you for your business."
   },
-  "templateId": "classic"
+  "templateId": "poppins-orange" // or "classic", "modern", etc.
 }
 ```
 
@@ -234,3 +270,15 @@ Make a POST request with the following JSON body:
   "error": "Error message"
 }
 ```
+
+## Template Information
+
+The system supports multiple invoice templates:
+
+- **Classic**: Simple, professional design with bordered tables
+- **Modern**: Clean, minimalistic design with subtle colors
+- **Elegant**: Sophisticated design with refined typography
+- **Colorful**: Bold design with vibrant color accents
+- **Poppins Orange**: Stylish design using Poppins font with orange accents
+
+Each template has specific formatting requirements and may use different fonts.
