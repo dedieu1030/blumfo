@@ -621,12 +621,26 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
     return (
       <div className="p-4 flex flex-col items-center">
         <h3 className="font-medium mb-4">Aperçu de la facture</h3>
-        <div className="border rounded shadow-md">
-          <img 
-            src={previewUrl} 
-            alt="Aperçu de la facture" 
-            className="max-w-full h-auto"
-          />
+        
+        {/* Preview Container with border and shadow */}
+        <div className="border rounded shadow-lg max-h-[70vh] overflow-auto w-full">
+          {/* If we have HTML content, render it in an iframe */}
+          {previewOpen && (
+            <iframe 
+              srcDoc={`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${previewUrl.htmlContent || ''}</body></html>`}
+              className="w-full min-h-[600px]"
+              title="Aperçu de la facture"
+            />
+          )}
+          
+          {/* If no HTML content available, show the image */}
+          {!previewUrl.htmlContent && (
+            <img 
+              src={previewUrl.previewUrl} 
+              alt="Aperçu de la facture" 
+              className="max-w-full h-auto"
+            />
+          )}
         </div>
       </div>
     );
