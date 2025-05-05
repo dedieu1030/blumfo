@@ -1,7 +1,5 @@
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { 
@@ -37,7 +35,7 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
       <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-credornoir border-t border-[#2a2a2a] p-0">
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-[#2a2a2a]">
-            <h1 className="text-xl font-bold text-white">LexFacture</h1>
+            <h1 className="text-xl font-bold text-white">INVOICE MAKER</h1>
             <p className="text-sm text-white/60">Facturez sans friction</p>
           </div>
           
@@ -48,20 +46,20 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
                   key={item.path}
                   to={item.path}
                   onClick={() => onOpenChange(false)}
-                  className={`flex items-center px-4 py-3 rounded-md text-base font-medium ${
+                  className={`flex items-center px-5 py-3.5 rounded-md text-sm font-medium transition-colors ${
                     isActive(item.path)
-                      ? "bg-white/10 text-vertlime"
-                      : "text-white/80 hover:text-white"
+                      ? "bg-white/10 border-l-2 border-vertlime text-white"
+                      : "text-white/80 hover:bg-white/10 active:bg-white/20"
                   }`}
                 >
-                  <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-vertlime" : ""}`} />
+                  <item.icon className={`h-[18px] w-[18px] mr-4 ${isActive(item.path) ? "text-vertlime" : ""}`} />
                   {item.name}
                 </Link>
               ))}
             </div>
           </div>
           
-          <div className="p-4 border-t border-[#2a2a2a]">
+          <div className="mt-auto mb-6 p-4 border-t border-[#2a2a2a]">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-violet rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">MD</span>
