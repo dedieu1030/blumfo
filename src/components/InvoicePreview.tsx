@@ -158,37 +158,41 @@ export function InvoicePreview({
 
   return (
     <div className="flex flex-col">
-      <div className="flex justify-between mb-2 items-center">
-        <div className="text-sm text-muted-foreground">
-          Format A4 - Aperçu
-        </div>
-        <div className="flex space-x-2">
+      <div className="flex justify-between items-center mb-1 px-1">
+        <div className="flex space-x-1">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={zoomOut}
             title="Réduire"
+            className="h-8 w-8"
           >
             <ZoomOut className="h-4 w-4" />
           </Button>
-          <span className="flex items-center text-sm font-mono">
+          <span className="flex items-center text-xs font-mono bg-gray-50 px-2 rounded">
             {Math.round(scale * 100)}%
           </span>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={zoomIn}
             title="Agrandir"
+            className="h-8 w-8"
           >
             <ZoomIn className="h-4 w-4" />
           </Button>
+        </div>
+        
+        <div className="flex space-x-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={toggleFullWidth}
             title={fullWidth ? "Taille réelle" : "Ajuster à la fenêtre"}
+            className="h-8"
           >
-            {fullWidth ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+            {fullWidth ? <Minimize className="h-4 w-4 mr-1" /> : <Maximize className="h-4 w-4 mr-1" />}
+            {fullWidth ? "Taille réelle" : "Ajuster"}
           </Button>
           
           {showDownloadButton && invoiceData && (
@@ -197,17 +201,17 @@ export function InvoicePreview({
               size="sm"
               onClick={handleDownloadPdf}
               disabled={isDownloading}
-              className="bg-violet hover:bg-violet/90 ml-2"
+              className="bg-violet hover:bg-violet/90 h-8"
             >
               <Download className="h-4 w-4 mr-1" />
-              {isDownloading ? "Génération..." : "Télécharger PDF"}
+              {isDownloading ? "Génération..." : "Télécharger"}
             </Button>
           )}
         </div>
       </div>
       <div 
-        className="bg-gray-100 p-4 rounded-md overflow-auto"
-        style={{ maxHeight: '70vh' }}
+        className="bg-gray-100 p-2 rounded-md overflow-auto"
+        style={{ maxHeight: '75vh' }}
       >
         <div
           className="mx-auto transform origin-top transition-all duration-200"

@@ -632,30 +632,32 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
     }
   };
 
-  // Preview modal content
+  // Preview modal content - Optimized for better space utilization
   const renderPreviewContent = () => {
     if (!previewData) return null;
     
     return (
-      <div className="p-4 flex flex-col items-center">
-        <h3 className="font-medium mb-4">Aperçu de la facture</h3>
+      <div className="flex flex-col h-full">
+        {/* Render the HTML content using the InvoicePreview component */}
+        {previewOpen && previewData.htmlContent && (
+          <InvoicePreview 
+            htmlContent={previewData.htmlContent}
+            invoiceData={invoiceData}
+            templateId={selectedTemplate}
+            showDownloadButton={true}
+          />
+        )}
         
-        {/* Preview Container with border and shadow */}
-        <div className="border rounded shadow-lg max-h-[70vh] overflow-auto w-full">
-          {/* Render the HTML content using the InvoicePreview component */}
-          {previewOpen && previewData.htmlContent && (
-            <InvoicePreview htmlContent={previewData.htmlContent} />
-          )}
-          
-          {/* If no HTML content available, show the image */}
-          {!previewData.htmlContent && previewData.previewUrl && (
+        {/* If no HTML content available, show the image */}
+        {!previewData.htmlContent && previewData.previewUrl && (
+          <div className="flex-1 overflow-auto">
             <img 
               src={previewData.previewUrl} 
               alt="Aperçu de la facture" 
-              className="max-w-full h-auto"
+              className="max-w-full h-auto mx-auto"
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -679,7 +681,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
           </DialogHeader>
           
           {/* Progress Indicator */}
-          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mt-2 mb-4">
+          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mt-1 mb-4">
             <div 
               className="bg-violet h-full transition-all duration-300 ease-in-out" 
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
@@ -690,7 +692,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
           {renderStepContent()}
           
           {/* Step Navigation */}
-          <DialogFooter className="flex justify-between items-center pt-6">
+          <DialogFooter className="flex justify-between items-center pt-4">
             <div className="flex-1">
               {currentStep > 1 && (
                 <Button 
@@ -717,7 +719,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
                     disabled={isLoading}
                   >
                     <Save className="mr-2 h-4 w-4" />
-                    Enregistrer brouillon
+                    Brouillon
                   </Button>
                   <Button 
                     variant="outline" 
@@ -725,7 +727,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
                     disabled={isLoading}
                   >
                     <Eye className="mr-2 h-4 w-4" />
-                    Prévisualiser
+                    Aperçu
                   </Button>
                   <Button 
                     className="bg-violet hover:bg-violet/90" 
@@ -738,7 +740,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
                         Traitement...
                       </div>
                     ) : (
-                      "Générer et envoyer"
+                      "Générer"
                     )}
                   </Button>
                 </>
@@ -756,19 +758,22 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
         </DialogContent>
       </Dialog>
       
-      {/* Preview Dialog */}
+      {/* Preview Dialog - Optimized to maximize content space */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh]">
+          <DialogHeader className="pb-0">
             <DialogTitle>Aperçu de la facture</DialogTitle>
           </DialogHeader>
           
-          {renderPreviewContent()}
+          <div className="flex-1 overflow-hidden">
+            {renderPreviewContent()}
+          </div>
           
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <Button 
               variant="outline" 
               onClick={() => setPreviewOpen(false)}
+              size="sm"
             >
               Fermer
             </Button>
@@ -778,6 +783,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
                 setPreviewOpen(false);
                 generateAndSendInvoice();
               }}
+              size="sm"
             >
               Générer et envoyer
             </Button>
