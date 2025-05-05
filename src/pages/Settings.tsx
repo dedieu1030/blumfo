@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Check, Settings, User } from "lucide-react";
+import { Check, User } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Settings() {

@@ -4,8 +4,6 @@ import "./App.css";
 
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
-import Dossiers from "./pages/Dossiers";
-import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import Invoices from "./pages/Invoices";
 import Invoicing from "./pages/Invoicing";
@@ -18,8 +16,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
-        <Route path="/dossiers" element={<Dossiers />} />
-        <Route path="/calendar" element={<Calendar />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/invoices" element={<Invoices />} />
         <Route path="/invoicing" element={<Invoicing />} />
