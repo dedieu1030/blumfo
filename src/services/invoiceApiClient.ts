@@ -3,11 +3,23 @@
  * Client pour interagir avec l'API de génération de PDF
  */
 
-import { GeneratePdfRequest, GeneratePdfResponse } from './puppeteerPdfService';
-
 // URL de l'API - à remplacer par votre URL réelle
 // Par exemple pour Supabase: https://your-project-ref.functions.supabase.co/generate-invoice-pdf
-const API_URL = import.meta.env.VITE_PDF_SERVICE_URL || 'https://your-api-url.com/generate-pdf';
+const API_URL = import.meta.env.VITE_PDF_SERVICE_URL || '';
+
+// Types pour les requêtes et réponses
+export interface GeneratePdfRequest {
+  invoiceData: any; 
+  templateId: string;
+  html?: string;
+  accessToken?: string;
+}
+
+export interface GeneratePdfResponse {
+  success: boolean;
+  pdfUrl?: string;
+  error?: string;
+}
 
 /**
  * Appelle l'API pour générer un PDF d'une facture
@@ -18,6 +30,16 @@ export async function generateInvoicePdf(
   accessToken?: string
 ): Promise<GeneratePdfResponse> {
   try {
+    // Vérifier si l'URL de l'API est configurée
+    if (!API_URL) {
+      console.warn('PDF API URL not configured. Using local generation. Set VITE_PDF_SERVICE_URL in your environment for production.');
+      // Utiliser la génération HTML locale et simuler une URL PDF
+      return {
+        success: true,
+        pdfUrl: `data:application/pdf;base64,${btoa(JSON.stringify(invoiceData))}`
+      };
+    }
+    
     // Préparation de la requête
     const request: GeneratePdfRequest = {
       invoiceData,

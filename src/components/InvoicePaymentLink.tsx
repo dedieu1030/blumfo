@@ -2,8 +2,9 @@
 import React from 'react';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Copy, Download } from "lucide-react";
+import { Copy, Download, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { generateAndDownloadInvoicePdf } from "@/services/invoiceApiClient";
 
 interface InvoicePaymentLinkProps {
   paymentUrl: string;
@@ -19,6 +20,7 @@ export function InvoicePaymentLink({
   templateId 
 }: InvoicePaymentLinkProps) {
   const { toast } = useToast();
+  const [isDownloading, setIsDownloading] = React.useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(paymentUrl);
@@ -26,6 +28,52 @@ export function InvoicePaymentLink({
       title: "Lien copié",
       description: "Le lien de paiement a été copié dans le presse-papier"
     });
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!invoiceData || !templateId) {
+      toast({
+        title: "Erreur",
+        description: "Données de facture manquantes",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+    toast({
+      title: "Génération du PDF",
+      description: "Préparation du PDF en cours..."
+    });
+
+    try {
+      const success = await generateAndDownloadInvoicePdf(
+        invoiceData, 
+        templateId
+      );
+
+      if (success) {
+        toast({
+          title: "Téléchargement démarré",
+          description: "Votre facture PDF a été générée avec succès"
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible de générer le PDF",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors du téléchargement:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la génération du PDF",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -53,6 +101,7 @@ export function InvoicePaymentLink({
               size="sm" 
               onClick={() => window.open(paymentUrl, '_blank')}
             >
+              <ExternalLink className="h-4 w-4 mr-1" />
               Ouvrir
             </Button>
             <Button
@@ -63,6 +112,22 @@ export function InvoicePaymentLink({
               <Copy className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Download PDF button */}
+          {invoiceData && templateId && (
+            <div className="mt-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleDownloadInvoice}
+                disabled={isDownloading}
+                className="w-full"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                {isDownloading ? "Génération..." : "Télécharger la facture (PDF)"}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
