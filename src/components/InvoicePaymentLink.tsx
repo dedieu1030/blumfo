@@ -2,15 +2,22 @@
 import React from 'react';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Copy } from "lucide-react";
+import { Copy, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface InvoicePaymentLinkProps {
   paymentUrl: string;
   qrCodeUrl: string;
+  invoiceData?: any;
+  templateId?: string;
 }
 
-export function InvoicePaymentLink({ paymentUrl, qrCodeUrl }: InvoicePaymentLinkProps) {
+export function InvoicePaymentLink({ 
+  paymentUrl, 
+  qrCodeUrl, 
+  invoiceData, 
+  templateId 
+}: InvoicePaymentLinkProps) {
   const { toast } = useToast();
 
   const handleCopy = () => {

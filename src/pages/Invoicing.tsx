@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -12,6 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash, Plus, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InvoicePreview } from "@/components/InvoicePreview";
+import { generateInvoiceHTML } from "@/services/pdfGenerator";
+import { InvoiceActions } from "@/components/InvoiceActions";
 
 // Define invoice template types
 const invoiceTemplates = [
@@ -96,6 +99,10 @@ export default function Invoicing() {
   const [subtotal, setSubtotal] = useState(0);
   const [taxTotal, setTaxTotal] = useState(0);
   const [total, setTotal] = useState(0);
+
+  // État pour la prévisualisation
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState("");
 
   // Generate a default invoice number on component mount
   useEffect(() => {
@@ -188,6 +195,30 @@ export default function Invoicing() {
     navigate("/invoices");
   };
 
+  // Générer la prévisualisation HTML
+  const generatePreview = () => {
+    // Collecter toutes les données de la facture
+    const invoiceData = {
+      invoiceNumber,
+      invoiceDate,
+      clientName,
+      clientEmail,
+      clientAddress,
+      serviceLines,
+      subtotal,
+      taxTotal,
+      total,
+      paymentDelay,
+      paymentMethod,
+      notes
+    };
+    
+    // Générer le HTML en utilisant la fonction du service
+    const html = generateInvoiceHTML(invoiceData, selectedTemplate);
+    setPreviewHtml(html);
+    setPreviewOpen(true);
+  };
+
   // Preview invoice
   const previewInvoice = () => {
     toast({
@@ -195,7 +226,7 @@ export default function Invoicing() {
       description: "Génération de l'aperçu en cours..."
     });
     
-    // In a real app, this would generate a PDF preview
+    generatePreview();
   };
 
   // Generate and send invoice
@@ -507,23 +538,64 @@ export default function Invoicing() {
           </CardContent>
         </Card>
         
-        {/* Action Buttons */}
+        {/* Action Buttons - Remplacé par le nouveau composant InvoiceActions */}
         <div className="flex justify-between pt-4">
           <Button variant="outline" onClick={saveAsDraft}>
             <Save className="mr-2 h-4 w-4" />
             Enregistrer comme brouillon
           </Button>
-          <div className="space-x-3">
-            <Button variant="outline" onClick={previewInvoice}>
-              <Eye className="mr-2 h-4 w-4" />
-              Prévisualiser
-            </Button>
-            <Button className="bg-violet hover:bg-violet/90" onClick={generateAndSendInvoice}>
-              Générer et envoyer
-            </Button>
-          </div>
+          
+          <InvoiceActions
+            invoiceData={{
+              invoiceNumber,
+              invoiceDate,
+              clientName,
+              clientEmail,
+              clientAddress,
+              serviceLines,
+              subtotal,
+              taxTotal,
+              total,
+              paymentDelay,
+              paymentMethod,
+              notes
+            }}
+            templateId={selectedTemplate}
+            onPreview={previewInvoice}
+            onSend={generateAndSendInvoice}
+          />
         </div>
       </div>
+      
+      {/* Dialogue de prévisualisation */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Aperçu de la facture</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <InvoicePreview 
+              htmlContent={previewHtml} 
+              invoiceData={{
+                invoiceNumber,
+                invoiceDate,
+                clientName,
+                clientEmail,
+                clientAddress,
+                serviceLines,
+                subtotal,
+                taxTotal,
+                total,
+                paymentDelay,
+                paymentMethod,
+                notes
+              }}
+              templateId={selectedTemplate}
+              showDownloadButton={true}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <MobileNavigation 
         isOpen={isMobileMenuOpen}
