@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,6 +19,11 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'space': ['"Space Grotesk"', 'Inter', 'sans-serif'],
+				'playfair': ['"Playfair Display"', 'serif'],
+				'sans': ['Inter', 'sans-serif']
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -61,7 +67,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom LexFacture colors
+				credornoir: '#141414',
+				violet: '#9b87f5',
+				bleuclair: '#eef1f5',
+				vertlime: '#d6fd51',
+				alerte: '#ea384c',
+				success: '#38d26c',
+				info: '#0EA5E9',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
