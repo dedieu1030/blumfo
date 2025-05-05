@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -13,9 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash, Plus, ArrowLeft, ArrowRight, Save, Eye } from "lucide-react";
+import { Trash, Plus, ArrowLeft, ArrowRight, Save, Eye, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { generateInvoicePreview } from "@/services/pdfGenerator";
+import { createStripeCheckoutSession, generateQRCodeUrl } from "@/services/stripe";
 
 // Define invoice template types
 const invoiceTemplates = [
@@ -68,6 +69,11 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
+  const [isLoading, setIsLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
 
   // Common invoice data state
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -200,18 +206,57 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
     navigate("/invoices");
   };
 
-  // Preview invoice
-  const previewInvoice = () => {
-    toast({
-      title: "Aperçu de la facture",
-      description: "Génération de l'aperçu en cours..."
-    });
+  // Generate invoice preview
+  const handlePreviewInvoice = async () => {
+    setIsLoading(true);
     
-    // In a real app, this would generate a PDF preview
+    try {
+      // Prepare invoice data for preview
+      const invoiceData = {
+        invoiceNumber,
+        invoiceDate,
+        clientName,
+        clientEmail,
+        clientAddress,
+        serviceLines,
+        subtotal,
+        taxTotal,
+        total,
+        paymentDelay,
+        paymentMethod,
+        notes,
+      };
+      
+      const result = await generateInvoicePreview(invoiceData, selectedTemplate);
+      
+      if (result.success) {
+        setPreviewUrl(result.previewUrl);
+        setPreviewOpen(true);
+        toast({
+          title: "Aperçu généré",
+          description: "Voici un aperçu de votre facture"
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible de générer l'aperçu",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Preview generation error:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la génération de l'aperçu",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Generate and send invoice
-  const generateAndSendInvoice = () => {
+  // Generate and send invoice with Stripe payment link
+  const generateAndSendInvoice = async () => {
     if (!clientName || !clientEmail) {
       toast({
         title: "Information requise",
@@ -221,15 +266,65 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
       return;
     }
 
-    // In a real app, this would generate PDF, create Stripe payment link, and send email
-    toast({
-      title: "Facture envoyée",
-      description: "La facture a été générée et envoyée au client"
-    });
+    setIsLoading(true);
     
-    // Close dialog and navigate to invoices list
-    onOpenChange(false);
-    navigate("/invoices");
+    try {
+      // Prepare invoice data
+      const invoiceData = {
+        invoiceNumber,
+        invoiceDate,
+        clientName,
+        clientEmail,
+        clientAddress,
+        serviceLines,
+        subtotal,
+        taxTotal,
+        total,
+        paymentDelay,
+        paymentMethod,
+        notes,
+      };
+      
+      // Create Stripe checkout session
+      const stripeSession = await createStripeCheckoutSession(invoiceData);
+      
+      if (stripeSession.success && stripeSession.url) {
+        // Store payment URL and generate QR code
+        setPaymentUrl(stripeSession.url);
+        setQrCodeUrl(generateQRCodeUrl(stripeSession.url));
+        
+        toast({
+          title: "Facture générée",
+          description: "La facture a été générée avec un lien de paiement Stripe"
+        });
+        
+        // In a real implementation, this would:
+        // 1. Save the invoice to the database with the Stripe session ID
+        // 2. Generate and send the PDF with payment link to the client
+        // 3. Update the UI to show the payment status
+        
+        // Close dialog and navigate to invoices list after a delay
+        setTimeout(() => {
+          onOpenChange(false);
+          navigate("/invoices");
+        }, 1500);
+      } else {
+        toast({
+          title: "Erreur de paiement",
+          description: stripeSession.error || "Impossible de créer le lien de paiement",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Invoice generation error:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la génération de la facture",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Step content rendering based on current step
@@ -478,12 +573,63 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
                 onChange={(e) => setNotes(e.target.value)} 
               />
             </div>
+            
+            {paymentUrl && qrCodeUrl && (
+              <div className="mt-6 p-4 border rounded-md bg-gray-50">
+                <h3 className="font-medium mb-2">Lien de paiement Stripe généré</h3>
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={qrCodeUrl} 
+                      alt="QR Code de paiement" 
+                      className="w-32 h-32 border"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Scannez ce QR code ou utilisez le lien ci-dessous pour effectuer le paiement:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        value={paymentUrl} 
+                        readOnly 
+                        className="text-xs"
+                      />
+                      <Button 
+                        size="sm" 
+                        onClick={() => window.open(paymentUrl, '_blank')}
+                      >
+                        Ouvrir
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       
       default:
         return null;
     }
+  };
+
+  // Preview modal content
+  const renderPreviewContent = () => {
+    if (!previewUrl) return null;
+    
+    return (
+      <div className="p-4 flex flex-col items-center">
+        <h3 className="font-medium mb-4">Aperçu de la facture</h3>
+        <div className="border rounded shadow-md">
+          <img 
+            src={previewUrl} 
+            alt="Aperçu de la facture" 
+            className="max-w-full h-auto"
+          />
+        </div>
+      </div>
+    );
   };
 
   const stepTitles = [
@@ -495,64 +641,121 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl">
-            {stepTitles[currentStep - 1]}
-          </DialogTitle>
-        </DialogHeader>
-        
-        {/* Progress Indicator */}
-        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mt-2 mb-4">
-          <div 
-            className="bg-violet h-full" 
-            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-          />
-        </div>
-        
-        {/* Step Content */}
-        {renderStepContent()}
-        
-        {/* Step Navigation */}
-        <DialogFooter className="flex justify-between items-center pt-6">
-          <div className="flex-1">
-            {currentStep > 1 && (
-              <Button variant="outline" onClick={prevStep}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Précédent
-              </Button>
-            )}
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[900px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {stepTitles[currentStep - 1]}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {/* Progress Indicator */}
+          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mt-2 mb-4">
+            <div 
+              className="bg-violet h-full transition-all duration-300 ease-in-out" 
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
           </div>
           
-          <div className="text-sm text-muted-foreground">
-            Étape {currentStep} sur {totalSteps}
-          </div>
+          {/* Step Content */}
+          {renderStepContent()}
           
-          <div className="flex flex-1 justify-end gap-2">
-            {currentStep === totalSteps ? (
-              <>
-                <Button variant="outline" onClick={saveAsDraft}>
-                  <Save className="mr-2 h-4 w-4" />
-                  Enregistrer brouillon
+          {/* Step Navigation */}
+          <DialogFooter className="flex justify-between items-center pt-6">
+            <div className="flex-1">
+              {currentStep > 1 && (
+                <Button 
+                  variant="outline" 
+                  onClick={prevStep}
+                  disabled={isLoading}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Précédent
                 </Button>
-                <Button variant="outline" onClick={previewInvoice}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Prévisualiser
+              )}
+            </div>
+            
+            <div className="text-sm text-muted-foreground">
+              Étape {currentStep} sur {totalSteps}
+            </div>
+            
+            <div className="flex flex-1 justify-end gap-2">
+              {currentStep === totalSteps ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={saveAsDraft}
+                    disabled={isLoading}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    Enregistrer brouillon
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handlePreviewInvoice}
+                    disabled={isLoading}
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
+                    Prévisualiser
+                  </Button>
+                  <Button 
+                    className="bg-violet hover:bg-violet/90" 
+                    onClick={generateAndSendInvoice}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <span className="animate-spin h-4 w-4 rounded-full border-2 border-white border-opacity-50 border-t-transparent mr-2"></span>
+                        Traitement...
+                      </div>
+                    ) : (
+                      "Générer et envoyer"
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={nextStep}
+                  disabled={isLoading}
+                >
+                  Suivant
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-                <Button className="bg-violet hover:bg-violet/90" onClick={generateAndSendInvoice}>
-                  Générer et envoyer
-                </Button>
-              </>
-            ) : (
-              <Button onClick={nextStep}>
-                Suivant
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+              )}
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Aperçu de la facture</DialogTitle>
+          </DialogHeader>
+          
+          {renderPreviewContent()}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setPreviewOpen(false)}
+            >
+              Fermer
+            </Button>
+            <Button 
+              className="bg-violet hover:bg-violet/90"
+              onClick={() => {
+                setPreviewOpen(false);
+                generateAndSendInvoice();
+              }}
+            >
+              Générer et envoyer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

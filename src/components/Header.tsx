@@ -1,10 +1,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Menu } from "lucide-react";
+import { PlusCircle, Menu, CheckCircle2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { InvoiceDialog } from "./InvoiceDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface HeaderProps {
   title: string;
@@ -16,6 +17,9 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  
+  // In a real app, this would come from an API or context
+  const stripeConnected = true; // Mock status - would be fetched from backend
 
   return (
     <>
@@ -35,7 +39,23 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
           {description && <p className="text-muted-foreground mt-1">{description}</p>}
         </div>
         
-        <div className="mt-4 sm:mt-0">
+        <div className="mt-4 sm:mt-0 flex items-center gap-3">
+          {stripeConnected && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                    <CheckCircle2 className="mr-1 h-4 w-4" />
+                    <span>Stripe connecté</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Votre compte Stripe est connecté et prêt à recevoir des paiements</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
           <Button 
             className="bg-violet hover:bg-violet/90"
             onClick={() => setInvoiceDialogOpen(true)}
