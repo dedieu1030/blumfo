@@ -1,4 +1,3 @@
-
 // This file handles PDF generation from invoice templates
 
 import { formatMoney } from './stripe';
@@ -10,6 +9,10 @@ const TEMPLATE_PREVIEWS = {
   elegant: "/templates/elegant-preview.png",
   colorful: "/templates/colorful-preview.png"
 };
+
+// A4 paper dimensions in CSS pixels (96 dpi)
+const A4_WIDTH_PX = 595;
+const A4_HEIGHT_PX = 842;
 
 // Real-world fallback URLs if templates aren't available locally
 const FALLBACK_PREVIEWS = {
@@ -44,11 +47,34 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
   // Start building HTML based on template
   let html = '';
   
+  // Common CSS for all templates to ensure proper PDF rendering
+  const commonStyles = `
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .invoice-container {
+      max-width: 100%;
+      margin: 0;
+      box-sizing: border-box;
+    }
+  `;
+  
   // This would be more complex in a real implementation with proper HTML templates
   // Here's a simplified version for demo purposes
   switch(template) {
     case 'modern':
       html = `
+      <style>
+        ${commonStyles}
+      </style>
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
           <div>
@@ -125,6 +151,9 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
       
     case 'elegant':
       html = `
+      <style>
+        ${commonStyles}
+      </style>
       <div style="font-family: 'Georgia', serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222;">
         <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #222; padding-bottom: 20px;">
           <h1 style="font-size: 32px; margin-bottom: 5px;">FACTURE</h1>
@@ -199,6 +228,9 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
 
     case 'colorful':
       html = `
+      <style>
+        ${commonStyles}
+      </style>
       <div style="font-family: 'Helvetica', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; background-color: #fcfcff;">
         <div style="background-color: #4a6cf7; color: white; padding: 20px; margin-bottom: 30px;">
           <div style="display: flex; justify-content: space-between;">
@@ -278,6 +310,9 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
     // Classic (default) template
     default:
       html = `
+      <style>
+        ${commonStyles}
+      </style>
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
           <div>
