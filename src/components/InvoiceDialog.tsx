@@ -66,15 +66,6 @@ interface PreviewData {
   previewUrl?: string;
 }
 
-interface ServiceLine {
-  id: string;
-  description: string;
-  quantity: string;
-  unitPrice: string;
-  tva: string;
-  total: string;
-}
-
 interface InvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
