@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -16,7 +15,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { generateInvoiceHTML } from "@/services/pdfGenerator";
 import { InvoiceActions } from "@/components/InvoiceActions";
-import { CompanyProfile } from "./CompanyProfile";
 
 // Define invoice template types
 const invoiceTemplates = [
@@ -47,13 +45,6 @@ const invoiceTemplates = [
     description: "Utilisation audacieuse des couleurs",
     previewBg: "bg-white",
     accent: "border-vertlime",
-  },
-  {
-    id: "poppins-orange",
-    name: "Poppins Orange",
-    description: "Un style contrasté avec touches d'orange",
-    previewBg: "bg-orange-50",
-    accent: "border-orange-500",
   }
 ];
 
@@ -70,12 +61,10 @@ export default function Invoicing() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   
   // Invoice number and date
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [dueDate, setDueDate] = useState("");
   
   // Client information
   const [clientName, setClientName] = useState("");
@@ -101,12 +90,10 @@ export default function Invoicing() {
   // Payment terms
   const [paymentDelay, setPaymentDelay] = useState("15");
   const [paymentMethod, setPaymentMethod] = useState("transfer");
-  const [paymentTerms, setPaymentTerms] = useState("");
   
   // Additional fields
   const [notes, setNotes] = useState("");
   const [signature, setSignature] = useState("");
-  const [thankYouMessage, setThankYouMessage] = useState("");
   
   // Invoice totals
   const [subtotal, setSubtotal] = useState(0);
@@ -116,32 +103,6 @@ export default function Invoicing() {
   // État pour la prévisualisation
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState("");
-
-  // Load company profile and set default values
-  useEffect(() => {
-    const savedProfile = localStorage.getItem("companyProfile");
-    if (savedProfile) {
-      const parsedProfile = JSON.parse(savedProfile);
-      setCompanyProfile(parsedProfile);
-      
-      // Set default values from company profile
-      if (parsedProfile.defaultTaxRate) {
-        const defaultTaxRate = parsedProfile.defaultTaxRate;
-        setServiceLines(prev => prev.map(line => ({
-          ...line,
-          tva: defaultTaxRate
-        })));
-      }
-      
-      if (parsedProfile.defaultPaymentTerms) {
-        setPaymentTerms(parsedProfile.defaultPaymentTerms);
-      }
-      
-      if (parsedProfile.defaultThankYouMessage) {
-        setThankYouMessage(parsedProfile.defaultThankYouMessage);
-      }
-    }
-  }, []);
 
   // Generate a default invoice number on component mount
   useEffect(() => {
@@ -153,22 +114,7 @@ export default function Invoicing() {
     const random = Math.floor(Math.random() * 90 + 10);
     
     setInvoiceNumber(`INV-${year}${month}${day}-${random}`);
-    
-    // Set due date based on payment delay (default to 15 days)
-    const dueDate = new Date(today);
-    dueDate.setDate(dueDate.getDate() + 15);
-    setDueDate(dueDate.toISOString().split('T')[0]);
   }, []);
-
-  // Update due date when invoice date or payment delay changes
-  useEffect(() => {
-    if (invoiceDate) {
-      const date = new Date(invoiceDate);
-      const days = paymentDelay === 'immediate' ? 0 : parseInt(paymentDelay) || 0;
-      date.setDate(date.getDate() + days);
-      setDueDate(date.toISOString().split('T')[0]);
-    }
-  }, [invoiceDate, paymentDelay]);
 
   // Calculate totals when service lines change
   useEffect(() => {
@@ -255,7 +201,6 @@ export default function Invoicing() {
     const invoiceData = {
       invoiceNumber,
       invoiceDate,
-      dueDate,
       clientName,
       clientEmail,
       clientAddress,
@@ -265,10 +210,7 @@ export default function Invoicing() {
       total,
       paymentDelay,
       paymentMethod,
-      paymentTerms,
-      notes,
-      thankYouMessage,
-      company: companyProfile,
+      notes
     };
     
     // Générer le HTML en utilisant la fonction du service
@@ -324,7 +266,7 @@ export default function Invoicing() {
             <CardDescription>Informations de base de la facture</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="invoice-number">Numéro de facture</Label>
                 <Input 
@@ -342,42 +284,9 @@ export default function Invoicing() {
                   onChange={(e) => setInvoiceDate(e.target.value)} 
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="due-date">Date d'échéance</Label>
-                <Input 
-                  id="due-date" 
-                  type="date" 
-                  value={dueDate} 
-                  onChange={(e) => setDueDate(e.target.value)} 
-                />
-              </div>
             </div>
           </CardContent>
         </Card>
-        
-        {/* Company Information Card - Only if no company profile exists */}
-        {!companyProfile && (
-          <Card className="border-orange-300 bg-orange-50">
-            <CardHeader>
-              <CardTitle className="text-orange-800">Informations d'entreprise manquantes</CardTitle>
-              <CardDescription>
-                Configurez votre profil d'entreprise pour qu'il apparaisse sur vos factures
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-orange-700 mb-4">
-                Vous n'avez pas encore configuré votre profil d'entreprise. Vos informations apparaîtront sur toutes vos factures.
-              </p>
-              <Button 
-                variant="outline" 
-                className="border-orange-500 text-orange-700 hover:bg-orange-100"
-                onClick={() => navigate("/profile")}
-              >
-                Configurer mon profil d'entreprise
-              </Button>
-            </CardContent>
-          </Card>
-        )}
         
         {/* Client Information */}
         <Card>
@@ -435,7 +344,7 @@ export default function Invoicing() {
             <CardDescription>Choisissez le style de présentation de votre facture</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {invoiceTemplates.map(template => (
                 <div
                   key={template.id}
@@ -597,38 +506,6 @@ export default function Invoicing() {
                   </SelectContent>
                 </Select>
               </div>
-              
-              {/* Show bank details selection when transfer is selected */}
-              {(paymentMethod === 'transfer' || paymentMethod === 'both') && companyProfile && (
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="payment-instructions">Coordonnées bancaires à afficher</Label>
-                  <div className="border rounded-md p-4 bg-gray-50">
-                    {companyProfile.bankName && (
-                      <p><strong>Banque:</strong> {companyProfile.bankName}</p>
-                    )}
-                    {companyProfile.bankIban && (
-                      <p><strong>IBAN:</strong> {companyProfile.bankIban}</p>
-                    )}
-                    {companyProfile.bankBic && (
-                      <p><strong>BIC/SWIFT:</strong> {companyProfile.bankBic}</p>
-                    )}
-                    {!companyProfile.bankName && !companyProfile.bankIban && !companyProfile.bankBic && (
-                      <p className="text-amber-600">Aucune information bancaire disponible. Veuillez configurer votre profil d'entreprise.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="payment-terms">Conditions de paiement</Label>
-                <Textarea 
-                  id="payment-terms"
-                  value={paymentTerms}
-                  onChange={(e) => setPaymentTerms(e.target.value)}
-                  placeholder="Paiement sous 30 jours. Pénalité 1.5%/mois."
-                  className="min-h-[80px]" 
-                />
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -657,21 +534,11 @@ export default function Invoicing() {
                   onChange={(e) => setNotes(e.target.value)} 
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="thank-you">Message de remerciement</Label>
-                <Textarea 
-                  id="thank-you" 
-                  placeholder="Merci pour votre confiance..." 
-                  className="min-h-[60px]"
-                  value={thankYouMessage}
-                  onChange={(e) => setThankYouMessage(e.target.value)} 
-                />
-              </div>
             </div>
           </CardContent>
         </Card>
         
-        {/* Action Buttons */}
+        {/* Action Buttons - Remplacé par le nouveau composant InvoiceActions */}
         <div className="flex justify-between pt-4">
           <Button variant="outline" onClick={saveAsDraft}>
             <Save className="mr-2 h-4 w-4" />
@@ -682,7 +549,6 @@ export default function Invoicing() {
             invoiceData={{
               invoiceNumber,
               invoiceDate,
-              dueDate,
               clientName,
               clientEmail,
               clientAddress,
@@ -692,10 +558,7 @@ export default function Invoicing() {
               total,
               paymentDelay,
               paymentMethod,
-              paymentTerms,
-              notes,
-              thankYouMessage,
-              company: companyProfile
+              notes
             }}
             templateId={selectedTemplate}
             onPreview={previewInvoice}
@@ -716,7 +579,6 @@ export default function Invoicing() {
               invoiceData={{
                 invoiceNumber,
                 invoiceDate,
-                dueDate,
                 clientName,
                 clientEmail,
                 clientAddress,
@@ -726,10 +588,7 @@ export default function Invoicing() {
                 total,
                 paymentDelay,
                 paymentMethod,
-                paymentTerms,
-                notes,
-                thankYouMessage,
-                company: companyProfile
+                notes
               }}
               templateId={selectedTemplate}
               showDownloadButton={true}
