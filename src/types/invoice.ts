@@ -25,6 +25,15 @@ export interface PaymentMethodDetails {
   details?: string;
 }
 
+export interface PaymentTermTemplate {
+  id: string;
+  name: string;
+  delay: string; // "immediate", "7", "15", "30", "60", "custom"
+  customDate?: string; // for custom date if delay is "custom"
+  termsText: string;
+  isDefault?: boolean;
+}
+
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
@@ -43,6 +52,8 @@ export interface InvoiceData {
   notes: string;
   signature?: string;
   templateId: string;
+  paymentTermsId?: string; // Reference to a payment term template
+  customPaymentTerms?: string; // Custom terms for this invoice
 }
 
 export interface ServiceLine {

@@ -1,15 +1,19 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { PaymentMethod, PaymentMethodDetails } from "@/types/invoice";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { PaymentMethod, PaymentMethodDetails, CompanyProfile } from "@/types/invoice";
 
 interface PaymentMethodSelectorProps {
   methods: PaymentMethodDetails[];
   onChange: (methods: PaymentMethodDetails[]) => void;
-  companyProfile: any;
+  companyProfile: CompanyProfile | null;
+  onSaveDefault?: (methods: PaymentMethodDetails[]) => void;
 }
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -18,15 +22,31 @@ const paymentMethodLabels: Record<PaymentMethod, string> = {
   paypal: "PayPal",
   check: "Chèque",
   cash: "Espèces",
-  payoneer: "Payoneer (bientôt disponible)",
+  payoneer: "Payoneer",
   other: "Autre"
 };
 
 export function PaymentMethodSelector({ 
   methods, 
   onChange,
-  companyProfile
+  companyProfile,
+  onSaveDefault
 }: PaymentMethodSelectorProps) {
+  const { toast } = useToast();
+  const [savedMethods, setSavedMethods] = useState<PaymentMethodDetails[]>([]);
+
+  // Load saved payment methods on component mount
+  useEffect(() => {
+    const savedPaymentMethods = localStorage.getItem('defaultPaymentMethods');
+    if (savedPaymentMethods) {
+      try {
+        setSavedMethods(JSON.parse(savedPaymentMethods));
+      } catch (e) {
+        console.error("Error parsing saved payment methods", e);
+      }
+    }
+  }, []);
+
   const updateMethod = (type: PaymentMethod, enabled: boolean, details?: string) => {
     const existingIndex = methods.findIndex(m => m.type === type);
     const updatedMethods = [...methods];
@@ -53,6 +73,32 @@ export function PaymentMethodSelector({
     return method ? { enabled: method.enabled, details: method.details } : { enabled: false };
   };
 
+  const handleSaveAsDefault = () => {
+    // Save current methods as default
+    localStorage.setItem('defaultPaymentMethods', JSON.stringify(methods));
+    setSavedMethods(methods);
+    
+    if (onSaveDefault) {
+      onSaveDefault(methods);
+    }
+    
+    toast({
+      title: "Méthodes de paiement sauvegardées",
+      description: "Ces méthodes seront proposées par défaut pour vos nouvelles factures"
+    });
+  };
+
+  const loadDefaultMethods = () => {
+    if (savedMethods.length > 0) {
+      onChange(savedMethods);
+      
+      toast({
+        title: "Méthodes par défaut chargées",
+        description: "Les méthodes de paiement par défaut ont été appliquées"
+      });
+    }
+  };
+
   // Conditions pour afficher ou non certaines méthodes
   const showPaypal = !!companyProfile?.paypal;
   const showPayoneer = !!companyProfile?.payoneer;
@@ -60,7 +106,19 @@ export function PaymentMethodSelector({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Méthodes de paiement acceptées</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Méthodes de paiement acceptées</h3>
+        
+        {savedMethods.length > 0 && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={loadDefaultMethods}
+          >
+            Charger méthodes par défaut
+          </Button>
+        )}
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center space-x-2">
@@ -118,9 +176,8 @@ export function PaymentMethodSelector({
               id="payment-payoneer" 
               checked={getMethodStatus('payoneer').enabled}
               onCheckedChange={(checked) => updateMethod('payoneer', checked as boolean)}
-              disabled={true}
             />
-            <Label htmlFor="payment-payoneer" className="text-muted-foreground">
+            <Label htmlFor="payment-payoneer">
               {paymentMethodLabels.payoneer}
             </Label>
           </div>
@@ -149,6 +206,17 @@ export function PaymentMethodSelector({
           </CardContent>
         </Card>
       )}
+      
+      <div className="flex justify-end mt-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleSaveAsDefault}
+        >
+          <Save className="mr-2 h-4 w-4" />
+          Définir comme méthodes par défaut
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -10,16 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash, Plus, ArrowLeft, ArrowRight, Save, Eye, QrCode } from "lucide-react";
+import { Trash, Plus, ArrowLeft, ArrowRight, Save, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { generateInvoicePreview } from "@/services/pdfGenerator";
 import { createStripeCheckoutSession, generateQRCodeUrl } from "@/services/stripe";
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { InvoicePaymentLink } from "@/components/InvoicePaymentLink";
-import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile } from "@/types/invoice";
+import { PaymentMethodSelector } from "@/components/PaymentMethodSelector";
+import { PaymentTermsSelector } from "@/components/PaymentTermsSelector";
+import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile, PaymentTermTemplate } from "@/types/invoice";
 
 // Define invoice template types
 const invoiceTemplates = [
@@ -100,19 +102,28 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
       total: "0"
     }
   ]);
-  const [paymentDelay, setPaymentDelay] = useState("15");
-  const [paymentMethod, setPaymentMethod] = useState("transfer");
   const [notes, setNotes] = useState("");
   const [signature, setSignature] = useState("");
   const [subtotal, setSubtotal] = useState(0);
   const [taxTotal, setTaxTotal] = useState(0);
   const [total, setTotal] = useState(0);
 
-  // Add missing state required by InvoiceData
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
+  // Payment Terms state
+  const [paymentDelay, setPaymentDelay] = useState("15");
+  const [dueDate, setDueDate] = useState("");
+  const [customTerms, setCustomTerms] = useState("");
+  const [useCustomTerms, setUseCustomTerms] = useState(false);
+  const [selectedTermTemplateId, setSelectedTermTemplateId] = useState("");
+  const [paymentTermsTemplates, setPaymentTermsTemplates] = useState<PaymentTermTemplate[]>([]);
+  
+  // Payment Methods state
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodDetails[]>([
-    { type: "card", enabled: true, details: "" }
+    { type: "card", enabled: true }
   ]);
+  const [defaultPaymentMethods, setDefaultPaymentMethods] = useState<PaymentMethodDetails[]>([]);
+
+  // Company profile state
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
 
   // Generate a default invoice number on component mount
   useEffect(() => {
@@ -126,8 +137,9 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
     setInvoiceNumber(`INV-${year}${month}${day}-${random}`);
   }, []);
 
-  // Load company profile on component mount
+  // Load company profile, default payment methods, and payment term templates on component mount
   useEffect(() => {
+    // Load company profile
     const savedProfile = localStorage.getItem('companyProfile');
     if (savedProfile) {
       try {
@@ -135,6 +147,39 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
         setCompanyProfile(profile);
       } catch (e) {
         console.error("Erreur lors du parsing du profil d'entreprise", e);
+      }
+    }
+    
+    // Load default payment methods
+    const savedMethods = localStorage.getItem('defaultPaymentMethods');
+    if (savedMethods) {
+      try {
+        const methods = JSON.parse(savedMethods);
+        setDefaultPaymentMethods(methods);
+        setPaymentMethods(methods); // Use default methods as initial state
+      } catch (e) {
+        console.error("Erreur lors du parsing des méthodes de paiement", e);
+      }
+    }
+    
+    // Load payment term templates
+    const savedTerms = localStorage.getItem('paymentTermsTemplates');
+    if (savedTerms) {
+      try {
+        const terms = JSON.parse(savedTerms);
+        setPaymentTermsTemplates(terms);
+        
+        // If there's a default template, use it
+        const defaultTemplate = terms.find((t: PaymentTermTemplate) => t.isDefault);
+        if (defaultTemplate) {
+          setSelectedTermTemplateId(defaultTemplate.id);
+          setPaymentDelay(defaultTemplate.delay);
+          if (defaultTemplate.customDate) setDueDate(defaultTemplate.customDate);
+          setCustomTerms(defaultTemplate.termsText);
+          setUseCustomTerms(true);
+        }
+      } catch (e) {
+        console.error("Erreur lors du parsing des modèles de conditions", e);
       }
     }
   }, []);
@@ -232,6 +277,22 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
     navigate("/invoices");
   };
 
+  // Save a payment term template
+  const savePaymentTermTemplate = (template: PaymentTermTemplate) => {
+    // Update local state
+    setSelectedTermTemplateId(template.id);
+    
+    // Update templates in localStorage
+    const updatedTemplates = [...paymentTermsTemplates, template];
+    setPaymentTermsTemplates(updatedTemplates);
+    localStorage.setItem('paymentTermsTemplates', JSON.stringify(updatedTemplates));
+    
+    toast({
+      title: "Modèle enregistré",
+      description: `Le modèle "${template.name}" a été créé avec succès`
+    });
+  };
+
   // Updated function to handle preview
   const handlePreviewInvoice = async () => {
     setIsLoading(true);
@@ -269,7 +330,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
       const invoiceData: InvoiceData = {
         invoiceNumber,
         invoiceDate,
-        dueDate: "",
+        dueDate: paymentDelay === "custom" ? dueDate : "",
         clientName,
         clientEmail,
         clientAddress,
@@ -294,7 +355,9 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
         paymentDelay,
         paymentMethods,
         notes,
-        templateId: selectedTemplate
+        templateId: selectedTemplate,
+        paymentTermsId: selectedTermTemplateId,
+        customPaymentTerms: useCustomTerms ? customTerms : ""
       };
       
       const result = await generateInvoicePreview(invoiceData, selectedTemplate);
@@ -371,7 +434,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
       const invoiceData: InvoiceData = {
         invoiceNumber,
         invoiceDate,
-        dueDate: "",
+        dueDate: paymentDelay === "custom" ? dueDate : "",
         clientName,
         clientEmail,
         clientAddress,
@@ -394,9 +457,11 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
         taxTotal,
         total,
         paymentDelay,
-        paymentMethods: [{ type: paymentMethod as "card" | "transfer" | "paypal" | "check" | "cash" | "payoneer" | "other", enabled: true, details: "" }],
+        paymentMethods,
         notes,
-        templateId: selectedTemplate
+        templateId: selectedTemplate,
+        paymentTermsId: selectedTermTemplateId,
+        customPaymentTerms: useCustomTerms ? customTerms : ""
       };
       
       // Create Stripe checkout session
@@ -613,38 +678,37 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
       case 4:
         return (
           <div className="space-y-6 py-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="payment-delay">Délai de paiement</Label>
-                <Select value={paymentDelay} onValueChange={setPaymentDelay}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un délai" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="immediate">Paiement immédiat</SelectItem>
-                    <SelectItem value="15">15 jours</SelectItem>
-                    <SelectItem value="30">30 jours</SelectItem>
-                    <SelectItem value="60">60 jours</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payment-method">Méthode de paiement</Label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un mode de paiement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="card">Carte bancaire</SelectItem>
-                    <SelectItem value="transfer">Virement bancaire</SelectItem>
-                    <SelectItem value="both">Carte ou virement</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Payment Terms Section */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium mb-4">Conditions de paiement</h3>
+              <PaymentTermsSelector
+                paymentDelay={paymentDelay}
+                onPaymentDelayChange={setPaymentDelay}
+                dueDate={dueDate}
+                onDueDateChange={setDueDate}
+                customTerms={customTerms}
+                onCustomTermsChange={setCustomTerms}
+                useCustomTerms={useCustomTerms}
+                onUseCustomTermsChange={setUseCustomTerms}
+                defaultTerms="Paiement à réception de facture. Des pénalités de retard de 3 fois le taux d'intérêt légal seront appliquées en cas de paiement après la date d'échéance."
+                onSaveAsTemplate={savePaymentTermTemplate}
+                onSelectTemplate={setSelectedTermTemplateId}
+                selectedTemplateId={selectedTermTemplateId}
+              />
             </div>
             
-            <div>
-              <Label className="block mb-2">Template de facture</Label>
+            {/* Payment Methods Section */}
+            <div className="border-t pt-6">
+              <PaymentMethodSelector
+                methods={paymentMethods}
+                onChange={setPaymentMethods}
+                companyProfile={companyProfile}
+              />
+            </div>
+            
+            {/* Template Selection Section */}
+            <div className="border-t pt-6">
+              <Label className="block mb-4 text-lg font-medium">Template de facture</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {invoiceTemplates.map(template => (
                   <div
@@ -736,7 +800,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
     const currentInvoiceData: InvoiceData = {
       invoiceNumber,
       invoiceDate,
-      dueDate: "",
+      dueDate: paymentDelay === "custom" ? dueDate : "",
       clientName,
       clientEmail,
       clientAddress,
@@ -759,9 +823,11 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
       taxTotal,
       total,
       paymentDelay,
-      paymentMethods: [{ type: paymentMethod as "card" | "transfer" | "paypal" | "check" | "cash" | "payoneer" | "other", enabled: true, details: "" }],
+      paymentMethods,
       notes,
-      templateId: selectedTemplate
+      templateId: selectedTemplate,
+      paymentTermsId: selectedTermTemplateId,
+      customPaymentTerms: useCustomTerms ? customTerms : ""
     };
     
     return (

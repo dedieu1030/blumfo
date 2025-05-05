@@ -1,19 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { MobileNavigation } from "@/components/MobileNavigation";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InvoiceDialog } from "@/components/InvoiceDialog";
-import { InvoiceData, CompanyProfile, PaymentMethodDetails } from "@/types/invoice";
 
 export default function Invoicing() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   
