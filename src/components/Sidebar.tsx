@@ -29,7 +29,7 @@ export function Sidebar({ className }: SidebarProps) {
   ];
 
   return (
-    <div className={`hidden md:flex flex-col bg-credornoir text-white w-64 min-h-screen ${className}`}>
+    <div className={`fixed hidden md:flex flex-col bg-credornoir text-white w-64 h-screen ${className}`}>
       <div className="p-6">
         <h1 className="text-2xl font-bold text-white">LexFacture</h1>
         <div className="mt-1 text-sm text-gray-400">Facturez sans friction</div>
