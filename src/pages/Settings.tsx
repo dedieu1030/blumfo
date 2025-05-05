@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Check, Settings, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Check } from "lucide-react";
 
 export default function Settings() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -56,26 +55,6 @@ export default function Settings() {
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
       />
       
-      {/* Company Profile Link Card */}
-      <Card className="mb-6">
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-violet/10 flex items-center justify-center mr-4">
-              <User className="h-5 w-5 text-violet" />
-            </div>
-            <div>
-              <h3 className="font-medium text-base">Profil d'entreprise</h3>
-              <p className="text-sm text-muted-foreground">Configurez les informations de votre entreprise pour vos factures</p>
-            </div>
-          </div>
-          <Button asChild>
-            <Link to="/profile">
-              Configurer
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-      
       <Tabs defaultValue="profile" className="w-full space-y-6">
         <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
           <TabsTrigger 
@@ -111,21 +90,6 @@ export default function Settings() {
               <CardDescription>Vos informations professionnelles qui apparaîtront sur vos factures</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
-                <p className="text-amber-800">
-                  Les paramètres du profil d'entreprise sont maintenant disponibles dans une nouvelle section dédiée.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-2 border-amber-500 text-amber-700 hover:bg-amber-100"
-                  asChild
-                >
-                  <Link to="/profile">
-                    Aller au profil d'entreprise
-                  </Link>
-                </Button>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="company-name">Nom du cabinet</Label>
@@ -167,21 +131,6 @@ export default function Settings() {
               <CardDescription>Personnalisez vos paramètres de facturation</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
-                <p className="text-amber-800">
-                  Les paramètres de facturation sont maintenant disponibles dans la section du profil d'entreprise.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-2 border-amber-500 text-amber-700 hover:bg-amber-100"
-                  asChild
-                >
-                  <Link to="/profile">
-                    Aller au profil d'entreprise
-                  </Link>
-                </Button>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="currency">Devise par défaut</Label>
@@ -223,21 +172,6 @@ export default function Settings() {
               <CardDescription>Choisissez l'apparence de vos factures parmi nos modèles prédéfinis</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
-                <p className="text-amber-800">
-                  Les templates de facture peuvent être choisis directement lors de la création d'une facture.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-2 border-amber-500 text-amber-700 hover:bg-amber-100"
-                  asChild
-                >
-                  <Link to="/invoicing">
-                    Créer une facture
-                  </Link>
-                </Button>
-              </div>
-              
               <RadioGroup 
                 value={selectedTemplate} 
                 onValueChange={setSelectedTemplate} 
