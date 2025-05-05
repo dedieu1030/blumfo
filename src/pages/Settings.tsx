@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,10 +10,32 @@ import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Check } from "lucide-react";
+import { CompanyProfileForm } from "@/components/CompanyProfileForm";
+import { CompanyProfile } from "@/types/invoice";
 
 export default function Settings() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("classic");
+  const [companyProfile, setCompanyProfile] = useState<Partial<CompanyProfile>>({});
+
+  // Simuler la récupération des données du profil d'entreprise
+  useEffect(() => {
+    // Dans une application réelle, récupérez les données depuis une API ou localStorage
+    const savedProfile = localStorage.getItem('companyProfile');
+    if (savedProfile) {
+      try {
+        setCompanyProfile(JSON.parse(savedProfile));
+      } catch (e) {
+        console.error("Erreur lors du parsing du profil d'entreprise", e);
+      }
+    }
+  }, []);
+
+  const handleSaveProfile = (profile: CompanyProfile) => {
+    setCompanyProfile(profile);
+    // Dans une application réelle, enregistrez les données via une API
+    localStorage.setItem('companyProfile', JSON.stringify(profile));
+  };
 
   const invoiceTemplates = [
     {
@@ -84,44 +105,10 @@ export default function Settings() {
         </TabsList>
         
         <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informations du cabinet</CardTitle>
-              <CardDescription>Vos informations professionnelles qui apparaîtront sur vos factures</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="company-name">Nom du cabinet</Label>
-                  <Input id="company-name" placeholder="Cabinet Dupont" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-name">Nom du contact principal</Label>
-                  <Input id="contact-name" placeholder="Me Dupont" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email professionnel</Label>
-                  <Input id="email" type="email" placeholder="contact@cabinet-dupont.fr" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input id="phone" placeholder="01 23 45 67 89" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Adresse complète</Label>
-                  <Textarea id="address" placeholder="15 rue du Barreau, 75001 Paris" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="siret">SIRET</Label>
-                  <Input id="siret" placeholder="123 456 789 00012" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tva">Numéro de TVA</Label>
-                  <Input id="tva" placeholder="FR12345678900" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <CompanyProfileForm 
+            initialData={companyProfile}
+            onSave={handleSaveProfile}
+          />
         </TabsContent>
         
         <TabsContent value="billing">

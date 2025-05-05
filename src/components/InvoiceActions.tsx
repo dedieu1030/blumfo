@@ -4,9 +4,10 @@ import { Button } from "./ui/button";
 import { Download, Send, Eye, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateAndDownloadInvoicePdf } from '@/services/invoiceApiClient';
+import { InvoiceData } from '@/types/invoice';
 
 interface InvoiceActionsProps {
-  invoiceData: any;
+  invoiceData: InvoiceData;
   templateId: string;
   onPreview?: () => void;
   onSave?: () => void;

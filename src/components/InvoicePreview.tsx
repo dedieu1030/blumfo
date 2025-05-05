@@ -1,13 +1,13 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { ZoomIn, ZoomOut, Maximize, Minimize, Download } from 'lucide-react';
 import { generateAndDownloadInvoicePdf } from '@/services/invoiceApiClient';
 import { useToast } from "@/hooks/use-toast";
+import { InvoiceData } from '@/types/invoice';
 
 interface InvoicePreviewProps {
   htmlContent: string;
-  invoiceData?: any;  // Données complètes de la facture pour la génération du PDF
+  invoiceData?: InvoiceData;
   templateId?: string; // ID du template utilisé
   showDownloadButton?: boolean; // Option pour afficher le bouton de téléchargement
 }
@@ -102,7 +102,71 @@ export function InvoicePreview({
     }
   };
 
-  // Add CSS to simulate A4 paper with proper margins
+  const formatPaymentInfo = (data: InvoiceData) => {
+    if (!data) return '';
+    
+    const paymentMethods = data.paymentMethods?.filter(m => m.enabled) || [];
+    if (paymentMethods.length === 0) return '';
+    
+    const issuer = data.issuerInfo;
+    let html = '<div class="payment-info">';
+    html += '<h3>Méthodes de paiement</h3>';
+    
+    paymentMethods.forEach(method => {
+      switch (method.type) {
+        case 'card':
+          html += '<p><strong>Carte bancaire :</strong> Un lien de paiement Stripe est inclus dans l\'email avec cette facture.</p>';
+          break;
+        case 'transfer':
+          html += `<p><strong>Virement bancaire :</strong><br>`;
+          html += `Banque: ${issuer.bankName}<br>`;
+          html += `Titulaire: ${issuer.accountHolder}<br>`;
+          html += `IBAN: ${issuer.bankAccount}</p>`;
+          break;
+        case 'paypal':
+          html += `<p><strong>PayPal :</strong> ${issuer.paypal}</p>`;
+          break;
+        case 'check':
+          html += `<p><strong>Chèque :</strong> À l'ordre de ${issuer.name}<br>`;
+          html += `Adresse: ${issuer.address}</p>`;
+          break;
+        case 'cash':
+          html += `<p><strong>Espèces :</strong> Paiement en personne uniquement.</p>`;
+          break;
+        case 'other':
+          html += `<p><strong>Autre :</strong> ${method.details}</p>`;
+          break;
+      }
+    });
+    
+    html += '</div>';
+    return html;
+  };
+
+  const enhanceHtmlWithDetails = (html: string) => {
+    if (!invoiceData) return html;
+    
+    // Injecter les méthodes de paiement
+    const paymentInfoHtml = formatPaymentInfo(invoiceData);
+    
+    // Injecter les conditions de paiement
+    let termsHtml = '';
+    if (invoiceData.notes) {
+      termsHtml = `<div class="payment-terms">
+        <h3>Conditions de paiement</h3>
+        <p>${invoiceData.notes}</p>
+      </div>`;
+    }
+    
+    // Injecter le tout avant la fin du document
+    return html.replace('</body>', `${paymentInfoHtml}${termsHtml}</body>`);
+  };
+
+  // Enhance the HTML content before displaying
+  const enhancedHtml = invoiceData ? enhanceHtmlWithDetails(htmlContent) : htmlContent;
+  
+  // Use enhancedHtml in your wrappedHtml template instead of the original htmlContent
+
   const wrappedHtml = `
     <!DOCTYPE html>
     <html>
@@ -143,7 +207,7 @@ export function InvoicePreview({
     </head>
     <body>
       <div class="page">
-        ${htmlContent}
+        ${enhancedHtml}
       </div>
       <script>
         // Send message to parent window with document height

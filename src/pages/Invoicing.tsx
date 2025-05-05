@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { useNavigate } from "react-router-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash, Plus, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { generateInvoiceHTML } from "@/services/pdfGenerator";
 import { InvoiceActions } from "@/components/InvoiceActions";
+import { PaymentMethodSelector } from "@/components/PaymentMethodSelector";
+import { PaymentTermsSelector } from "@/components/PaymentTermsSelector";
+import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile } from "@/types/invoice";
 
 // Define invoice template types
 const invoiceTemplates = [
@@ -65,12 +67,18 @@ export default function Invoicing() {
   // Invoice number and date
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dueDate, setDueDate] = useState("");
+  const [useDueDate, setUseDueDate] = useState(false);
   
   // Client information
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientAddress, setClientAddress] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
   const [saveClient, setSaveClient] = useState(false);
+  
+  // Issuer information (company profile)
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   
   // Template selection
   const [selectedTemplate, setSelectedTemplate] = useState("classic");
@@ -89,7 +97,11 @@ export default function Invoicing() {
   
   // Payment terms
   const [paymentDelay, setPaymentDelay] = useState("15");
-  const [paymentMethod, setPaymentMethod] = useState("transfer");
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodDetails[]>([
+    { type: "card", enabled: true }
+  ]);
+  const [customTerms, setCustomTerms] = useState("");
+  const [useCustomTerms, setUseCustomTerms] = useState(false);
   
   // Additional fields
   const [notes, setNotes] = useState("");
@@ -103,6 +115,28 @@ export default function Invoicing() {
   // État pour la prévisualisation
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState("");
+
+  // Load company profile
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('companyProfile');
+    if (savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        setCompanyProfile(profile);
+        
+        // Set default tax rate from company profile
+        if (profile.taxRate && serviceLines.length === 1 && serviceLines[0].tva === "20") {
+          const updatedLines = serviceLines.map(line => ({
+            ...line,
+            tva: profile.taxRate
+          }));
+          setServiceLines(updatedLines);
+        }
+      } catch (e) {
+        console.error("Erreur lors du parsing du profil d'entreprise", e);
+      }
+    }
+  }, []);
 
   // Generate a default invoice number on component mount
   useEffect(() => {
@@ -157,7 +191,7 @@ export default function Invoicing() {
         description: "",
         quantity: "1",
         unitPrice: "0",
-        tva: "20",
+        tva: companyProfile?.taxRate || "20",
         total: "0"
       }
     ]);
@@ -197,20 +231,34 @@ export default function Invoicing() {
 
   // Générer la prévisualisation HTML
   const generatePreview = () => {
+    if (!companyProfile) {
+      toast({
+        title: "Profil incomplet",
+        description: "Veuillez compléter votre profil d'entreprise dans les paramètres",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Collecter toutes les données de la facture
-    const invoiceData = {
+    const invoiceData: InvoiceData = {
       invoiceNumber,
       invoiceDate,
+      dueDate: paymentDelay === "custom" ? dueDate : "",
       clientName,
       clientEmail,
       clientAddress,
+      clientPhone,
+      issuerInfo: companyProfile,
       serviceLines,
       subtotal,
       taxTotal,
       total,
       paymentDelay,
-      paymentMethod,
-      notes
+      paymentMethods,
+      notes: useCustomTerms ? customTerms : companyProfile.termsAndConditions,
+      signature,
+      templateId: selectedTemplate
     };
     
     // Générer le HTML en utilisant la fonction du service
@@ -235,6 +283,15 @@ export default function Invoicing() {
       toast({
         title: "Information requise",
         description: "Veuillez compléter les informations client avant d'envoyer la facture",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!companyProfile) {
+      toast({
+        title: "Profil incomplet",
+        description: "Veuillez compléter votre profil d'entreprise dans les paramètres",
         variant: "destructive"
       });
       return;
@@ -313,6 +370,15 @@ export default function Invoicing() {
                   placeholder="contact@sci-legalis.fr"
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-phone">Téléphone</Label>
+                <Input 
+                  id="client-phone" 
+                  placeholder="01 23 45 67 89"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)} 
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -478,34 +544,26 @@ export default function Invoicing() {
             <CardDescription>Définissez les modalités de règlement</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="payment-delay">Délai de paiement</Label>
-                <Select value={paymentDelay} onValueChange={setPaymentDelay}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un délai" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="immediate">Paiement immédiat</SelectItem>
-                    <SelectItem value="15">15 jours</SelectItem>
-                    <SelectItem value="30">30 jours</SelectItem>
-                    <SelectItem value="60">60 jours</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payment-method">Méthode de paiement</Label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un mode de paiement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="card">Carte bancaire</SelectItem>
-                    <SelectItem value="transfer">Virement bancaire</SelectItem>
-                    <SelectItem value="both">Carte ou virement</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <PaymentTermsSelector
+              paymentDelay={paymentDelay}
+              onPaymentDelayChange={setPaymentDelay}
+              dueDate={dueDate}
+              onDueDateChange={setDueDate}
+              useDueDate={useDueDate}
+              onUseDueDateChange={setUseDueDate}
+              customTerms={customTerms}
+              onCustomTermsChange={setCustomTerms}
+              useCustomTerms={useCustomTerms}
+              onUseCustomTermsChange={setUseCustomTerms}
+              defaultTerms={companyProfile?.termsAndConditions || "Paiement sous 30 jours. Pénalité 1.5%/mois en cas de retard."}
+            />
+            
+            <div className="mt-8">
+              <PaymentMethodSelector
+                methods={paymentMethods}
+                onChange={setPaymentMethods}
+                companyProfile={companyProfile}
+              />
             </div>
           </CardContent>
         </Card>
@@ -525,10 +583,10 @@ export default function Invoicing() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes et conditions</Label>
+                <Label htmlFor="notes">Notes</Label>
                 <Textarea 
                   id="notes" 
-                  placeholder="Ajoutez des informations complémentaires ou des conditions..." 
+                  placeholder="Ajoutez des informations complémentaires..." 
                   className="min-h-[100px]"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)} 
@@ -538,7 +596,7 @@ export default function Invoicing() {
           </CardContent>
         </Card>
         
-        {/* Action Buttons - Remplacé par le nouveau composant InvoiceActions */}
+        {/* Action Buttons */}
         <div className="flex justify-between pt-4">
           <Button variant="outline" onClick={saveAsDraft}>
             <Save className="mr-2 h-4 w-4" />
@@ -549,16 +607,32 @@ export default function Invoicing() {
             invoiceData={{
               invoiceNumber,
               invoiceDate,
+              dueDate: paymentDelay === "custom" ? dueDate : "",
               clientName,
               clientEmail,
               clientAddress,
+              clientPhone,
+              issuerInfo: companyProfile || {
+                name: "",
+                address: "",
+                email: "",
+                phone: "",
+                bankAccount: "",
+                bankName: "",
+                accountHolder: "",
+                taxRate: "20",
+                termsAndConditions: "",
+                thankYouMessage: "",
+                defaultCurrency: "EUR"
+              },
               serviceLines,
               subtotal,
               taxTotal,
               total,
               paymentDelay,
-              paymentMethod,
-              notes
+              paymentMethods,
+              notes: useCustomTerms ? customTerms : (companyProfile?.termsAndConditions || ""),
+              templateId: selectedTemplate
             }}
             templateId={selectedTemplate}
             onPreview={previewInvoice}
@@ -579,16 +653,32 @@ export default function Invoicing() {
               invoiceData={{
                 invoiceNumber,
                 invoiceDate,
+                dueDate: paymentDelay === "custom" ? dueDate : "",
                 clientName,
                 clientEmail,
                 clientAddress,
+                clientPhone,
+                issuerInfo: companyProfile || {
+                  name: "",
+                  address: "",
+                  email: "",
+                  phone: "",
+                  bankAccount: "",
+                  bankName: "",
+                  accountHolder: "",
+                  taxRate: "20",
+                  termsAndConditions: "",
+                  thankYouMessage: "",
+                  defaultCurrency: "EUR"
+                },
                 serviceLines,
                 subtotal,
                 taxTotal,
                 total,
                 paymentDelay,
-                paymentMethod,
-                notes
+                paymentMethods,
+                notes: useCustomTerms ? customTerms : (companyProfile?.termsAndConditions || ""),
+                templateId: selectedTemplate
               }}
               templateId={selectedTemplate}
               showDownloadButton={true}
