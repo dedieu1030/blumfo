@@ -1,3 +1,4 @@
+
 // This file handles PDF generation from invoice templates
 
 import { formatMoney } from './stripe';
@@ -36,15 +37,42 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
   // Format dates
   const invoiceDate = new Date(invoiceData.invoiceDate).toLocaleDateString('fr-FR');
   
-  // Calculate due date based on payment delay
-  let dueDate = new Date(invoiceData.invoiceDate);
-  if (invoiceData.paymentDelay === 'immediate') {
-    dueDate = new Date(invoiceData.invoiceDate);
+  // Use provided due date or calculate based on payment delay
+  let dueDate;
+  if (invoiceData.dueDate) {
+    dueDate = new Date(invoiceData.dueDate).toLocaleDateString('fr-FR');
   } else {
-    const delayDays = parseInt(invoiceData.paymentDelay) || 0;
-    dueDate.setDate(dueDate.getDate() + delayDays);
+    // Calculate due date based on payment delay
+    let dueDateObj = new Date(invoiceData.invoiceDate);
+    if (invoiceData.paymentDelay === 'immediate') {
+      dueDateObj = new Date(invoiceData.invoiceDate);
+    } else {
+      const delayDays = parseInt(invoiceData.paymentDelay) || 0;
+      dueDateObj.setDate(dueDateObj.getDate() + delayDays);
+    }
+    dueDate = dueDateObj.toLocaleDateString('fr-FR');
   }
-  const formattedDueDate = dueDate.toLocaleDateString('fr-FR');
+  
+  // Get company information
+  const company = invoiceData.company || {};
+  const companyName = company?.name || "Votre Entreprise";
+  const companyAddress = company?.address || "123 Rue de Paris, 75001 Paris, France";
+  const companyEmail = company?.email || "contact@entreprise.fr";
+  const companyPhone = company?.phone || "";
+  const companyWebsite = company?.website || "";
+  const companyTaxId = company?.taxId || "";
+  const companyVatNumber = company?.vatNumber || "";
+  const companyLogo = company?.logo || "";
+  
+  // Get bank information
+  const bankName = company?.bankName || "";
+  const bankIban = company?.bankIban || "";
+  const bankBic = company?.bankBic || "";
+  const bankAccountNumber = company?.bankAccountNumber || "";
+  
+  // Get payment terms and thank you message
+  const paymentTerms = invoiceData.paymentTerms || "Paiement sous 30 jours";
+  const thankYouMessage = invoiceData.thankYouMessage || "Merci pour votre confiance.";
   
   // Start building HTML based on template
   let html = '';
@@ -67,7 +95,37 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
       margin: 0;
       box-sizing: border-box;
     }
+    .company-logo {
+      max-height: 80px;
+      max-width: 200px;
+    }
   `;
+  
+  // Company information HTML block
+  const companyInfoBlock = `
+    <div class="company-info">
+      ${companyLogo ? `<img src="${companyLogo}" alt="${companyName}" class="company-logo" />` : ''}
+      <p><strong>${companyName}</strong></p>
+      ${companyAddress ? `<p>${companyAddress}</p>` : ''}
+      ${companyPhone ? `<p>Tél: ${companyPhone}</p>` : ''}
+      ${companyEmail ? `<p>Email: ${companyEmail}</p>` : ''}
+      ${companyWebsite ? `<p>Site: ${companyWebsite}</p>` : ''}
+      ${companyTaxId ? `<p>SIRET: ${companyTaxId}</p>` : ''}
+      ${companyVatNumber ? `<p>TVA: ${companyVatNumber}</p>` : ''}
+    </div>
+  `;
+  
+  // Bank information HTML block (only displayed for transfer payment method)
+  const showBankInfo = invoiceData.paymentMethod === 'transfer' || invoiceData.paymentMethod === 'both';
+  const bankInfoBlock = showBankInfo ? `
+    <div class="bank-info">
+      <h3>Coordonnées bancaires</h3>
+      ${bankName ? `<p><strong>Banque:</strong> ${bankName}</p>` : ''}
+      ${bankAccountNumber ? `<p><strong>Compte:</strong> ${bankAccountNumber}</p>` : ''}
+      ${bankIban ? `<p><strong>IBAN:</strong> ${bankIban}</p>` : ''}
+      ${bankBic ? `<p><strong>BIC/SWIFT:</strong> ${bankBic}</p>` : ''}
+    </div>
+  ` : '';
   
   // This would be more complex in a real implementation with proper HTML templates
   // Here's a simplified version for demo purposes
@@ -93,6 +151,17 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             width: ${A4_WIDTH_PX - 80}px;
             margin: auto;
             padding: 40px;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          }
+          .company-info {
+            text-align: left;
+          }
+          .company-logo {
+            margin-bottom: 10px;
           }
           h1 {
             font-size: 48px;
@@ -180,6 +249,12 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             margin-top: 10px;
             font-style: italic;
           }
+          .thank-you {
+            margin-top: 20px;
+            text-align: center;
+            font-style: italic;
+            color: #2c2c64;
+          }
           .signature {
             margin-top: 40px;
             display: flex;
@@ -230,22 +305,41 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             max-height: 150px;
             border: 1px solid #eee;
           }
+          .bank-info {
+            margin-top: 20px;
+            background: #f8f8f8;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 5px;
+          }
+          .bank-info h3 {
+            color: #2c2c64;
+            margin-bottom: 10px;
+          }
         </style>
       </head>
       <body>
         <div class="invoice-box">
-          <h1>INVOICE</h1>
+          <div class="header">
+            ${companyInfoBlock}
+            <div>
+              <h1>FACTURE</h1>
+            </div>
+          </div>
+          
           <div class="top-section">
             <div class="left">
-              <h4>INVOICE TO :</h4>
+              <h4>FACTURÉ À :</h4>
               <p>${invoiceData.clientName}</p>
+              ${invoiceData.clientAddress ? `<div>${invoiceData.clientAddress}</div>` : ''}
+              ${invoiceData.clientEmail ? `<div>${invoiceData.clientEmail}</div>` : ''}
             </div>
             <div class="right">
-              <div><strong>Date :</strong> ${invoiceDate}</div>
-              <div><strong>Due Date :</strong> ${formattedDueDate}</div>
-              <div><strong>TOTAL DUE :</strong></div>
+              <div><strong>Date d'émission :</strong> ${invoiceDate}</div>
+              <div><strong>Date d'échéance :</strong> ${dueDate}</div>
+              <div><strong>TOTAL :</strong></div>
               <div class="total-due">${formatMoney(invoiceData.total)}</div>
-              <div class="invoice-no">Invoice No : ${invoiceData.invoiceNumber}</div>
+              <div class="invoice-no">Facture N° : ${invoiceData.invoiceNumber}</div>
             </div>
           </div>
 
@@ -253,8 +347,8 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             <thead>
               <tr>
                 <th>Description</th>
-                <th>Qty</th>
-                <th>Price</th>
+                <th>Qté</th>
+                <th>Prix unit.</th>
                 <th>TVA</th>
                 <th>Total</th>
               </tr>
@@ -286,15 +380,19 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
               <em>Méthode : ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
                 invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</em>
             </div>
-            ${invoiceData.paymentMethod === 'transfer' ? `
-              <div><em>Compte bancaire : FR76 3000 1007 0000 0000 0000 000</em></div>
-              <div><em>BIC : BNPAFRPP</em></div>
-            ` : ''}
+            ${bankInfoBlock}
           </div>
 
+          ${invoiceData.paymentTerms ? `
+            <div class="terms">
+              <strong>Conditions de paiement</strong>
+              <p>${paymentTerms}</p>
+            </div>
+          ` : ''}
+          
           ${invoiceData.notes ? `
             <div class="terms">
-              <strong>Termes et conditions</strong>
+              <strong>Notes</strong>
               <p>${invoiceData.notes}</p>
             </div>
           ` : ''}
@@ -302,9 +400,13 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           <div class="signature">
             <div></div>
             <div>
-              <p class="name">Votre Entreprise</p>
+              <p class="name">${companyName}</p>
               <p>Administrator</p>
             </div>
+          </div>
+
+          <div class="thank-you">
+            <p>${thankYouMessage}</p>
           </div>
 
           <div class="footer-bar">
@@ -324,13 +426,15 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
           <div>
+            ${companyLogo ? `<img src="${companyLogo}" alt="${companyName}" class="company-logo" style="margin-bottom: 10px;" />` : ''}
             <h1 style="font-size: 28px; color: #5046e5;">FACTURE</h1>
             <p style="color: #666;">N° ${invoiceData.invoiceNumber}</p>
           </div>
           <div style="text-align: right;">
-            <p style="font-weight: bold; font-size: 18px;">Votre Entreprise</p>
-            <p>123 Rue de Paris</p>
-            <p>75001 Paris, France</p>
+            <p style="font-weight: bold; font-size: 18px;">${companyName}</p>
+            ${companyAddress ? `<p>${companyAddress}</p>` : ''}
+            ${companyPhone ? `<p>Tél: ${companyPhone}</p>` : ''}
+            ${companyEmail ? `<p>Email: ${companyEmail}</p>` : ''}
           </div>
         </div>
         
@@ -338,12 +442,12 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           <div>
             <h2 style="color: #5046e5; font-size: 18px; margin-bottom: 10px;">Facturer à:</h2>
             <p style="font-weight: bold;">${invoiceData.clientName}</p>
-            <p>${invoiceData.clientAddress}</p>
-            <p>${invoiceData.clientEmail}</p>
+            <p>${invoiceData.clientAddress || ''}</p>
+            <p>${invoiceData.clientEmail || ''}</p>
           </div>
           <div style="text-align: right;">
             <p><strong>Date d'émission:</strong> ${invoiceDate}</p>
-            <p><strong>Échéance:</strong> ${formattedDueDate}</p>
+            <p><strong>Date d'échéance:</strong> ${dueDate}</p>
           </div>
         </div>
         
@@ -389,7 +493,20 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           <h2 style="color: #5046e5; font-size: 18px;">Modalités de paiement</h2>
           <p>Méthode de paiement: ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
             invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
-          ${invoiceData.notes ? `<p>Notes: ${invoiceData.notes}</p>` : ''}
+          
+          ${bankInfoBlock}
+          
+          ${paymentTerms ? `<div style="margin-top: 15px;"><strong>Conditions:</strong> ${paymentTerms}</div>` : ''}
+          ${invoiceData.notes ? `<div style="margin-top: 15px;"><strong>Notes:</strong> ${invoiceData.notes}</div>` : ''}
+          
+          <div style="margin-top: 30px; text-align: center; font-style: italic; color: #5046e5;">
+            ${thankYouMessage}
+          </div>
+        </div>
+
+        <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; font-size: 12px; color: #666;">
+          ${companyTaxId ? `<p>SIRET: ${companyTaxId}</p>` : ''}
+          ${companyVatNumber ? `<p>N° TVA: ${companyVatNumber}</p>` : ''}
         </div>
       </div>
       `;
@@ -408,21 +525,23 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
         
         <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
           <div>
-            <p style="font-weight: bold; font-size: 18px;">Votre Entreprise</p>
-            <p>123 Rue de Paris</p>
-            <p>75001 Paris, France</p>
+            ${companyLogo ? `<img src="${companyLogo}" alt="${companyName}" class="company-logo" style="margin-bottom: 10px;" />` : ''}
+            <p style="font-weight: bold; font-size: 18px;">${companyName}</p>
+            ${companyAddress ? `<p>${companyAddress}</p>` : ''}
+            ${companyPhone ? `<p>Tél: ${companyPhone}</p>` : ''}
+            ${companyEmail ? `<p>Email: ${companyEmail}</p>` : ''}
           </div>
           <div style="text-align: right;">
-            <p><strong>Date:</strong> ${invoiceDate}</p>
-            <p><strong>Échéance:</strong> ${formattedDueDate}</p>
+            <p><strong>Date d'émission:</strong> ${invoiceDate}</p>
+            <p><strong>Date d'échéance:</strong> ${dueDate}</p>
           </div>
         </div>
         
         <div style="margin-bottom: 40px;">
           <h2 style="font-size: 18px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Facturer à:</h2>
           <p style="font-weight: bold;">${invoiceData.clientName}</p>
-          <p>${invoiceData.clientAddress}</p>
-          <p>${invoiceData.clientEmail}</p>
+          ${invoiceData.clientAddress ? `<p>${invoiceData.clientAddress}</p>` : ''}
+          ${invoiceData.clientEmail ? `<p>${invoiceData.clientEmail}</p>` : ''}
         </div>
         
         <table style="width: 100%; border-collapse: collapse; margin: 30px 0;">
@@ -463,10 +582,31 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           </div>
         </div>
         
-        <div style="margin: 40px 0; font-style: italic;">
-          <p>Modalités de paiement: ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
-            invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
-          ${invoiceData.notes ? `<p>Notes: ${invoiceData.notes}</p>` : ''}
+        <div style="margin: 40px 0;">
+          <div style="margin-bottom: 20px;">
+            <h3 style="font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Modalités de paiement:</h3>
+            <p style="margin-top: 10px;">Méthode: ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
+              invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
+            
+            ${bankInfoBlock}
+            
+            ${paymentTerms ? `<p style="margin-top: 10px;"><strong>Conditions:</strong> ${paymentTerms}</p>` : ''}
+          </div>
+          
+          ${invoiceData.notes ? `
+            <div style="margin-top: 20px;">
+              <h3 style="font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Notes:</h3>
+              <p style="margin-top: 10px; font-style: italic;">${invoiceData.notes}</p>
+            </div>
+          ` : ''}
+          
+          <div style="margin-top: 40px; text-align: center; font-style: italic;">
+            ${thankYouMessage}
+          </div>
+        </div>
+        
+        <div style="margin-top: 60px; border-top: 1px solid #ccc; padding-top: 20px; font-size: 12px; color: #666; text-align: center;">
+          ${companyName} | ${companyTaxId ? `SIRET: ${companyTaxId}` : ''} ${companyVatNumber ? `| TVA: ${companyVatNumber}` : ''}
         </div>
       </div>
       `;
@@ -481,13 +621,15 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
         <div style="background-color: #4a6cf7; color: white; padding: 20px; margin-bottom: 30px;">
           <div style="display: flex; justify-content: space-between;">
             <div>
+              ${companyLogo ? `<img src="${companyLogo}" alt="${companyName}" class="company-logo" style="margin-bottom: 10px; background-color: white; padding: 5px; border-radius: 4px;" />` : ''}
               <h1 style="font-size: 28px; margin: 0;">FACTURE</h1>
               <p style="margin: 5px 0 0;">N° ${invoiceData.invoiceNumber}</p>
             </div>
             <div style="text-align: right;">
-              <p style="font-weight: bold;">Votre Entreprise</p>
-              <p>123 Rue de Paris</p>
-              <p>75001 Paris, France</p>
+              <p style="font-weight: bold;">${companyName}</p>
+              ${companyAddress ? `<p>${companyAddress}</p>` : ''}
+              ${companyPhone ? `<p>${companyPhone}</p>` : ''}
+              ${companyEmail ? `<p>${companyEmail}</p>` : ''}
             </div>
           </div>
         </div>
@@ -496,12 +638,12 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           <div style="background-color: #f0f4ff; padding: 20px; border-left: 4px solid #4a6cf7; width: 45%;">
             <h2 style="color: #4a6cf7; font-size: 18px; margin-top: 0;">Facturer à:</h2>
             <p style="font-weight: bold;">${invoiceData.clientName}</p>
-            <p>${invoiceData.clientAddress}</p>
-            <p>${invoiceData.clientEmail}</p>
+            ${invoiceData.clientAddress ? `<p>${invoiceData.clientAddress}</p>` : ''}
+            ${invoiceData.clientEmail ? `<p>${invoiceData.clientEmail}</p>` : ''}
           </div>
           <div style="background-color: #f0f4ff; padding: 20px; text-align: right; width: 45%;">
             <p><strong>Date d'émission:</strong> ${invoiceDate}</p>
-            <p><strong>Échéance:</strong> ${formattedDueDate}</p>
+            <p><strong>Date d'échéance:</strong> ${dueDate}</p>
           </div>
         </div>
         
@@ -547,7 +689,20 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           <h2 style="color: #4a6cf7; font-size: 18px; margin-top: 0;">Modalités de paiement</h2>
           <p>Méthode: ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
             invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
-          ${invoiceData.notes ? `<p>Notes: ${invoiceData.notes}</p>` : ''}
+          
+          ${bankInfoBlock}
+          
+          ${paymentTerms ? `<p style="margin-top: 10px;"><strong>Conditions:</strong> ${paymentTerms}</p>` : ''}
+          ${invoiceData.notes ? `<p style="margin-top: 10px;"><strong>Notes:</strong> ${invoiceData.notes}</p>` : ''}
+        </div>
+
+        <div style="margin: 30px 0; text-align: center; font-style: italic; color: #4a6cf7;">
+          ${thankYouMessage}
+        </div>
+        
+        <div style="margin-top: 40px; background-color: #4a6cf7; color: white; padding: 10px; text-align: center; font-size: 12px;">
+          ${companyName} | ${companyTaxId ? `SIRET: ${companyTaxId}` : ''} ${companyVatNumber ? `| TVA: ${companyVatNumber}` : ''}
+          ${companyWebsite ? `| ${companyWebsite}` : ''}
         </div>
       </div>
       `;
@@ -562,13 +717,15 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
           <div>
+            ${companyLogo ? `<img src="${companyLogo}" alt="${companyName}" class="company-logo" style="margin-bottom: 10px;" />` : ''}
             <h1 style="font-size: 24px; margin-bottom: 0;">FACTURE</h1>
             <p>N° ${invoiceData.invoiceNumber}</p>
           </div>
           <div style="text-align: right;">
-            <p style="font-weight: bold;">Votre Entreprise</p>
-            <p>123 Rue de Paris</p>
-            <p>75001 Paris, France</p>
+            <p style="font-weight: bold;">${companyName}</p>
+            ${companyAddress ? `<p>${companyAddress}</p>` : ''}
+            ${companyPhone ? `<p>Tél: ${companyPhone}</p>` : ''}
+            ${companyEmail ? `<p>Email: ${companyEmail}</p>` : ''}
           </div>
         </div>
         
@@ -576,12 +733,12 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           <div>
             <h2 style="font-size: 16px;">Facturer à:</h2>
             <p style="font-weight: bold;">${invoiceData.clientName}</p>
-            <p>${invoiceData.clientAddress}</p>
-            <p>${invoiceData.clientEmail}</p>
+            ${invoiceData.clientAddress ? `<p>${invoiceData.clientAddress}</p>` : ''}
+            ${invoiceData.clientEmail ? `<p>${invoiceData.clientEmail}</p>` : ''}
           </div>
           <div style="text-align: right;">
             <p><strong>Date d'émission:</strong> ${invoiceDate}</p>
-            <p><strong>Échéance:</strong> ${formattedDueDate}</p>
+            <p><strong>Date d'échéance:</strong> ${dueDate}</p>
           </div>
         </div>
         
@@ -626,7 +783,19 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
         <div style="margin: 30px 0; border-top: 1px solid #ddd; padding-top: 20px;">
           <p><strong>Modalités de paiement:</strong> ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
             invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
-          ${invoiceData.notes ? `<p><strong>Notes:</strong> ${invoiceData.notes}</p>` : ''}
+          
+          ${bankInfoBlock}
+          
+          ${paymentTerms ? `<p style="margin-top: 10px;"><strong>Conditions:</strong> ${paymentTerms}</p>` : ''}
+          ${invoiceData.notes ? `<p style="margin-top: 10px;"><strong>Notes:</strong> ${invoiceData.notes}</p>` : ''}
+          
+          <div style="margin-top: 30px; font-style: italic;">
+            ${thankYouMessage}
+          </div>
+        </div>
+        
+        <div style="margin-top: 40px; border-top: 1px solid #ddd; padding-top: 10px; font-size: 12px; color: #666; text-align: center;">
+          ${companyName} ${companyTaxId ? `- SIRET: ${companyTaxId}` : ''} ${companyVatNumber ? `- TVA: ${companyVatNumber}` : ''}
         </div>
       </div>
       `;
