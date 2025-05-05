@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -17,6 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { generateInvoicePreview } from "@/services/pdfGenerator";
 import { createStripeCheckoutSession, generateQRCodeUrl } from "@/services/stripe";
+import { InvoicePreview } from "@/components/InvoicePreview";
+import { InvoicePaymentLink } from "@/components/InvoicePaymentLink";
 
 // Define invoice template types
 const invoiceTemplates = [
@@ -50,6 +53,12 @@ const invoiceTemplates = [
   }
 ];
 
+// Define the interface for the preview data
+interface PreviewData {
+  htmlContent: string;
+  previewUrl?: string;
+}
+
 interface ServiceLine {
   id: string;
   description: string;
@@ -70,7 +79,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
   const [isLoading, setIsLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
@@ -230,7 +239,10 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
       const result = await generateInvoicePreview(invoiceData, selectedTemplate);
       
       if (result.success) {
-        setPreviewUrl(result.previewUrl);
+        setPreviewData({
+          htmlContent: result.htmlContent,
+          previewUrl: result.previewUrl
+        });
         setPreviewOpen(true);
         toast({
           title: "Aperçu généré",
@@ -616,7 +628,7 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
 
   // Preview modal content
   const renderPreviewContent = () => {
-    if (!previewUrl) return null;
+    if (!previewData) return null;
     
     return (
       <div className="p-4 flex flex-col items-center">
@@ -624,19 +636,15 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
         
         {/* Preview Container with border and shadow */}
         <div className="border rounded shadow-lg max-h-[70vh] overflow-auto w-full">
-          {/* If we have HTML content, render it in an iframe */}
-          {previewOpen && (
-            <iframe 
-              srcDoc={`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${previewUrl.htmlContent || ''}</body></html>`}
-              className="w-full min-h-[600px]"
-              title="Aperçu de la facture"
-            />
+          {/* Render the HTML content using the InvoicePreview component */}
+          {previewOpen && previewData.htmlContent && (
+            <InvoicePreview htmlContent={previewData.htmlContent} />
           )}
           
           {/* If no HTML content available, show the image */}
-          {!previewUrl.htmlContent && (
+          {!previewData.htmlContent && previewData.previewUrl && (
             <img 
-              src={previewUrl.previewUrl} 
+              src={previewData.previewUrl} 
               alt="Aperçu de la facture" 
               className="max-w-full h-auto"
             />
