@@ -45,12 +45,12 @@
 
     /* Sidebar specific colors */
     --sidebar-background: 0 0% 8%; /* Noir Credor: #141414 */
-    --sidebar-foreground: 0 0% 98%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 255 71% 75%; /* Violet: #9b87f5 */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 14%; /* #242424 */
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 14.9%; /* #262626 */
+    --sidebar-accent: 84 98% 66%; /* Vert Lime: #d6fd51 */
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 16%; /* #2a2a2a */
     --sidebar-ring: 255 71% 75%; /* Violet: #9b87f5 */
   }
 
@@ -96,16 +96,5 @@
 
   h1, h2, h3, h4 {
     @apply font-space font-medium;
-  }
-}
-
-@layer utilities {
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
   }
 }
