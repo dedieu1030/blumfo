@@ -636,13 +636,29 @@ export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
   const renderPreviewContent = () => {
     if (!previewData) return null;
     
+    // Create the invoice data object to pass to the preview component
+    const currentInvoiceData = {
+      invoiceNumber,
+      invoiceDate,
+      clientName,
+      clientEmail,
+      clientAddress,
+      serviceLines,
+      subtotal,
+      taxTotal,
+      total,
+      paymentDelay,
+      paymentMethod,
+      notes,
+    };
+    
     return (
       <div className="flex flex-col h-full">
         {/* Render the HTML content using the InvoicePreview component */}
         {previewOpen && previewData.htmlContent && (
           <InvoicePreview 
             htmlContent={previewData.htmlContent}
-            invoiceData={invoiceData}
+            invoiceData={currentInvoiceData}
             templateId={selectedTemplate}
             showDownloadButton={true}
           />
