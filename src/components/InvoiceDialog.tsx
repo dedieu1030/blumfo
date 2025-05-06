@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -71,9 +70,11 @@ interface PreviewData {
 interface InvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onGenerateInvoice?: (invoiceData: InvoiceData) => Promise<void>;
+  isGenerating?: boolean;
 }
 
-export function InvoiceDialog({ open, onOpenChange }: InvoiceDialogProps) {
+export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerating = false }: InvoiceDialogProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
