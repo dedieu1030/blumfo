@@ -5,17 +5,16 @@ import { Input } from "./ui/input";
 import { Copy, Download, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateAndDownloadInvoicePdf } from "@/services/invoiceApiClient";
+import { QRCodeDisplay } from "./QRCodeDisplay";
 
 interface InvoicePaymentLinkProps {
   paymentUrl: string;
-  qrCodeUrl: string;
   invoiceData?: any;
   templateId?: string;
 }
 
 export function InvoicePaymentLink({ 
   paymentUrl, 
-  qrCodeUrl, 
   invoiceData, 
   templateId 
 }: InvoicePaymentLinkProps) {
@@ -81,10 +80,10 @@ export function InvoicePaymentLink({
       <h3 className="font-medium mb-2">Lien de paiement Stripe généré</h3>
       <div className="flex flex-col md:flex-row items-center gap-4">
         <div className="flex-shrink-0">
-          <img 
-            src={qrCodeUrl} 
-            alt="QR Code de paiement" 
-            className="w-32 h-32 border"
+          <QRCodeDisplay 
+            value={paymentUrl} 
+            size={128}
+            className="w-32 h-32"
           />
         </div>
         <div className="flex-1">

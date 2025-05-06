@@ -62,17 +62,6 @@ export const createStripeCheckoutSession = async (invoiceData: any) => {
 };
 
 /**
- * Generates a QR code URL for a payment link
- * @param paymentUrl The payment URL to encode in the QR code
- * @returns URL to a QR code image
- */
-export const generateQRCodeUrl = (paymentUrl: string) => {
-  // Using QR code API to generate QR code
-  // In production, consider using a library like qrcode.react
-  return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentUrl)}`;
-};
-
-/**
  * Simulates checking the payment status of an invoice
  * @param sessionId Stripe session ID to check
  * @returns Payment status information
