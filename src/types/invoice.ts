@@ -31,7 +31,7 @@ export interface PaymentTermTemplate {
   delay: string; // "immediate", "7", "15", "30", "60", "custom"
   customDate?: string; // for custom date if delay is "custom"
   termsText: string;
-  isDefault?: boolean;
+  isDefault: boolean; // Changed from optional to required with a default value
 }
 
 export interface InvoiceData {

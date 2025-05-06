@@ -94,6 +94,7 @@ export function PaymentTermsSelector({
       name: templateName,
       delay: paymentDelay,
       termsText: customTerms,
+      isDefault: false,
       ...(paymentDelay === "custom" && { customDate: dueDate })
     };
 

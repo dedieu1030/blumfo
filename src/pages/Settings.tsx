@@ -139,8 +139,11 @@ export default function Settings() {
       
       // Si le nouveau modèle est défini par défaut, supprimer la définition par défaut des autres
       updatedTemplates = newTemplateDefault 
-        ? paymentTermTemplates.map(t => ({ ...t, isDefault: false })).concat(newTemplate)
-        : [...paymentTermTemplates, newTemplate];
+        ? paymentTermTemplates.map(t => ({ ...t, isDefault: false }))
+        : [...paymentTermTemplates];
+      
+      // Add the new template to the updated templates array
+      updatedTemplates.push(newTemplate);
     }
     
     setPaymentTermTemplates(updatedTemplates);
