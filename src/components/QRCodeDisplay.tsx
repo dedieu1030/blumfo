@@ -1,6 +1,6 @@
 
 import React from 'react';
-import QRCode from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface QRCodeDisplayProps {
   value: string;
@@ -11,10 +11,9 @@ interface QRCodeDisplayProps {
 export function QRCodeDisplay({ value, size = 150, className }: QRCodeDisplayProps) {
   return (
     <div className={className}>
-      <QRCode 
+      <QRCodeCanvas 
         value={value}
         size={size}
-        renderAs="svg"
         includeMargin={true}
         className="border rounded"
       />
