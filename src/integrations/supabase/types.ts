@@ -9,7 +9,212 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      stripe_customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          phone: string | null
+          stripe_customer_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          stripe_customer_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          stripe_customer_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      stripe_invoice_items: {
+        Row: {
+          amount_tax: number | null
+          amount_total: number
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          quantity: number
+          stripe_invoice_id: string | null
+          stripe_product_id: string | null
+          tax_rate: number | null
+          unit_price_cents: number
+        }
+        Insert: {
+          amount_tax?: number | null
+          amount_total: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          quantity?: number
+          stripe_invoice_id?: string | null
+          stripe_product_id?: string | null
+          tax_rate?: number | null
+          unit_price_cents: number
+        }
+        Update: {
+          amount_tax?: number | null
+          amount_total?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          quantity?: number
+          stripe_invoice_id?: string | null
+          stripe_product_id?: string | null
+          tax_rate?: number | null
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_invoice_items_stripe_invoice_id_fkey"
+            columns: ["stripe_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "stripe_invoices"
+            referencedColumns: ["stripe_invoice_id"]
+          },
+          {
+            foreignKeyName: "stripe_invoice_items_stripe_product_id_fkey"
+            columns: ["stripe_product_id"]
+            isOneToOne: false
+            referencedRelation: "stripe_products"
+            referencedColumns: ["stripe_product_id"]
+          },
+        ]
+      }
+      stripe_invoices: {
+        Row: {
+          amount_paid: number | null
+          amount_total: number
+          created_at: string
+          currency: string
+          due_date: string | null
+          id: string
+          invoice_number: string
+          invoice_pdf_url: string | null
+          issued_date: string
+          metadata: Json | null
+          paid_date: string | null
+          payment_intent_id: string | null
+          payment_link: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_invoice_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_paid?: number | null
+          amount_total: number
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          invoice_pdf_url?: string | null
+          issued_date?: string
+          metadata?: Json | null
+          paid_date?: string | null
+          payment_intent_id?: string | null
+          payment_link?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_invoice_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_paid?: number | null
+          amount_total?: number
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          invoice_pdf_url?: string | null
+          issued_date?: string
+          metadata?: Json | null
+          paid_date?: string | null
+          payment_intent_id?: string | null
+          payment_link?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_invoice_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_invoices_stripe_customer_id_fkey"
+            columns: ["stripe_customer_id"]
+            isOneToOne: false
+            referencedRelation: "stripe_customers"
+            referencedColumns: ["stripe_customer_id"]
+          },
+        ]
+      }
+      stripe_products: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          price_cents: number | null
+          stripe_product_id: string | null
+          tax_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          price_cents?: number | null
+          stripe_product_id?: string | null
+          tax_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          price_cents?: number | null
+          stripe_product_id?: string | null
+          tax_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

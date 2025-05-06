@@ -1,14 +1,16 @@
 
 import React, { useState } from 'react';
 import { Button } from "./ui/button";
-import { Download, Send, Eye, Save, Loader2 } from "lucide-react";
+import { Download, Send, Eye, Save, Loader2, CreditCard, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateAndDownloadInvoicePdf } from '@/services/invoiceApiClient';
 import { InvoiceData } from '@/types/invoice';
+import { createPaymentLink, sendInvoice } from '@/services/stripeApiClient';
 
 interface InvoiceActionsProps {
   invoiceData: InvoiceData;
   templateId: string;
+  stripeInvoiceId?: string;
   onPreview?: () => void;
   onSave?: () => void;
   onSend?: () => void;
@@ -18,6 +20,7 @@ interface InvoiceActionsProps {
 export function InvoiceActions({ 
   invoiceData,
   templateId,
+  stripeInvoiceId,
   onPreview, 
   onSave,
   onSend,
@@ -25,6 +28,9 @@ export function InvoiceActions({
 }: InvoiceActionsProps) {
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   
   const handleDownloadPdf = async () => {
     if (!invoiceData) {
@@ -72,6 +78,103 @@ export function InvoiceActions({
       setIsDownloading(false);
     }
   };
+
+  const handleSendInvoice = async () => {
+    if (!stripeInvoiceId) {
+      toast({
+        title: "Erreur",
+        description: "ID de facture Stripe manquant",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSending(true);
+    toast({
+      title: "Envoi en cours",
+      description: "Envoi de la facture au client..."
+    });
+
+    try {
+      const response = await sendInvoice(stripeInvoiceId);
+
+      if (response.success) {
+        toast({
+          title: "Facture envoyée",
+          description: "La facture a été envoyée au client avec succès"
+        });
+        
+        if (onSend) {
+          onSend();
+        }
+      } else {
+        toast({
+          title: "Erreur",
+          description: response.error || "Impossible d'envoyer la facture",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'envoi:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de l'envoi de la facture",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleCreatePaymentLink = async () => {
+    if (!stripeInvoiceId) {
+      toast({
+        title: "Erreur",
+        description: "ID de facture Stripe manquant",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCreatingPaymentLink(true);
+    toast({
+      title: "Création en cours",
+      description: "Création du lien de paiement..."
+    });
+
+    try {
+      const response = await createPaymentLink(stripeInvoiceId);
+
+      if (response.success && response.paymentUrl) {
+        setPaymentUrl(response.paymentUrl);
+        toast({
+          title: "Lien créé",
+          description: "Le lien de paiement a été créé avec succès"
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: response.error || "Impossible de créer le lien de paiement",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création du lien de paiement:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la création du lien de paiement",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreatingPaymentLink(false);
+    }
+  };
+
+  const openPaymentLink = () => {
+    if (paymentUrl) {
+      window.open(paymentUrl, '_blank');
+    }
+  };
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
@@ -102,10 +205,50 @@ export function InvoiceActions({
         {isDownloading ? "Génération..." : "Télécharger PDF"}
       </Button>
       
-      {onSend && (
+      {stripeInvoiceId && (
+        <>
+          <Button 
+            variant="outline" 
+            onClick={handleSendInvoice}
+            disabled={isSending}
+          >
+            {isSending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="mr-2 h-4 w-4" />
+            )}
+            {isSending ? "Envoi..." : "Envoyer par email"}
+          </Button>
+          
+          {!paymentUrl ? (
+            <Button 
+              variant="outline" 
+              onClick={handleCreatePaymentLink}
+              disabled={isCreatingPaymentLink}
+            >
+              {isCreatingPaymentLink ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CreditCard className="mr-2 h-4 w-4" />
+              )}
+              {isCreatingPaymentLink ? "Création..." : "Lien de paiement"}
+            </Button>
+          ) : (
+            <Button 
+              className="bg-violet hover:bg-violet/90" 
+              onClick={openPaymentLink}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Ouvrir lien de paiement
+            </Button>
+          )}
+        </>
+      )}
+      
+      {onSend && !stripeInvoiceId && (
         <Button className="bg-violet hover:bg-violet/90" onClick={onSend}>
           <Send className="mr-2 h-4 w-4" />
-          Envoyer
+          Générer et envoyer
         </Button>
       )}
     </div>
