@@ -12,6 +12,9 @@ export interface CompanyProfile {
   termsAndConditions: string;
   thankYouMessage: string;
   defaultCurrency: string;
+  // Type d'activité professionnelle
+  businessType?: "company" | "individual" | "lawyer" | "freelancer" | "other";
+  businessTypeCustom?: string; // Pour "other"
   // Additional payment methods
   paypal?: string;
   payoneer?: string;

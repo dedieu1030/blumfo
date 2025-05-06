@@ -33,12 +33,17 @@ export const createStripeCheckoutSession = async (invoiceData: any) => {
       quantity: parseInt(line.quantity) || 1,
     }));
     
+    // Determine the customer type based on the businessType if available
+    const customerType = invoiceData.issuerInfo?.businessType || 'company';
+    
     // Create metadata for the invoice
     const metadata = {
       invoice_number: invoiceData.invoiceNumber,
       client_name: invoiceData.clientName,
       client_email: invoiceData.clientEmail,
       due_date: dueDate.toISOString().split('T')[0],
+      issuer_type: customerType,
+      issuer_name: invoiceData.issuerInfo?.name || '',
     };
     
     // Simulate API response delay

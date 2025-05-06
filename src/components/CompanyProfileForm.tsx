@@ -30,17 +30,25 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
     defaultCurrency: "EUR",
     paypal: "",
     payoneer: "",
+    businessType: "company",
     ...initialData
   });
+
+  const [showCustomBusinessType, setShowCustomBusinessType] = useState(formData.businessType === "other");
 
   useEffect(() => {
     if (initialData) {
       setFormData(prev => ({ ...prev, ...initialData }));
+      setShowCustomBusinessType(initialData.businessType === "other");
     }
   }, [initialData]);
 
   const handleChange = (field: keyof CompanyProfile, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    if (field === "businessType") {
+      setShowCustomBusinessType(value === "other");
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,20 +60,64 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
     });
   };
 
+  const getHeaderTitle = () => {
+    if (!formData.businessType || formData.businessType === "company") return "Informations de l'entreprise";
+    if (formData.businessType === "lawyer") return "Informations du cabinet";
+    if (formData.businessType === "freelancer") return "Informations professionnelles";
+    if (formData.businessType === "individual") return "Informations personnelles";
+    return "Informations professionnelles";
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>Informations du cabinet</CardTitle>
-          <CardDescription>Vos informations professionnelles qui apparaîtront sur vos factures</CardDescription>
+          <CardTitle>Votre profil professionnel</CardTitle>
+          <CardDescription>Vos informations qui apparaîtront sur vos factures</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="business-type">Type d'activité</Label>
+            <Select 
+              value={formData.businessType} 
+              onValueChange={(value) => handleChange("businessType", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez votre type d'activité" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="company">Entreprise</SelectItem>
+                <SelectItem value="individual">Particulier</SelectItem>
+                <SelectItem value="lawyer">Avocat / Cabinet juridique</SelectItem>
+                <SelectItem value="freelancer">Freelance</SelectItem>
+                <SelectItem value="other">Autre</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {showCustomBusinessType && (
+            <div className="space-y-2">
+              <Label htmlFor="business-type-custom">Précisez votre activité</Label>
+              <Input 
+                id="business-type-custom" 
+                placeholder="Ex: Consultant, Architecte, etc." 
+                value={formData.businessTypeCustom || ""}
+                onChange={(e) => handleChange("businessTypeCustom", e.target.value)}
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="company-name">Nom du cabinet</Label>
+              <Label htmlFor="company-name">{formData.businessType === "individual" ? "Nom complet" : "Nom professionnel"}</Label>
               <Input 
                 id="company-name" 
-                placeholder="Cabinet Dupont" 
+                placeholder={
+                  formData.businessType === "lawyer" ? "Cabinet Dupont" :
+                  formData.businessType === "individual" ? "Jean Dupont" :
+                  formData.businessType === "freelancer" ? "Jean Dupont Freelance" :
+                  "Entreprise Dupont"
+                } 
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 required
@@ -75,7 +127,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
               <Label htmlFor="contact-name">Nom du titulaire du compte</Label>
               <Input 
                 id="contact-name" 
-                placeholder="Me Dupont" 
+                placeholder={formData.businessType === "lawyer" ? "Me Dupont" : "Jean Dupont"} 
                 value={formData.accountHolder}
                 onChange={(e) => handleChange("accountHolder", e.target.value)}
                 required
@@ -86,7 +138,11 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="contact@cabinet-dupont.fr" 
+                placeholder={
+                  formData.businessType === "lawyer" ? "contact@cabinet-dupont.fr" :
+                  formData.businessType === "freelancer" ? "jean.dupont@gmail.com" :
+                  "contact@entreprise-dupont.fr"
+                } 
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 required
@@ -106,7 +162,11 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
               <Label htmlFor="address">Adresse complète</Label>
               <Textarea 
                 id="address" 
-                placeholder="15 rue du Barreau, 75001 Paris" 
+                placeholder={
+                  formData.businessType === "lawyer" ? "15 rue du Barreau, 75001 Paris" :
+                  formData.businessType === "company" ? "15 rue de l'Entreprise, 75001 Paris" :
+                  "15 rue des Lilas, 75001 Paris"
+                } 
                 value={formData.address}
                 onChange={(e) => handleChange("address", e.target.value)}
                 required
