@@ -20,6 +20,7 @@ import { InvoicePreview } from "@/components/InvoicePreview";
 import { InvoicePaymentLink } from "@/components/InvoicePaymentLink";
 import { PaymentMethodSelector } from "@/components/PaymentMethodSelector";
 import { PaymentTermsSelector } from "@/components/PaymentTermsSelector";
+import { ClientSelector, Client } from "@/components/ClientSelector";
 import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile, PaymentTermTemplate } from "@/types/invoice";
 
 // Define invoice template types
@@ -538,6 +539,12 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       case 2:
         return (
           <div className="space-y-4 py-4">
+            {/* Ajout du sélecteur de client existant */}
+            <div className="mb-4">
+              <ClientSelector onClientSelect={handleClientSelect} />
+              <div className="text-center my-4 text-sm text-muted-foreground">- ou -</div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="client-name">Nom / Raison sociale</Label>
               <Input 
