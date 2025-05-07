@@ -124,7 +124,7 @@ export const createTaxConfiguration = async (config: Omit<TaxConfiguration, 'id'
       const taxRatesData = config.taxRates.map(rate => ({
         configuration_id: data.id,
         name: rate.name,
-        // Convert number to string for DB
+        // Convert number to string for DB - this is the key fix
         rate: rate.rate.toString(),
         tax_type: rate.taxType,
         tax_code: rate.taxCode,
@@ -133,6 +133,7 @@ export const createTaxConfiguration = async (config: Omit<TaxConfiguration, 'id'
         display_order: rate.displayOrder
       }));
       
+      // Use the .insert() method with the array of objects
       const { error: ratesError } = await supabase
         .from("tax_rates")
         .insert(taxRatesData);
@@ -181,7 +182,7 @@ export const updateTaxConfiguration = async (config: TaxConfiguration): Promise<
       const taxRatesData = config.taxRates.map(rate => ({
         configuration_id: config.id,
         name: rate.name,
-        // Convert number to string for DB
+        // Convert number to string for DB - this is the key fix
         rate: rate.rate.toString(),
         tax_type: rate.taxType,
         tax_code: rate.taxCode,
@@ -190,6 +191,7 @@ export const updateTaxConfiguration = async (config: TaxConfiguration): Promise<
         display_order: rate.displayOrder
       }));
       
+      // Use the .insert() method with the array of objects
       const { error: insertError } = await supabase
         .from("tax_rates")
         .insert(taxRatesData);

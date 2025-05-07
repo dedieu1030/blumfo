@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,11 +124,12 @@ export function TaxSettings() {
     setFormData(prev => {
       const updatedRates = [...(prev.taxRates || [])];
       
-      // Convert string to number for numeric fields
+      // Convert string to number for numeric fields - ensure all rate values are numbers
       if (field === 'rate') {
+        const numericValue = typeof value === 'string' ? parseFloat(value) : value;
         updatedRates[index] = { 
           ...updatedRates[index], 
-          [field]: typeof value === 'string' ? parseFloat(value) || 0 : value 
+          [field]: isNaN(numericValue) ? 0 : numericValue
         };
       } else {
         updatedRates[index] = { ...updatedRates[index], [field]: value };
@@ -566,8 +566,8 @@ export function TaxSettings() {
                           value={rate.rate} 
                           onChange={(e) => {
                             // Ensure we pass a number to handleTaxRateChange
-                            const value = parseFloat(e.target.value) || 0;
-                            handleTaxRateChange(index, 'rate', value);
+                            const numValue = parseFloat(e.target.value);
+                            handleTaxRateChange(index, 'rate', isNaN(numValue) ? 0 : numValue);
                           }}
                           step="0.01"
                           min="0"
