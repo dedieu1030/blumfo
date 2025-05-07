@@ -139,6 +139,38 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
   // Obtenir les données de région pour le pays sélectionné
   const countryData = selectedCountry !== "none" ? getTaxRegionById(selectedCountry) : undefined;
 
+  // Déterminer le libellé de la région en fonction du pays sélectionné
+  const getRegionLabel = () => {
+    switch (selectedCountry) {
+      case 'canada':
+        return 'Province / Territoire';
+      case 'usa':
+        return 'État';
+      case 'mexico':
+        return 'Type d\'IVA';
+      case 'eu':
+        return 'Pays membre';
+      default:
+        return 'Région';
+    }
+  };
+
+  // Obtenir le texte du placeholder pour la sélection de région
+  const getRegionPlaceholder = () => {
+    switch (selectedCountry) {
+      case 'canada':
+        return 'Sélectionnez une province';
+      case 'usa':
+        return 'Sélectionnez un état';
+      case 'mexico':
+        return 'Sélectionnez un taux d\'IVA';
+      case 'eu':
+        return 'Sélectionnez un pays membre';
+      default:
+        return 'Sélectionnez une région';
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -170,6 +202,7 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                         <SelectItem value="canada">Canada 🇨🇦</SelectItem>
                         <SelectItem value="usa">États-Unis 🇺🇸</SelectItem>
                         <SelectItem value="mexico">Mexique 🇲🇽</SelectItem>
+                        <SelectItem value="eu">Union Européenne 🇪🇺</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -186,11 +219,7 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                 name="region"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {selectedCountry === 'canada' ? 'Province / Territoire' : 
-                       selectedCountry === 'usa' ? 'État' : 
-                       selectedCountry === 'mexico' ? 'Type d\'IVA' : 'Région'}
-                    </FormLabel>
+                    <FormLabel>{getRegionLabel()}</FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || ""}
@@ -200,11 +229,7 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                         }}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={`Sélectionnez ${
-                            selectedCountry === 'canada' ? 'une province' : 
-                            selectedCountry === 'usa' ? 'un état' : 
-                            selectedCountry === 'mexico' ? 'un taux d\'IVA' : 'une région'
-                          }`} />
+                          <SelectValue placeholder={getRegionPlaceholder()} />
                         </SelectTrigger>
                         <SelectContent>
                           {countryData.regions.map((region) => (
@@ -219,6 +244,7 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                       {selectedCountry === 'canada' ? 'Sélectionnez votre province ou territoire.' : 
                        selectedCountry === 'usa' ? "Sélectionnez votre état." : 
                        selectedCountry === 'mexico' ? "Sélectionnez le type d'IVA applicable." :
+                       selectedCountry === 'eu' ? "Sélectionnez votre pays membre de l'UE." :
                        'Sélectionnez votre région.'}
                     </FormDescription>
                   </FormItem>
@@ -266,6 +292,26 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                       {/* Mexican IVA tax rate */}
                       {region.ivaRate !== undefined && (
                         <p><strong>IVA: </strong> {region.ivaRate}%</p>
+                      )}
+                      
+                      {/* EU VAT rates */}
+                      {region.vatStandardRate !== undefined && (
+                        <p><strong>TVA standard: </strong> {region.vatStandardRate}%</p>
+                      )}
+                      
+                      {region.vatReducedRates && region.vatReducedRates.length > 0 && (
+                        <p>
+                          <strong>TVA réduite: </strong>
+                          {region.vatReducedRates.join('%, ')}%
+                        </p>
+                      )}
+                      
+                      {region.vatSuperReducedRate !== undefined && (
+                        <p><strong>TVA super-réduite: </strong> {region.vatSuperReducedRate}%</p>
+                      )}
+                      
+                      {region.vatParkingRate !== undefined && (
+                        <p><strong>TVA parking: </strong> {region.vatParkingRate}%</p>
                       )}
                       
                       <p><strong>Taux total: </strong> {region.totalRate}%</p>

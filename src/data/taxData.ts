@@ -341,7 +341,296 @@ export const mexicoTaxRegions: TaxRegion = {
   ]
 };
 
-export const taxRegions: TaxRegion[] = [canadaTaxRegions, usaTaxRegions, mexicoTaxRegions];
+export const euVatRegions: TaxRegion = {
+  id: "eu",
+  name: "Union Européenne",
+  countryCode: "EU",
+  regions: [
+    {
+      id: "de",
+      name: "Allemagne",
+      code: "DE",
+      taxType: "vat-standard",
+      vatStandardRate: 19,
+      vatReducedRates: [7],
+      totalRate: 19,
+      notes: "Taux standard 19%, taux réduit 7%"
+    },
+    {
+      id: "at",
+      name: "Autriche",
+      code: "AT",
+      taxType: "vat-standard",
+      vatStandardRate: 20,
+      vatReducedRates: [10, 13],
+      vatParkingRate: 13,
+      totalRate: 20,
+      notes: "Taux standard 20%, taux réduits 10% et 13%, taux parking 13%"
+    },
+    {
+      id: "be",
+      name: "Belgique",
+      code: "BE",
+      taxType: "vat-standard",
+      vatStandardRate: 21,
+      vatReducedRates: [6, 12],
+      vatParkingRate: 12,
+      totalRate: 21,
+      notes: "Taux standard 21%, taux réduits 6% et 12%, taux parking 12%"
+    },
+    {
+      id: "bg",
+      name: "Bulgarie",
+      code: "BG",
+      taxType: "vat-standard",
+      vatStandardRate: 20,
+      vatReducedRates: [9],
+      totalRate: 20,
+      notes: "Taux standard 20%, taux réduit 9%"
+    },
+    {
+      id: "cy",
+      name: "Chypre",
+      code: "CY",
+      taxType: "vat-standard",
+      vatStandardRate: 19,
+      vatReducedRates: [5, 9],
+      totalRate: 19,
+      notes: "Taux standard 19%, taux réduits 5% et 9%"
+    },
+    {
+      id: "hr",
+      name: "Croatie",
+      code: "HR",
+      taxType: "vat-standard",
+      vatStandardRate: 25,
+      vatReducedRates: [5, 13],
+      totalRate: 25,
+      notes: "Taux standard 25%, taux réduits 5% et 13%"
+    },
+    {
+      id: "dk",
+      name: "Danemark",
+      code: "DK",
+      taxType: "vat-standard",
+      vatStandardRate: 25,
+      vatReducedRates: [],
+      totalRate: 25,
+      notes: "Taux standard 25%, pas de taux réduit"
+    },
+    {
+      id: "es",
+      name: "Espagne",
+      code: "ES",
+      taxType: "vat-standard",
+      vatStandardRate: 21,
+      vatReducedRates: [10],
+      vatSuperReducedRate: 4,
+      totalRate: 21,
+      notes: "Taux standard 21%, taux réduit 10%, taux super-réduit 4%"
+    },
+    {
+      id: "ee",
+      name: "Estonie",
+      code: "EE",
+      taxType: "vat-standard",
+      vatStandardRate: 22,
+      vatReducedRates: [9],
+      totalRate: 22,
+      notes: "Taux standard 22% (passera à 24% en juillet 2025), taux réduit 9%"
+    },
+    {
+      id: "fi",
+      name: "Finlande",
+      code: "FI",
+      taxType: "vat-standard",
+      vatStandardRate: 25.5,
+      vatReducedRates: [10, 14],
+      totalRate: 25.5,
+      notes: "Taux standard 25.5% depuis septembre 2024, taux réduits 10% et 14%"
+    },
+    {
+      id: "fr",
+      name: "France",
+      code: "FR",
+      taxType: "vat-standard",
+      vatStandardRate: 20,
+      vatReducedRates: [5.5, 10],
+      vatSuperReducedRate: 2.1,
+      totalRate: 20,
+      notes: "Taux standard 20%, taux réduits 5.5% et 10%, taux super-réduit 2.1%"
+    },
+    {
+      id: "gr",
+      name: "Grèce",
+      code: "GR",
+      taxType: "vat-standard",
+      vatStandardRate: 24,
+      vatReducedRates: [6, 13],
+      totalRate: 24,
+      notes: "Taux standard 24%, taux réduits 6% et 13%"
+    },
+    {
+      id: "hu",
+      name: "Hongrie",
+      code: "HU",
+      taxType: "vat-standard",
+      vatStandardRate: 27,
+      vatReducedRates: [5, 18],
+      totalRate: 27,
+      notes: "Taux standard 27% (le plus élevé de l'UE), taux réduits 5% et 18%"
+    },
+    {
+      id: "ie",
+      name: "Irlande",
+      code: "IE",
+      taxType: "vat-standard",
+      vatStandardRate: 23,
+      vatReducedRates: [9, 13.5],
+      vatSuperReducedRate: 4.8,
+      vatParkingRate: 13.5,
+      totalRate: 23,
+      notes: "Taux standard 23%, taux réduits 9% et 13.5%, taux super-réduit 4.8%, taux parking 13.5%"
+    },
+    {
+      id: "it",
+      name: "Italie",
+      code: "IT",
+      taxType: "vat-standard",
+      vatStandardRate: 22,
+      vatReducedRates: [5, 10],
+      vatSuperReducedRate: 4,
+      totalRate: 22,
+      notes: "Taux standard 22%, taux réduits 5% et 10%, taux super-réduit 4%"
+    },
+    {
+      id: "lv",
+      name: "Lettonie",
+      code: "LV",
+      taxType: "vat-standard",
+      vatStandardRate: 21,
+      vatReducedRates: [5, 12],
+      totalRate: 21,
+      notes: "Taux standard 21%, taux réduits 5% et 12%"
+    },
+    {
+      id: "lt",
+      name: "Lituanie",
+      code: "LT",
+      taxType: "vat-standard",
+      vatStandardRate: 21,
+      vatReducedRates: [5, 9],
+      totalRate: 21,
+      notes: "Taux standard 21%, taux réduits 5% et 9%"
+    },
+    {
+      id: "lu",
+      name: "Luxembourg",
+      code: "LU",
+      taxType: "vat-standard",
+      vatStandardRate: 17,
+      vatReducedRates: [8, 14],
+      vatSuperReducedRate: 3,
+      vatParkingRate: 12,
+      totalRate: 17,
+      notes: "Taux standard 17% (le plus bas de l'UE), taux réduits 8% et 14%, taux super-réduit 3%, taux parking 12%"
+    },
+    {
+      id: "mt",
+      name: "Malte",
+      code: "MT",
+      taxType: "vat-standard",
+      vatStandardRate: 18,
+      vatReducedRates: [5, 7],
+      totalRate: 18,
+      notes: "Taux standard 18%, taux réduits 5% et 7%"
+    },
+    {
+      id: "nl",
+      name: "Pays-Bas",
+      code: "NL",
+      taxType: "vat-standard",
+      vatStandardRate: 21,
+      vatReducedRates: [9],
+      totalRate: 21,
+      notes: "Taux standard 21%, taux réduit 9%"
+    },
+    {
+      id: "pl",
+      name: "Pologne",
+      code: "PL",
+      taxType: "vat-standard",
+      vatStandardRate: 23,
+      vatReducedRates: [5, 8],
+      totalRate: 23,
+      notes: "Taux standard 23%, taux réduits 5% et 8%"
+    },
+    {
+      id: "pt",
+      name: "Portugal",
+      code: "PT",
+      taxType: "vat-standard",
+      vatStandardRate: 23,
+      vatReducedRates: [6, 13],
+      vatParkingRate: 13,
+      totalRate: 23,
+      notes: "Taux standard 23%, taux réduits 6% et 13%, taux parking 13%"
+    },
+    {
+      id: "ro",
+      name: "Roumanie",
+      code: "RO",
+      taxType: "vat-standard",
+      vatStandardRate: 19,
+      vatReducedRates: [5, 9],
+      totalRate: 19,
+      notes: "Taux standard 19%, taux réduits 5% et 9%"
+    },
+    {
+      id: "sk",
+      name: "Slovaquie",
+      code: "SK",
+      taxType: "vat-standard",
+      vatStandardRate: 23,
+      vatReducedRates: [10],
+      vatSuperReducedRate: 5,
+      totalRate: 23,
+      notes: "Taux standard 23% (augmenté de 20% à 23% en janvier 2025), taux réduit 10%, taux super-réduit 5%"
+    },
+    {
+      id: "si",
+      name: "Slovénie",
+      code: "SI",
+      taxType: "vat-standard",
+      vatStandardRate: 22,
+      vatReducedRates: [5, 9.5],
+      totalRate: 22,
+      notes: "Taux standard 22%, taux réduits 5% et 9.5%"
+    },
+    {
+      id: "se",
+      name: "Suède",
+      code: "SE",
+      taxType: "vat-standard",
+      vatStandardRate: 25,
+      vatReducedRates: [6, 12],
+      totalRate: 25,
+      notes: "Taux standard 25%, taux réduits 6% et 12%"
+    },
+    {
+      id: "cz",
+      name: "Tchéquie",
+      code: "CZ",
+      taxType: "vat-standard",
+      vatStandardRate: 21,
+      vatReducedRates: [12],
+      totalRate: 21,
+      notes: "Taux standard 21%, taux réduit 12%"
+    }
+  ]
+};
+
+export const taxRegions: TaxRegion[] = [canadaTaxRegions, usaTaxRegions, mexicoTaxRegions, euVatRegions];
 
 export const getTaxRegionById = (countryId: string): TaxRegion | undefined => {
   return taxRegions.find(region => region.id === countryId);
@@ -376,6 +665,16 @@ export const getTaxTypeLabel = (taxType: string): string => {
       return "IVA (Taux zéro)";
     case "iva-exempt":
       return "Exonéré d'IVA";
+    case "vat-standard":
+      return "TVA (Taux standard)";
+    case "vat-reduced":
+      return "TVA (Taux réduit)";
+    case "vat-super-reduced":
+      return "TVA (Taux super-réduit)";
+    case "vat-parking":
+      return "TVA (Taux parking)";
+    case "vat-exempt":
+      return "Exonéré de TVA";
     default:
       return "Taxes de vente";
   }
