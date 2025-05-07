@@ -124,12 +124,20 @@ export function TaxSettings() {
     setFormData(prev => {
       const updatedRates = [...(prev.taxRates || [])];
       
-      // Convert string to number for numeric fields - ensure all rate values are numbers
+      // Handle the rate field specially to ensure it's always a number
       if (field === 'rate') {
-        const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+        // Make sure we always have a valid number
+        let numericValue: number;
+        if (typeof value === 'string') {
+          numericValue = parseFloat(value);
+          if (isNaN(numericValue)) numericValue = 0;
+        } else {
+          numericValue = value;
+        }
+        
         updatedRates[index] = { 
           ...updatedRates[index], 
-          [field]: isNaN(numericValue) ? 0 : numericValue
+          [field]: numericValue
         };
       } else {
         updatedRates[index] = { ...updatedRates[index], [field]: value };
@@ -565,7 +573,7 @@ export function TaxSettings() {
                           type="number" 
                           value={rate.rate} 
                           onChange={(e) => {
-                            // Ensure we pass a number to handleTaxRateChange
+                            // Ensure we convert the input to a number and handle NaN
                             const numValue = parseFloat(e.target.value);
                             handleTaxRateChange(index, 'rate', isNaN(numValue) ? 0 : numValue);
                           }}

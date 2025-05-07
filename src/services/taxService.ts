@@ -133,10 +133,10 @@ export const createTaxConfiguration = async (config: Omit<TaxConfiguration, 'id'
         display_order: rate.displayOrder
       }));
       
-      // Use the .insert() method with the array of objects
+      // Convert to type expected by Supabase
       const { error: ratesError } = await supabase
         .from("tax_rates")
-        .insert(taxRatesData);
+        .insert(taxRatesData as any);
       
       if (ratesError) throw ratesError;
     }
@@ -191,10 +191,10 @@ export const updateTaxConfiguration = async (config: TaxConfiguration): Promise<
         display_order: rate.displayOrder
       }));
       
-      // Use the .insert() method with the array of objects
+      // Convert to type expected by Supabase
       const { error: insertError } = await supabase
         .from("tax_rates")
-        .insert(taxRatesData);
+        .insert(taxRatesData as any);
       
       if (insertError) throw insertError;
     }
