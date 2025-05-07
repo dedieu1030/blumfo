@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { InvoiceList } from "@/components/InvoiceList";
 import { MobileNavigation } from "@/components/MobileNavigation";
@@ -10,6 +10,17 @@ import { Search, FileText } from "lucide-react";
 import { InvoiceReportDialog } from "@/components/InvoiceReportDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { InvoicePaymentAlert } from "@/components/InvoicePaymentAlert";
+import { differenceInDays, parseISO } from "date-fns";
+
+// Fonction pour vérifier si une facture est proche de l'échéance (sous 3 jours)
+const isNearDue = (dueDate: string) => {
+  if (!dueDate) return false;
+  const today = new Date();
+  const due = parseISO(dueDate);
+  const daysDiff = differenceInDays(due, today);
+  return daysDiff >= 0 && daysDiff <= 3; // Entre aujourd'hui et 3 jours
+};
 
 // Mock data for demonstration
 const allInvoices = [
@@ -64,9 +75,10 @@ export default function Invoices() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
   
   // Attempt to fetch invoices from Supabase if authenticated
-  const { data: fetchedInvoices, isError } = useQuery({
+  const { data: fetchedInvoices, isError, refetch } = useQuery({
     queryKey: ["invoices"],
     queryFn: async () => {
       try {
@@ -102,6 +114,31 @@ export default function Invoices() {
   const pendingInvoices = filteredInvoices.filter(invoice => invoice.status === "pending");
   const overdueInvoices = filteredInvoices.filter(invoice => invoice.status === "overdue");
   const draftInvoices = filteredInvoices.filter(invoice => invoice.status === "draft");
+  
+  // Calculer les factures qui nécessitent une vérification (en retard de plus de 2 jours)
+  const needsVerificationInvoices = filteredInvoices.filter(invoice => {
+    if (invoice.status !== "pending") return false;
+    
+    const today = new Date();
+    const dueDate = new Date(invoice.dueDate);
+    const daysPastDue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24));
+    
+    return daysPastDue > 2; // Plus de 2 jours après l'échéance
+  });
+
+  // Calculer les factures proches de l'échéance (sous 3 jours)
+  const nearDueInvoices = filteredInvoices.filter(invoice => {
+    if (invoice.status !== "pending") return false;
+    return isNearDue(invoice.dueDate);
+  });
+  
+  const handleViewOverdue = () => {
+    setActiveTab("needs-verification");
+  };
+  
+  const handleViewNearDue = () => {
+    setActiveTab("near-due");
+  };
 
   return (
     <>
@@ -112,6 +149,15 @@ export default function Invoices() {
       />
       
       <div className="space-y-6">
+        {/* Alerte pour les factures nécessitant une vérification */}
+        <InvoicePaymentAlert 
+          overdueCount={needsVerificationInvoices.length}
+          nearDueCount={nearDueInvoices.length}
+          onViewOverdue={handleViewOverdue}
+          onViewNearDue={handleViewNearDue}
+          className="mb-6"
+        />
+        
         <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -132,7 +178,12 @@ export default function Invoices() {
           </Button>
         </div>
         
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs 
+          defaultValue={activeTab === "needs-verification" ? "needs-verification" : "all"} 
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
           <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
             <TabsTrigger 
               value="all" 
@@ -159,6 +210,18 @@ export default function Invoices() {
               En retard ({overdueInvoices.length})
             </TabsTrigger>
             <TabsTrigger 
+              value="needs-verification"
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            >
+              À vérifier ({needsVerificationInvoices.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="near-due"
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            >
+              Échéance proche ({nearDueInvoices.length})
+            </TabsTrigger>
+            <TabsTrigger 
               value="draft"
               className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
             >
@@ -167,23 +230,59 @@ export default function Invoices() {
           </TabsList>
           
           <TabsContent value="all" className="pt-6">
-            <InvoiceList title="" invoices={filteredInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={filteredInvoices} 
+              onInvoiceStatusChanged={refetch}
+            />
           </TabsContent>
           
           <TabsContent value="pending" className="pt-6">
-            <InvoiceList title="" invoices={pendingInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={pendingInvoices}
+              onInvoiceStatusChanged={refetch} 
+            />
           </TabsContent>
           
           <TabsContent value="paid" className="pt-6">
-            <InvoiceList title="" invoices={paidInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={paidInvoices}
+              onInvoiceStatusChanged={refetch} 
+            />
           </TabsContent>
           
           <TabsContent value="overdue" className="pt-6">
-            <InvoiceList title="" invoices={overdueInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={overdueInvoices}
+              onInvoiceStatusChanged={refetch} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="needs-verification" className="pt-6">
+            <InvoiceList 
+              title="" 
+              invoices={needsVerificationInvoices}
+              onInvoiceStatusChanged={refetch} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="near-due" className="pt-6">
+            <InvoiceList 
+              title="" 
+              invoices={nearDueInvoices}
+              onInvoiceStatusChanged={refetch}
+            />
           </TabsContent>
           
           <TabsContent value="draft" className="pt-6">
-            <InvoiceList title="" invoices={draftInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={draftInvoices}
+              onInvoiceStatusChanged={refetch}
+            />
           </TabsContent>
         </Tabs>
       </div>

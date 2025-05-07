@@ -1,14 +1,17 @@
 
+import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { InvoiceStatus } from "./InvoiceStatus";
-import { Download, Send, Copy, QrCode, ExternalLink } from "lucide-react";
+import { Download, Send, Copy, QrCode, ExternalLink, Check } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { InvoicePaymentConfirmation } from "./InvoicePaymentConfirmation";
+import { useToast } from "@/hooks/use-toast";
 
 interface Invoice {
   id: string;
@@ -19,6 +22,7 @@ interface Invoice {
   dueDate: string;
   status: "paid" | "pending" | "overdue" | "draft";
   paymentUrl?: string;
+  stripeInvoiceId?: string;
 }
 
 interface InvoiceListProps {
@@ -26,15 +30,38 @@ interface InvoiceListProps {
   invoices: Invoice[];
   limit?: number;
   showViewAll?: boolean;
+  onInvoiceStatusChanged?: () => void;
 }
 
-export function InvoiceList({ title, invoices, limit, showViewAll = false }: InvoiceListProps) {
+export function InvoiceList({ 
+  title, 
+  invoices, 
+  limit, 
+  showViewAll = false,
+  onInvoiceStatusChanged
+}: InvoiceListProps) {
   const displayedInvoices = limit ? invoices.slice(0, limit) : invoices;
+  const { toast } = useToast();
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   
   const handleCopyLink = (paymentUrl: string) => {
     navigator.clipboard.writeText(paymentUrl);
-    // In a real app, you would show a toast notification here
-    console.log("Payment link copied to clipboard");
+    toast({
+      title: "Lien copié",
+      description: "Le lien de paiement a été copié dans le presse-papier"
+    });
+  };
+
+  const handleConfirmPayment = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsPaymentDialogOpen(true);
+  };
+  
+  const handlePaymentConfirmed = () => {
+    if (onInvoiceStatusChanged) {
+      onInvoiceStatusChanged();
+    }
   };
   
   return (
@@ -62,7 +89,10 @@ export function InvoiceList({ title, invoices, limit, showViewAll = false }: Inv
           </TableHeader>
           <TableBody>
             {displayedInvoices.map((invoice) => (
-              <TableRow key={invoice.id}>
+              <TableRow 
+                key={invoice.id}
+                className={invoice.status === "overdue" ? "bg-amber-50" : ""}
+              >
                 <TableCell className="font-medium">{invoice.number}</TableCell>
                 <TableCell>{invoice.client}</TableCell>
                 <TableCell>{invoice.date}</TableCell>
@@ -138,6 +168,25 @@ export function InvoiceList({ title, invoices, limit, showViewAll = false }: Inv
                         </Tooltip>
                       </>
                     )}
+
+                    {/* Bouton pour marquer la facture comme payée */}
+                    {(invoice.status === "pending" || invoice.status === "overdue") && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="text-success hover:bg-success/10"
+                            onClick={() => handleConfirmPayment(invoice)}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Marquer comme payée</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </TooltipProvider>
                 </TableCell>
               </TableRow>
@@ -145,6 +194,16 @@ export function InvoiceList({ title, invoices, limit, showViewAll = false }: Inv
           </TableBody>
         </Table>
       </div>
+      
+      {/* Boîte de dialogue de confirmation de paiement */}
+      {selectedInvoice && (
+        <InvoicePaymentConfirmation
+          isOpen={isPaymentDialogOpen}
+          onOpenChange={setIsPaymentDialogOpen}
+          invoice={selectedInvoice}
+          onConfirm={handlePaymentConfirmed}
+        />
+      )}
     </div>
   );
 }
