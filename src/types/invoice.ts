@@ -3,7 +3,7 @@ export interface CompanyProfile {
   name: string;
   address: string;
   email: string;
-  emailType?: "personal" | "professional" | "company"; // Nouveau champ pour différencier les types d'email
+  emailType: "personal" | "professional" | "company"; // Type modifié pour être obligatoire avec des options spécifiques
   phone: string;
   bankAccount: string;
   bankName: string;
