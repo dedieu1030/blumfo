@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -563,7 +564,11 @@ export function TaxSettings() {
                         <Input 
                           type="number" 
                           value={rate.rate} 
-                          onChange={(e) => handleTaxRateChange(index, 'rate', parseFloat(e.target.value))}
+                          onChange={(e) => {
+                            // Ensure we pass a number to handleTaxRateChange
+                            const value = parseFloat(e.target.value) || 0;
+                            handleTaxRateChange(index, 'rate', value);
+                          }}
                           step="0.01"
                           min="0"
                           max="100"

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TaxConfiguration, TaxRate, TaxType } from "@/types/tax";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ export const getTaxConfigurations = async (): Promise<TaxConfiguration[]> => {
         taxRates: taxRates.map(rate => ({
           id: rate.id,
           name: rate.name,
+          // Convert the string from DB to number for our code
           rate: parseFloat(rate.rate),
           taxType: rate.tax_type as TaxType,
           taxCode: rate.tax_code,
@@ -82,6 +84,7 @@ export const getTaxConfiguration = async (id: string): Promise<TaxConfiguration 
       taxRates: taxRates.map(rate => ({
         id: rate.id,
         name: rate.name,
+        // Convert the string from DB to number for our code
         rate: parseFloat(rate.rate),
         taxType: rate.tax_type as TaxType,
         taxCode: rate.tax_code,
@@ -117,10 +120,12 @@ export const createTaxConfiguration = async (config: Omit<TaxConfiguration, 'id'
     
     // Insérer les taux de taxe associés
     if (config.taxRates?.length > 0) {
+      // Create properly typed array for database insertion
       const taxRatesData = config.taxRates.map(rate => ({
         configuration_id: data.id,
         name: rate.name,
-        rate: rate.rate.toString(), // Convert number to string for DB
+        // Convert number to string for DB
+        rate: rate.rate.toString(),
         tax_type: rate.taxType,
         tax_code: rate.taxCode,
         description: rate.description,
@@ -172,10 +177,12 @@ export const updateTaxConfiguration = async (config: TaxConfiguration): Promise<
     
     // Insérer les nouveaux taux de taxe
     if (config.taxRates?.length > 0) {
+      // Create properly typed array for database insertion
       const taxRatesData = config.taxRates.map(rate => ({
         configuration_id: config.id,
         name: rate.name,
-        rate: rate.rate.toString(), // Convert number to string for DB
+        // Convert number to string for DB
+        rate: rate.rate.toString(),
         tax_type: rate.taxType,
         tax_code: rate.taxCode,
         description: rate.description,
@@ -275,6 +282,7 @@ export const getDefaultTaxConfiguration = async (): Promise<TaxConfiguration | n
       taxRates: taxRates.map(rate => ({
         id: rate.id,
         name: rate.name,
+        // Convert the string from DB to number for our code
         rate: parseFloat(rate.rate),
         taxType: rate.tax_type as TaxType,
         taxCode: rate.tax_code,
@@ -322,6 +330,7 @@ export const getTaxConfigurationsByCountry = async (countryCode: string): Promis
         taxRates: taxRates.map(rate => ({
           id: rate.id,
           name: rate.name,
+          // Convert the string from DB to number for our code
           rate: parseFloat(rate.rate),
           taxType: rate.tax_type as TaxType,
           taxCode: rate.tax_code,
