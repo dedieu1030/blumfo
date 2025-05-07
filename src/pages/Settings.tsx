@@ -68,7 +68,10 @@ export default function Settings() {
     localStorage.setItem('companyProfile', JSON.stringify(profile));
     
     // Afficher une notification de succès
-    toast.success("Profil enregistré avec succès");
+    toast({
+      title: "Succès",
+      description: "Profil enregistré avec succès"
+    });
   };
 
   return (

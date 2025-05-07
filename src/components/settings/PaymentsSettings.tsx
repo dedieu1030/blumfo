@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { RefreshCw, AlertTriangle, CheckCircle2, XCircle, Loader2, CreditCard, ExternalLink } from "lucide-react";
+import { RefreshCw, AlertTriangle, CheckCircle2, XCircle, Loader2, CreditCard, ExternalLink, Check } from "lucide-react";
 import { 
   checkStripeConnection, 
   initiateStripeConnect, 
