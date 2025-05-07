@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -10,7 +11,6 @@ import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Check, Plus, Edit, Trash, ExternalLink, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Loader2, CreditCard } from "lucide-react";
-import { CompanyProfileForm } from "@/components/CompanyProfileForm";
 import { CompanyProfile, PaymentTermTemplate, PaymentMethodDetails } from "@/types/invoice";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,8 @@ import { PaymentMethodSelector } from "@/components/PaymentMethodSelector";
 import { useSearchParams } from "react-router-dom";
 import { checkStripeConnection, initiateStripeConnect, disconnectStripeAccount } from "@/services/stripeConnectClient";
 import { toast } from "sonner";
+import { ProfileWizard } from "@/components/profile/ProfileWizard";
+import { ProfileViewer } from "@/components/profile/ProfileViewer";
 
 export default function Settings() {
   const { toast: shadcnToast } = useToast();
@@ -27,7 +29,14 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("classic");
+  
+  // État du profil
   const [companyProfile, setCompanyProfile] = useState<Partial<CompanyProfile>>({});
+  const [hasProfile, setHasProfile] = useState(false);
+  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  
+  // État pour les autres fonctionnalités
   const [paymentTermTemplates, setPaymentTermTemplates] = useState<PaymentTermTemplate[]>([]);
   const [defaultPaymentMethods, setDefaultPaymentMethods] = useState<PaymentMethodDetails[]>([]);
   
@@ -60,7 +69,9 @@ export default function Settings() {
     const savedProfile = localStorage.getItem('companyProfile');
     if (savedProfile) {
       try {
-        setCompanyProfile(JSON.parse(savedProfile));
+        const profileData = JSON.parse(savedProfile);
+        setCompanyProfile(profileData);
+        setHasProfile(true);
       } catch (e) {
         console.error("Erreur lors du parsing du profil d'entreprise", e);
       }
@@ -98,7 +109,13 @@ export default function Settings() {
 
   const handleSaveProfile = (profile: CompanyProfile) => {
     setCompanyProfile(profile);
+    setHasProfile(true);
+    setIsCreatingProfile(false);
+    setIsEditingProfile(false);
     localStorage.setItem('companyProfile', JSON.stringify(profile));
+    
+    // Afficher une notification de succès
+    toast.success("Profil enregistré avec succès");
   };
 
   // Gestion des modèles de conditions de paiement
@@ -359,10 +376,35 @@ export default function Settings() {
         </TabsList>
         
         <TabsContent value="profile">
-          <CompanyProfileForm 
-            initialData={companyProfile}
-            onSave={handleSaveProfile}
-          />
+          {!hasProfile && !isCreatingProfile ? (
+            <div className="text-center py-16">
+              <h2 className="text-2xl font-bold mb-4">Vous n'avez pas encore de profil</h2>
+              <p className="text-muted-foreground mb-8">
+                Créez votre profil professionnel pour qu'il apparaisse sur vos factures.
+              </p>
+              <Button 
+                className="bg-violet hover:bg-violet/90"
+                onClick={() => setIsCreatingProfile(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Créer mon profil
+              </Button>
+            </div>
+          ) : isCreatingProfile || isEditingProfile ? (
+            <ProfileWizard 
+              initialData={isEditingProfile ? companyProfile : undefined}
+              onComplete={handleSaveProfile}
+              onCancel={() => {
+                setIsCreatingProfile(false);
+                setIsEditingProfile(false);
+              }}
+            />
+          ) : (
+            <ProfileViewer 
+              profile={companyProfile as CompanyProfile}
+              onEdit={() => setIsEditingProfile(true)}
+            />
+          )}
         </TabsContent>
         
         <TabsContent value="billing">
@@ -406,7 +448,7 @@ export default function Settings() {
           </Card>
         </TabsContent>
         
-        {/* Nouvelle section: Conditions de paiement */}
+        {/* Conditions de paiement */}
         <TabsContent value="payment-terms">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -467,7 +509,7 @@ export default function Settings() {
           </Card>
         </TabsContent>
         
-        {/* Nouvelle section: Méthodes de paiement */}
+        {/* Méthodes de paiement */}
         <TabsContent value="payment-methods">
           <Card>
             <CardHeader>
@@ -475,12 +517,29 @@ export default function Settings() {
               <CardDescription>Définissez les méthodes de paiement que vous proposez habituellement</CardDescription>
             </CardHeader>
             <CardContent>
-              <PaymentMethodSelector 
-                methods={defaultPaymentMethods}
-                onChange={handleSaveDefaultPaymentMethods}
-                companyProfile={companyProfile as CompanyProfile}
-                onSaveDefault={handleSaveDefaultPaymentMethods}
-              />
+              {hasProfile ? (
+                <PaymentMethodSelector 
+                  methods={defaultPaymentMethods}
+                  onChange={handleSaveDefaultPaymentMethods}
+                  companyProfile={companyProfile as CompanyProfile}
+                  onSaveDefault={handleSaveDefaultPaymentMethods}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    Vous devez d'abord créer un profil avant de configurer les méthodes de paiement.
+                  </p>
+                  <Button 
+                    className="mt-4 bg-violet hover:bg-violet/90"
+                    onClick={() => {
+                      setActiveTab("profile");
+                      setIsCreatingProfile(true);
+                    }}
+                  >
+                    Créer mon profil
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -19,6 +19,9 @@ export interface CompanyProfile {
   // Additional payment methods
   paypal?: string;
   payoneer?: string;
+  // Nouveaux champs pour le système de profil amélioré
+  profileType?: "personal" | "business";
+  profileSubtype?: string;
 }
 
 export type PaymentMethod = "card" | "transfer" | "paypal" | "check" | "cash" | "payoneer" | "other";
@@ -68,3 +71,4 @@ export interface ServiceLine {
   tva: string;
   total: string;
 }
+
