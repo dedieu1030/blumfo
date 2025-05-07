@@ -60,13 +60,72 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
     });
   };
 
-  const getHeaderTitle = () => {
-    if (!formData.businessType || formData.businessType === "company") return "Informations de l'entreprise";
-    if (formData.businessType === "lawyer") return "Informations du cabinet";
-    if (formData.businessType === "freelancer") return "Informations professionnelles";
-    if (formData.businessType === "individual") return "Informations personnelles";
-    return "Informations professionnelles";
+  // Récupérer les labels adaptés en fonction du type d'activité
+  const getLabels = () => {
+    const businessType = formData.businessType || "company";
+    
+    switch (businessType) {
+      case "individual":
+        return {
+          headerTitle: "Informations personnelles",
+          nameLabel: "Nom complet",
+          namePlaceholder: "Jean Dupont",
+          emailLabel: "Email personnel",
+          emailPlaceholder: "jean.dupont@gmail.com",
+          addressPlaceholder: "15 rue des Lilas, 75001 Paris",
+          accountHolderLabel: "Nom du titulaire du compte",
+          accountHolderPlaceholder: "Jean Dupont",
+        };
+      case "lawyer":
+        return {
+          headerTitle: "Informations du cabinet",
+          nameLabel: "Nom du cabinet",
+          namePlaceholder: "Cabinet Dupont",
+          emailLabel: "Email professionnel",
+          emailPlaceholder: "contact@cabinet-dupont.fr",
+          addressPlaceholder: "15 rue du Barreau, 75001 Paris",
+          accountHolderLabel: "Nom du titulaire du compte",
+          accountHolderPlaceholder: "Me Jean Dupont",
+        };
+      case "freelancer":
+        return {
+          headerTitle: "Informations professionnelles",
+          nameLabel: "Nom professionnel",
+          namePlaceholder: "Jean Dupont Freelance",
+          emailLabel: "Email professionnel",
+          emailPlaceholder: "jean.dupont@gmail.com",
+          addressPlaceholder: "15 rue des Freelances, 75001 Paris",
+          accountHolderLabel: "Nom du titulaire du compte",
+          accountHolderPlaceholder: "Jean Dupont",
+        };
+      case "other":
+        const customType = formData.businessTypeCustom || "Professionnel";
+        return {
+          headerTitle: `Informations - ${customType}`,
+          nameLabel: `Nom ${customType.toLowerCase()}`,
+          namePlaceholder: `${customType} Jean Dupont`,
+          emailLabel: "Email professionnel",
+          emailPlaceholder: "contact@entreprise.fr",
+          addressPlaceholder: "15 rue Principale, 75001 Paris",
+          accountHolderLabel: "Nom du titulaire du compte",
+          accountHolderPlaceholder: "Jean Dupont",
+        };
+      case "company":
+      default:
+        return {
+          headerTitle: "Informations de l'entreprise",
+          nameLabel: "Nom de l'entreprise",
+          namePlaceholder: "Entreprise Dupont",
+          emailLabel: "Email d'entreprise",
+          emailPlaceholder: "contact@entreprise-dupont.fr",
+          addressPlaceholder: "15 rue de l'Entreprise, 75001 Paris",
+          accountHolderLabel: "Nom du titulaire du compte",
+          accountHolderPlaceholder: "Jean Dupont",
+        };
+    }
   };
+
+  const labels = getLabels();
 
   return (
     <form onSubmit={handleSubmit}>
@@ -109,40 +168,31 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="company-name">{formData.businessType === "individual" ? "Nom complet" : "Nom professionnel"}</Label>
+              <Label htmlFor="company-name">{labels.nameLabel}</Label>
               <Input 
                 id="company-name" 
-                placeholder={
-                  formData.businessType === "lawyer" ? "Cabinet Dupont" :
-                  formData.businessType === "individual" ? "Jean Dupont" :
-                  formData.businessType === "freelancer" ? "Jean Dupont Freelance" :
-                  "Entreprise Dupont"
-                } 
+                placeholder={labels.namePlaceholder} 
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contact-name">Nom du titulaire du compte</Label>
+              <Label htmlFor="contact-name">{labels.accountHolderLabel}</Label>
               <Input 
                 id="contact-name" 
-                placeholder={formData.businessType === "lawyer" ? "Me Dupont" : "Jean Dupont"} 
+                placeholder={labels.accountHolderPlaceholder} 
                 value={formData.accountHolder}
                 onChange={(e) => handleChange("accountHolder", e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email professionnel</Label>
+              <Label htmlFor="email">{labels.emailLabel}</Label>
               <Input 
                 id="email" 
                 type="email" 
-                placeholder={
-                  formData.businessType === "lawyer" ? "contact@cabinet-dupont.fr" :
-                  formData.businessType === "freelancer" ? "jean.dupont@gmail.com" :
-                  "contact@entreprise-dupont.fr"
-                } 
+                placeholder={labels.emailPlaceholder} 
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 required
@@ -162,11 +212,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
               <Label htmlFor="address">Adresse complète</Label>
               <Textarea 
                 id="address" 
-                placeholder={
-                  formData.businessType === "lawyer" ? "15 rue du Barreau, 75001 Paris" :
-                  formData.businessType === "company" ? "15 rue de l'Entreprise, 75001 Paris" :
-                  "15 rue des Lilas, 75001 Paris"
-                } 
+                placeholder={labels.addressPlaceholder} 
                 value={formData.address}
                 onChange={(e) => handleChange("address", e.target.value)}
                 required

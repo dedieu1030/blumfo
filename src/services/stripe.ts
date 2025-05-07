@@ -1,6 +1,8 @@
 
 // This file contains utilities for Stripe integration
 
+import { CompanyProfile } from "@/types/invoice";
+
 /**
  * Creates a Stripe Checkout session for invoice payment
  * @param invoiceData Invoice data to create payment for
@@ -33,8 +35,26 @@ export const createStripeCheckoutSession = async (invoiceData: any) => {
       quantity: parseInt(line.quantity) || 1,
     }));
     
-    // Determine the customer type based on the businessType if available
-    const customerType = invoiceData.issuerInfo?.businessType || 'company';
+    // Determine the issuer type and name based on the businessType if available
+    const issuerType = invoiceData.issuerInfo?.businessType || 'company';
+    let issuerTypeDisplay = 'Entreprise';
+    
+    switch(issuerType) {
+      case 'individual':
+        issuerTypeDisplay = 'Particulier';
+        break;
+      case 'lawyer':
+        issuerTypeDisplay = 'Cabinet juridique';
+        break;
+      case 'freelancer':
+        issuerTypeDisplay = 'Freelance';
+        break;
+      case 'other':
+        issuerTypeDisplay = invoiceData.issuerInfo?.businessTypeCustom || 'Professionnel';
+        break;
+      default:
+        issuerTypeDisplay = 'Entreprise';
+    }
     
     // Create metadata for the invoice
     const metadata = {
@@ -42,7 +62,7 @@ export const createStripeCheckoutSession = async (invoiceData: any) => {
       client_name: invoiceData.clientName,
       client_email: invoiceData.clientEmail,
       due_date: dueDate.toISOString().split('T')[0],
-      issuer_type: customerType,
+      issuer_type: issuerTypeDisplay,
       issuer_name: invoiceData.issuerInfo?.name || '',
     };
     
