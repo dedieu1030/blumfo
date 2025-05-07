@@ -10,6 +10,7 @@ import { Search, FileText } from "lucide-react";
 import { InvoiceReportDialog } from "@/components/InvoiceReportDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Mock data for demonstration
 const allInvoices = [
@@ -66,7 +67,7 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   
   // Attempt to fetch invoices from Supabase if authenticated
-  const { data: fetchedInvoices, isError } = useQuery({
+  const { data: fetchedInvoices, isError, refetch } = useQuery({
     queryKey: ["invoices"],
     queryFn: async () => {
       try {
@@ -74,6 +75,7 @@ export default function Invoices() {
         return data?.invoices || [];
       } catch (error) {
         console.error("Error fetching invoices:", error);
+        toast.error("Erreur lors de la récupération des factures");
         return [];
       }
     },
@@ -87,6 +89,12 @@ export default function Invoices() {
   
   // Use either fetched invoices or mock data
   const invoices = fetchedInvoices?.length > 0 ? fetchedInvoices : allInvoices;
+  
+  // Handle invoice update (payment confirmation, etc)
+  const handleInvoiceUpdated = () => {
+    toast.success("Facture mise à jour avec succès");
+    refetch();
+  };
   
   // Filter invoices by search term
   const filteredInvoices = invoices.filter((invoice) => {
@@ -102,6 +110,15 @@ export default function Invoices() {
   const pendingInvoices = filteredInvoices.filter(invoice => invoice.status === "pending");
   const overdueInvoices = filteredInvoices.filter(invoice => invoice.status === "overdue");
   const draftInvoices = filteredInvoices.filter(invoice => invoice.status === "draft");
+  
+  // Vérifier les factures qui approchent de leur échéance
+  const today = new Date();
+  const almostDueInvoices = pendingInvoices.filter(invoice => {
+    const dueDate = new Date(invoice.dueDate.split("/").reverse().join("-"));
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 3 && diffDays >= 0;
+  });
 
   return (
     <>
@@ -131,6 +148,42 @@ export default function Invoices() {
             Générer un rapport
           </Button>
         </div>
+        
+        {almostDueInvoices.length > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
+            <h3 className="text-sm font-medium text-yellow-800 mb-2">
+              Factures avec échéance proche: {almostDueInvoices.length}
+            </h3>
+            <p className="text-xs text-yellow-700 mb-1">
+              Les factures suivantes ont une échéance dans les 3 prochains jours:
+            </p>
+            <ul className="text-xs text-yellow-700 list-disc pl-5">
+              {almostDueInvoices.map(inv => (
+                <li key={inv.id}>
+                  {inv.number} - {inv.client} - Échéance: {inv.dueDate} - {inv.amount}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {overdueInvoices.length > 0 && (
+          <div className="bg-red-50 border border-red-200 p-4 rounded-md">
+            <h3 className="text-sm font-medium text-red-800 mb-2">
+              Factures en retard: {overdueInvoices.length}
+            </h3>
+            <p className="text-xs text-red-700 mb-1">
+              Les factures suivantes ont dépassé leur date d'échéance:
+            </p>
+            <ul className="text-xs text-red-700 list-disc pl-5">
+              {overdueInvoices.map(inv => (
+                <li key={inv.id}>
+                  {inv.number} - {inv.client} - Échéance: {inv.dueDate} - {inv.amount}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
@@ -167,23 +220,43 @@ export default function Invoices() {
           </TabsList>
           
           <TabsContent value="all" className="pt-6">
-            <InvoiceList title="" invoices={filteredInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={filteredInvoices} 
+              onInvoiceUpdated={handleInvoiceUpdated}
+            />
           </TabsContent>
           
           <TabsContent value="pending" className="pt-6">
-            <InvoiceList title="" invoices={pendingInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={pendingInvoices}
+              onInvoiceUpdated={handleInvoiceUpdated}
+            />
           </TabsContent>
           
           <TabsContent value="paid" className="pt-6">
-            <InvoiceList title="" invoices={paidInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={paidInvoices}
+              onInvoiceUpdated={handleInvoiceUpdated}
+            />
           </TabsContent>
           
           <TabsContent value="overdue" className="pt-6">
-            <InvoiceList title="" invoices={overdueInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={overdueInvoices}
+              onInvoiceUpdated={handleInvoiceUpdated}
+            />
           </TabsContent>
           
           <TabsContent value="draft" className="pt-6">
-            <InvoiceList title="" invoices={draftInvoices} />
+            <InvoiceList 
+              title="" 
+              invoices={draftInvoices}
+              onInvoiceUpdated={handleInvoiceUpdated}
+            />
           </TabsContent>
         </Tabs>
       </div>
