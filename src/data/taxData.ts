@@ -1,5 +1,5 @@
 
-import { TaxRegion } from "@/types/tax";
+import { TaxRegion, TaxRegionData } from "@/types/tax";
 
 export const canadaTaxRegions: TaxRegion = {
   id: "canada",
