@@ -269,6 +269,92 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_configurations: {
+        Row: {
+          country_code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          region_code: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          country_code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          region_code?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          country_code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          region_code?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      tax_rates: {
+        Row: {
+          configuration_id: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_compound: boolean | null
+          name: string
+          rate: number
+          tax_code: string | null
+          tax_type: Database["public"]["Enums"]["tax_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          configuration_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_compound?: boolean | null
+          name: string
+          rate: number
+          tax_code?: string | null
+          tax_type: Database["public"]["Enums"]["tax_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          configuration_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_compound?: boolean | null
+          name?: string
+          rate?: number
+          tax_code?: string | null
+          tax_type?: Database["public"]["Enums"]["tax_type"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_rates_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "tax_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -277,7 +363,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      tax_type: "vat" | "gst" | "pst" | "hst" | "qst" | "sales" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -392,6 +478,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      tax_type: ["vat", "gst", "pst", "hst", "qst", "sales", "other"],
+    },
   },
 } as const
