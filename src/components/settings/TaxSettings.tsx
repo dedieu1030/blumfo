@@ -169,6 +169,7 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                         <SelectItem value="none">Personnalisé (configurer manuellement)</SelectItem>
                         <SelectItem value="canada">Canada 🇨🇦</SelectItem>
                         <SelectItem value="usa">États-Unis 🇺🇸</SelectItem>
+                        <SelectItem value="mexico">Mexique 🇲🇽</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -187,7 +188,8 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                   <FormItem>
                     <FormLabel>
                       {selectedCountry === 'canada' ? 'Province / Territoire' : 
-                       selectedCountry === 'usa' ? 'État' : 'Région'}
+                       selectedCountry === 'usa' ? 'État' : 
+                       selectedCountry === 'mexico' ? 'Type d\'IVA' : 'Région'}
                     </FormLabel>
                     <FormControl>
                       <Select
@@ -200,7 +202,8 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                         <SelectTrigger>
                           <SelectValue placeholder={`Sélectionnez ${
                             selectedCountry === 'canada' ? 'une province' : 
-                            selectedCountry === 'usa' ? 'un état' : 'une région'
+                            selectedCountry === 'usa' ? 'un état' : 
+                            selectedCountry === 'mexico' ? 'un taux d\'IVA' : 'une région'
                           }`} />
                         </SelectTrigger>
                         <SelectContent>
@@ -215,6 +218,7 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                     <FormDescription>
                       {selectedCountry === 'canada' ? 'Sélectionnez votre province ou territoire.' : 
                        selectedCountry === 'usa' ? "Sélectionnez votre état." : 
+                       selectedCountry === 'mexico' ? "Sélectionnez le type d'IVA applicable." :
                        'Sélectionnez votre région.'}
                     </FormDescription>
                   </FormItem>
@@ -257,6 +261,11 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                       
                       {region.localTaxRate !== undefined && region.localTaxRate > 0 && (
                         <p><strong>Taxe locale (moyenne): </strong> {region.localTaxRate}%</p>
+                      )}
+                      
+                      {/* Mexican IVA tax rate */}
+                      {region.ivaRate !== undefined && (
+                        <p><strong>IVA: </strong> {region.ivaRate}%</p>
                       )}
                       
                       <p><strong>Taux total: </strong> {region.totalRate}%</p>

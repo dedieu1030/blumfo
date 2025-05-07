@@ -1,4 +1,3 @@
-
 import { TaxRegion, TaxRegionData } from "@/types/tax";
 
 export const canadaTaxRegions: TaxRegion = {
@@ -298,7 +297,51 @@ export const usaTaxRegions: TaxRegion = {
   ]
 };
 
-export const taxRegions: TaxRegion[] = [canadaTaxRegions, usaTaxRegions];
+export const mexicoTaxRegions: TaxRegion = {
+  id: "mexico",
+  name: "Mexique",
+  countryCode: "MX",
+  regions: [
+    {
+      id: "standard",
+      name: "Taux standard",
+      code: "STD",
+      taxType: "iva-standard",
+      ivaRate: 16,
+      totalRate: 16,
+      notes: "Appliqué à la majorité des biens et services."
+    },
+    {
+      id: "reduced",
+      name: "Taux réduit (régions frontalières)",
+      code: "RED",
+      taxType: "iva-reduced",
+      ivaRate: 8,
+      totalRate: 8,
+      notes: "Appliqué dans certaines régions frontalières nord et sud."
+    },
+    {
+      id: "zero",
+      name: "Taux zéro",
+      code: "ZER",
+      taxType: "iva-zero",
+      ivaRate: 0,
+      totalRate: 0,
+      notes: "Appliqué aux exportations, médicaments, aliments de base, livres, etc."
+    },
+    {
+      id: "exempt",
+      name: "Exonéré",
+      code: "EXE",
+      taxType: "iva-exempt",
+      ivaRate: 0,
+      totalRate: 0,
+      notes: "Services comme l'éducation, les transports publics urbains et les services médicaux."
+    }
+  ]
+};
+
+export const taxRegions: TaxRegion[] = [canadaTaxRegions, usaTaxRegions, mexicoTaxRegions];
 
 export const getTaxRegionById = (countryId: string): TaxRegion | undefined => {
   return taxRegions.find(region => region.id === countryId);
@@ -325,6 +368,14 @@ export const getTaxTypeLabel = (taxType: string): string => {
       return "Taxe de vente";
     case "no-tax":
       return "Exonéré de taxe";
+    case "iva-standard":
+      return "IVA (Taux standard)";
+    case "iva-reduced":
+      return "IVA (Taux réduit)";
+    case "iva-zero":
+      return "IVA (Taux zéro)";
+    case "iva-exempt":
+      return "Exonéré d'IVA";
     default:
       return "Taxes de vente";
   }
