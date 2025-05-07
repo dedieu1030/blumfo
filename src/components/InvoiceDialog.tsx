@@ -867,6 +867,19 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     );
   };
 
+  const handleClientSelect = (client: Client) => {
+    setClientName(client.name);
+    setClientEmail(client.email);
+    setClientAddress(client.address);
+    // Since we're selecting an existing client, we don't need to save it again
+    setSaveClient(false);
+    
+    toast({
+      title: "Client sélectionné",
+      description: `${client.name} a été sélectionné pour cette facture.`
+    });
+  };
+
   const stepTitles = [
     "Détails de la facture",
     "Informations client",
