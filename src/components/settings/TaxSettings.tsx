@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { CompanyProfile } from "@/types/invoice";
-import { TaxConfiguration } from "@/types/tax";
+import { TaxConfiguration, TaxRegionData } from "@/types/tax";
 import { canadaTaxRegions, taxRegions, getTaxRegionById, getRegionData, getTaxTypeLabel } from "@/data/taxData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { InfoIcon } from "lucide-react";
@@ -168,6 +168,7 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                       <SelectContent>
                         <SelectItem value="none">Personnalisé (configurer manuellement)</SelectItem>
                         <SelectItem value="canada">Canada 🇨🇦</SelectItem>
+                        <SelectItem value="usa">États-Unis 🇺🇸</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -184,7 +185,10 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                 name="region"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Province / Territoire</FormLabel>
+                    <FormLabel>
+                      {selectedCountry === 'canada' ? 'Province / Territoire' : 
+                       selectedCountry === 'usa' ? 'État' : 'Région'}
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || ""}
@@ -194,7 +198,10 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                         }}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={`Sélectionnez une ${selectedCountry === 'canada' ? 'province' : 'région'}`} />
+                          <SelectValue placeholder={`Sélectionnez ${
+                            selectedCountry === 'canada' ? 'une province' : 
+                            selectedCountry === 'usa' ? 'un état' : 'une région'
+                          }`} />
                         </SelectTrigger>
                         <SelectContent>
                           {countryData.regions.map((region) => (
@@ -206,7 +213,9 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                       </Select>
                     </FormControl>
                     <FormDescription>
-                      {selectedCountry === 'canada' ? 'Sélectionnez votre province ou territoire.' : 'Sélectionnez votre région.'}
+                      {selectedCountry === 'canada' ? 'Sélectionnez votre province ou territoire.' : 
+                       selectedCountry === 'usa' ? "Sélectionnez votre état." : 
+                       'Sélectionnez votre région.'}
                     </FormDescription>
                   </FormItem>
                 )}
@@ -224,20 +233,30 @@ export function TaxSettings({ companyProfile }: TaxSettingsProps) {
                     <div className="space-y-2 text-sm">
                       <p><strong>Système: </strong> {getTaxTypeLabel(region.taxType)}</p>
                       
-                      {region.gstRate && (
+                      {/* Canadian tax rates */}
+                      {region.gstRate !== undefined && (
                         <p><strong>TPS/GST: </strong> {region.gstRate}%</p>
                       )}
                       
-                      {region.pstRate && (
+                      {region.pstRate !== undefined && (
                         <p><strong>TVP/PST: </strong> {region.pstRate}%</p>
                       )}
                       
-                      {region.qstRate && (
+                      {region.qstRate !== undefined && (
                         <p><strong>TVQ/QST: </strong> {region.qstRate}%</p>
                       )}
                       
-                      {region.hstRate && (
+                      {region.hstRate !== undefined && (
                         <p><strong>TVH/HST: </strong> {region.hstRate}%</p>
+                      )}
+                      
+                      {/* US tax rates */}
+                      {region.stateTaxRate !== undefined && (
+                        <p><strong>Taxe d'État: </strong> {region.stateTaxRate}%</p>
+                      )}
+                      
+                      {region.localTaxRate !== undefined && region.localTaxRate > 0 && (
+                        <p><strong>Taxe locale (moyenne): </strong> {region.localTaxRate}%</p>
                       )}
                       
                       <p><strong>Taux total: </strong> {region.totalRate}%</p>
