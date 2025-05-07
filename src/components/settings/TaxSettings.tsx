@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,7 +123,17 @@ export function TaxSettings() {
   const handleTaxRateChange = (index: number, field: keyof TaxRate, value: any) => {
     setFormData(prev => {
       const updatedRates = [...(prev.taxRates || [])];
-      updatedRates[index] = { ...updatedRates[index], [field]: value };
+      
+      // Convert string to number for numeric fields
+      if (field === 'rate') {
+        updatedRates[index] = { 
+          ...updatedRates[index], 
+          [field]: typeof value === 'string' ? parseFloat(value) || 0 : value 
+        };
+      } else {
+        updatedRates[index] = { ...updatedRates[index], [field]: value };
+      }
+      
       return { ...prev, taxRates: updatedRates };
     });
   };

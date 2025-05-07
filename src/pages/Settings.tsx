@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { PaymentMethodsSettings } from "@/components/settings/PaymentMethodsSett
 import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings";
 import { InvoiceTemplateSettings } from "@/components/settings/InvoiceTemplateSettings";
 import { PaymentsSettings } from "@/components/settings/PaymentsSettings";
+import { TaxSettings } from "@/components/settings/TaxSettings";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -97,6 +97,12 @@ export default function Settings() {
             Facturation
           </TabsTrigger>
           <TabsTrigger 
+            value="taxes"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+          >
+            Taxes
+          </TabsTrigger>
+          <TabsTrigger 
             value="payment-terms"
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
           >
@@ -161,6 +167,10 @@ export default function Settings() {
           />
           
           {showReminderConfig && <ReminderSettings />}
+        </TabsContent>
+        
+        <TabsContent value="taxes">
+          <TaxSettings />
         </TabsContent>
         
         <TabsContent value="payment-terms">

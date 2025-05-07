@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TaxConfiguration, TaxRate, TaxType } from "@/types/tax";
 import { toast } from "sonner";
@@ -121,7 +120,7 @@ export const createTaxConfiguration = async (config: Omit<TaxConfiguration, 'id'
       const taxRatesData = config.taxRates.map(rate => ({
         configuration_id: data.id,
         name: rate.name,
-        rate: rate.rate,
+        rate: rate.rate.toString(), // Convert number to string for DB
         tax_type: rate.taxType,
         tax_code: rate.taxCode,
         description: rate.description,
@@ -176,7 +175,7 @@ export const updateTaxConfiguration = async (config: TaxConfiguration): Promise<
       const taxRatesData = config.taxRates.map(rate => ({
         configuration_id: config.id,
         name: rate.name,
-        rate: rate.rate,
+        rate: rate.rate.toString(), // Convert number to string for DB
         tax_type: rate.taxType,
         tax_code: rate.taxCode,
         description: rate.description,
