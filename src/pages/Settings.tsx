@@ -10,7 +10,7 @@ import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Check, Plus, Edit, Trash, ExternalLink, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Loader2, CreditCard } from "lucide-react";
-import { CompanyProfile, PaymentTermTemplate, PaymentMethodDetails } from "@/types/invoice";
+import { CompanyProfile, PaymentTermTemplate, PaymentMethodDetails, ReminderSchedule } from "@/types/invoice";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentTermsSelector } from "@/components/PaymentTermsSelector";
@@ -65,6 +65,12 @@ export default function Settings() {
   const [newTemplateTerms, setNewTemplateTerms] = useState("");
   const [newTemplateDefault, setNewTemplateDefault] = useState(false);
 
+  // État pour les planifications de relance
+  const [reminderSchedules, setReminderSchedules] = useState<ReminderSchedule[]>([]);
+  const [editingSchedule, setEditingSchedule] = useState<ReminderSchedule | null>(null);
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+  const [showReminderConfig, setShowReminderConfig] = useState(false);
+
   // Récupérer les données du profil d'entreprise
   useEffect(() => {
     const savedProfile = localStorage.getItem('companyProfile');
@@ -106,6 +112,42 @@ export default function Settings() {
     
     // Check Stripe connection status
     checkStripeConnectionStatus();
+    
+    // Récupérer les planifications de relance
+    const savedSchedules = localStorage.getItem('reminderSchedules');
+    if (savedSchedules) {
+      try {
+        setReminderSchedules(JSON.parse(savedSchedules));
+      } catch (e) {
+        console.error("Erreur lors du parsing des planifications de relance", e);
+      }
+    } else {
+      // Créer une planification par défaut
+      const defaultSchedule: ReminderSchedule = {
+        id: "default",
+        name: "Relances standard",
+        enabled: false,
+        isDefault: true,
+        triggers: [
+          {
+            id: "trigger1",
+            triggerType: "days_after_due",
+            triggerValue: 3,
+            emailSubject: "Rappel de facture impayée",
+            emailBody: "Cher [NOM_CLIENT],\n\nNous vous rappelons que votre facture [NUM_FACTURE] d'un montant de [MONTANT] € est arrivée à échéance le [DATE_ECHEANCE] et n'a pas encore été réglée.\n\nNous vous invitons à procéder à son règlement dès que possible.\n\nCordialement,\n[VOTRE_NOM]"
+          },
+          {
+            id: "trigger2",
+            triggerType: "days_after_previous_reminder",
+            triggerValue: 7,
+            emailSubject: "Relance importante - Facture impayée",
+            emailBody: "Cher [NOM_CLIENT],\n\nMalgré notre précédent rappel, nous n'avons toujours pas reçu le paiement de votre facture [NUM_FACTURE] d'un montant de [MONTANT] €.\n\nNous vous invitons à procéder à son règlement dans les plus brefs délais afin d'éviter des frais supplémentaires.\n\nCordialement,\n[VOTRE_NOM]"
+          }
+        ]
+      };
+      setReminderSchedules([defaultSchedule]);
+      localStorage.setItem('reminderSchedules', JSON.stringify([defaultSchedule]));
+    }
   }, []);
 
   const handleSaveProfile = (profile: CompanyProfile) => {
@@ -297,6 +339,58 @@ export default function Settings() {
     }
   };
 
+  const openScheduleEditor = (schedule?: ReminderSchedule) => {
+    if (schedule) {
+      setEditingSchedule(schedule);
+    } else {
+      setEditingSchedule(null);
+    }
+    setIsEditingSchedule(true);
+  };
+
+  const deleteSchedule = (scheduleId: string) => {
+    const updatedSchedules = reminderSchedules.filter(s => s.id !== scheduleId);
+    setReminderSchedules(updatedSchedules);
+    localStorage.setItem('reminderSchedules', JSON.stringify(updatedSchedules));
+    
+    shadcnToast({
+      title: "Planification supprimée",
+      description: "La planification de relances a été supprimée"
+    });
+  };
+
+  const handleSaveSchedule = (schedule: ReminderSchedule) => {
+    let updatedSchedules: ReminderSchedule[];
+    
+    if (editingSchedule) {
+      // Mise à jour d'une planification existante
+      updatedSchedules = reminderSchedules.map(s => 
+        s.id === schedule.id ? schedule : schedule.isDefault ? { ...s, isDefault: false } : s
+      );
+    } else {
+      // Création d'une nouvelle planification
+      if (schedule.isDefault) {
+        updatedSchedules = reminderSchedules.map(s => ({ ...s, isDefault: false }));
+      } else {
+        updatedSchedules = [...reminderSchedules];
+      }
+      updatedSchedules.push(schedule);
+    }
+    
+    setReminderSchedules(updatedSchedules);
+    localStorage.setItem('reminderSchedules', JSON.stringify(updatedSchedules));
+    setIsEditingSchedule(false);
+    
+    shadcnToast({
+      title: editingSchedule ? "Planification mise à jour" : "Planification créée",
+      description: `La planification "${schedule.name}" a été ${editingSchedule ? "mise à jour" : "créée"} avec succès`
+    });
+  };
+
+  const handleToggleAutoReminders = (enabled: boolean) => {
+    setShowReminderConfig(enabled);
+  };
+
   const invoiceTemplates = [
     {
       id: "classic",
@@ -327,53 +421,6 @@ export default function Settings() {
       accent: "border-vertlime",
     }
   ];
-
-  // État pour les planifications de relance
-  const [reminderSchedules, setReminderSchedules] = useState<ReminderSchedule[]>([]);
-  const [editingSchedule, setEditingSchedule] = useState<ReminderSchedule | null>(null);
-  const [isEditingSchedule, setIsEditingSchedule] = useState(false);
-  const [showReminderConfig, setShowReminderConfig] = useState(false);
-  
-  // Récupérer les planifications de relance
-  useEffect(() => {
-    const savedSchedules = localStorage.getItem('reminderSchedules');
-    if (savedSchedules) {
-      try {
-        setReminderSchedules(JSON.parse(savedSchedules));
-      } catch (e) {
-        console.error("Erreur lors du parsing des planifications de relance", e);
-      }
-    } else {
-      // Créer une planification par défaut
-      const defaultSchedule: ReminderSchedule = {
-        id: "default",
-        name: "Relances standard",
-        enabled: false,
-        isDefault: true,
-        triggers: [
-          {
-            id: "trigger1",
-            triggerType: "days_after_due",
-            triggerValue: 3,
-            emailSubject: "Rappel de facture impayée",
-            emailBody: "Cher [NOM_CLIENT],\n\nNous vous rappelons que votre facture [NUM_FACTURE] d'un montant de [MONTANT] € est arrivée à échéance le [DATE_ECHEANCE] et n'a pas encore été réglée.\n\nNous vous invitons à procéder à son règlement dès que possible.\n\nCordialement,\n[VOTRE_NOM]"
-          },
-          {
-            id: "trigger2",
-            triggerType: "days_after_previous_reminder",
-            triggerValue: 7,
-            emailSubject: "Relance importante - Facture impayée",
-            emailBody: "Cher [NOM_CLIENT],\n\nMalgré notre précédent rappel, nous n'avons toujours pas reçu le paiement de votre facture [NUM_FACTURE] d'un montant de [MONTANT] €.\n\nNous vous invitons à procéder à son règlement dans les plus brefs délais afin d'éviter des frais supplémentaires.\n\nCordialement,\n[VOTRE_NOM]"
-          }
-        ]
-      };
-      setReminderSchedules([defaultSchedule]);
-    }
-  }, []);
-
-  const handleToggleAutoReminders = (enabled: boolean) => {
-    setShowReminderConfig(enabled);
-  };
 
   return (
     <>

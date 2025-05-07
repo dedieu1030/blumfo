@@ -72,7 +72,7 @@ export interface ServiceLine {
   total: string;
 }
 
-// Nouvelles interfaces pour la configuration des relances automatiques
+// Interfaces pour la configuration des relances automatiques
 export interface ReminderSchedule {
   id: string;
   name: string;
