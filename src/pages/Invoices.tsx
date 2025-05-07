@@ -77,10 +77,11 @@ export default function Invoices() {
         return [];
       }
     },
-    // Use mock data if fetch fails
-    onError: (error) => {
-      console.log("Using mock data due to error:", error);
-      return allInvoices;
+    // Handle errors properly using options.meta
+    meta: {
+      onError: (error: any) => {
+        console.log("Using mock data due to error:", error);
+      }
     }
   });
   

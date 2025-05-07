@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, FileText, Download, FileSpreadsheet, FilePdf } from "lucide-react";
+import { CalendarIcon, FileText, Download, FileSpreadsheet, FileText as FilePdf } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
