@@ -3,7 +3,7 @@ export interface CompanyProfile {
   name: string;
   address: string;
   email: string;
-  emailType: "personal" | "professional" | "company"; // Type modifié pour être obligatoire avec des options spécifiques
+  emailType: "personal" | "professional" | "company";
   phone: string;
   bankAccount: string;
   bankName: string;
@@ -13,13 +13,10 @@ export interface CompanyProfile {
   termsAndConditions: string;
   thankYouMessage: string;
   defaultCurrency: string;
-  // Type d'activité professionnelle
   businessType?: "company" | "individual" | "lawyer" | "freelancer" | "other";
   businessTypeCustom?: string; // Pour "other"
-  // Additional payment methods
   paypal?: string;
   payoneer?: string;
-  // Nouveaux champs pour le système de profil amélioré
   profileType?: "personal" | "business";
   profileSubtype?: string;
 }
@@ -35,16 +32,16 @@ export interface PaymentMethodDetails {
 export interface PaymentTermTemplate {
   id: string;
   name: string;
-  delay: string; // "immediate", "7", "15", "30", "60", "custom"
+  delay: string; // "immediate", "7", "15", "30", "45", "60", "90", "custom"
   customDate?: string; // for custom date if delay is "custom"
   termsText: string;
-  isDefault: boolean; // Changed from optional to required with a default value
+  isDefault: boolean;
 }
 
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
-  dueDate?: string; // Adding due date separate from payment delay
+  dueDate?: string;
   clientName: string;
   clientEmail: string;
   clientAddress: string;
@@ -59,8 +56,8 @@ export interface InvoiceData {
   notes: string;
   signature?: string;
   templateId: string;
-  paymentTermsId?: string; // Reference to a payment term template
-  customPaymentTerms?: string; // Custom terms for this invoice
+  paymentTermsId?: string;
+  customPaymentTerms?: string;
 }
 
 export interface ServiceLine {
@@ -88,4 +85,28 @@ export interface ReminderTrigger {
   emailTemplateId?: string;
   emailSubject: string;
   emailBody: string;
+}
+
+// Configuration de la numérotation des factures
+export interface InvoiceNumberingConfig {
+  prefix: string;
+  nextNumber: number;
+  suffix?: string;
+  padding: number; // Nombre de zéros pour le remplissage (ex: 001, 0001)
+  resetAnnually: boolean;
+}
+
+// Liste étendue des devises
+export type Currency = 
+  "EUR" | "USD" | "GBP" | "CAD" | "AUD" | "CHF" | "JPY" | 
+  "CNY" | "SEK" | "NOK" | "DKK" | "PLN" | "CZK" | "HUF" | 
+  "RON" | "BGN" | "TRY" | "RUB" | "ZAR" | "INR" | "BRL" | 
+  "MXN" | "ARS" | "CLP" | "PEN" | "COP";
+
+// Information sur les devises
+export interface CurrencyInfo {
+  code: Currency;
+  symbol: string;
+  name: string;
+  position: "prefix" | "suffix";
 }
