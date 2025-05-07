@@ -36,8 +36,8 @@ export const getTaxConfigurations = async (): Promise<TaxConfiguration[]> => {
         taxRates: taxRates.map(rate => ({
           id: rate.id,
           name: rate.name,
-          // Convert the string from DB to number for our code
-          rate: parseFloat(rate.rate),
+          // Convert string from DB to number for our code
+          rate: typeof rate.rate === 'string' ? parseFloat(rate.rate) : rate.rate,
           taxType: rate.tax_type as TaxType,
           taxCode: rate.tax_code,
           description: rate.description,
@@ -84,8 +84,8 @@ export const getTaxConfiguration = async (id: string): Promise<TaxConfiguration 
       taxRates: taxRates.map(rate => ({
         id: rate.id,
         name: rate.name,
-        // Convert the string from DB to number for our code
-        rate: parseFloat(rate.rate),
+        // Convert string from DB to number for our code
+        rate: typeof rate.rate === 'string' ? parseFloat(rate.rate) : rate.rate,
         taxType: rate.tax_type as TaxType,
         taxCode: rate.tax_code,
         description: rate.description,
@@ -284,8 +284,8 @@ export const getDefaultTaxConfiguration = async (): Promise<TaxConfiguration | n
       taxRates: taxRates.map(rate => ({
         id: rate.id,
         name: rate.name,
-        // Convert the string from DB to number for our code
-        rate: parseFloat(rate.rate),
+        // Convert string from DB to number for our code
+        rate: typeof rate.rate === 'string' ? parseFloat(rate.rate) : rate.rate,
         taxType: rate.tax_type as TaxType,
         taxCode: rate.tax_code,
         description: rate.description,
@@ -332,8 +332,8 @@ export const getTaxConfigurationsByCountry = async (countryCode: string): Promis
         taxRates: taxRates.map(rate => ({
           id: rate.id,
           name: rate.name,
-          // Convert the string from DB to number for our code
-          rate: parseFloat(rate.rate),
+          // Convert string from DB to number for our code
+          rate: typeof rate.rate === 'string' ? parseFloat(rate.rate) : rate.rate,
           taxType: rate.tax_type as TaxType,
           taxCode: rate.tax_code,
           description: rate.description,
