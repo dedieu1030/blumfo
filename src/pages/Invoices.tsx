@@ -5,7 +5,11 @@ import { InvoiceList } from "@/components/InvoiceList";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, FileText } from "lucide-react";
+import { InvoiceReportDialog } from "@/components/InvoiceReportDialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock data for demonstration
 const allInvoices = [
@@ -58,12 +62,45 @@ const allInvoices = [
 
 export default function Invoices() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Attempt to fetch invoices from Supabase if authenticated
+  const { data: fetchedInvoices, isError } = useQuery({
+    queryKey: ["invoices"],
+    queryFn: async () => {
+      try {
+        const { data } = await supabase.functions.invoke('list-invoices');
+        return data?.invoices || [];
+      } catch (error) {
+        console.error("Error fetching invoices:", error);
+        return [];
+      }
+    },
+    // Use mock data if fetch fails
+    onError: (error) => {
+      console.log("Using mock data due to error:", error);
+      return allInvoices;
+    }
+  });
+  
+  // Use either fetched invoices or mock data
+  const invoices = fetchedInvoices?.length > 0 ? fetchedInvoices : allInvoices;
+  
+  // Filter invoices by search term
+  const filteredInvoices = invoices.filter((invoice) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      invoice.number.toLowerCase().includes(search) ||
+      invoice.client.toLowerCase().includes(search)
+    );
+  });
   
   // Filter invoices by status
-  const paidInvoices = allInvoices.filter(invoice => invoice.status === "paid");
-  const pendingInvoices = allInvoices.filter(invoice => invoice.status === "pending");
-  const overdueInvoices = allInvoices.filter(invoice => invoice.status === "overdue");
-  const draftInvoices = allInvoices.filter(invoice => invoice.status === "draft");
+  const paidInvoices = filteredInvoices.filter(invoice => invoice.status === "paid");
+  const pendingInvoices = filteredInvoices.filter(invoice => invoice.status === "pending");
+  const overdueInvoices = filteredInvoices.filter(invoice => invoice.status === "overdue");
+  const draftInvoices = filteredInvoices.filter(invoice => invoice.status === "draft");
 
   return (
     <>
@@ -74,12 +111,24 @@ export default function Invoices() {
       />
       
       <div className="space-y-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Rechercher une facture..." 
-            className="pl-10 bg-background" 
-          />
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Rechercher une facture..." 
+              className="pl-10 bg-background" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <Button 
+            onClick={() => setIsReportDialogOpen(true)}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Générer un rapport
+          </Button>
         </div>
         
         <Tabs defaultValue="all" className="w-full">
@@ -88,7 +137,7 @@ export default function Invoices() {
               value="all" 
               className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
             >
-              Toutes ({allInvoices.length})
+              Toutes ({filteredInvoices.length})
             </TabsTrigger>
             <TabsTrigger 
               value="pending"
@@ -117,7 +166,7 @@ export default function Invoices() {
           </TabsList>
           
           <TabsContent value="all" className="pt-6">
-            <InvoiceList title="" invoices={allInvoices} />
+            <InvoiceList title="" invoices={filteredInvoices} />
           </TabsContent>
           
           <TabsContent value="pending" className="pt-6">
@@ -137,6 +186,12 @@ export default function Invoices() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <InvoiceReportDialog 
+        isOpen={isReportDialogOpen}
+        onOpenChange={setIsReportDialogOpen}
+        invoices={invoices}
+      />
       
       <MobileNavigation 
         isOpen={isMobileMenuOpen}
