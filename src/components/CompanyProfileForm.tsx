@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { CompanyProfile } from "@/types/invoice";
 
@@ -20,6 +21,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
     name: "",
     address: "",
     email: "",
+    emailType: "professional",
     phone: "",
     bankAccount: "",
     bankName: "",
@@ -70,33 +72,48 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
           headerTitle: "Informations personnelles",
           nameLabel: "Nom complet",
           namePlaceholder: "Jean Dupont",
-          emailLabel: "Email personnel",
+          emailLabel: "Email",
           emailPlaceholder: "jean.dupont@gmail.com",
           addressPlaceholder: "15 rue des Lilas, 75001 Paris",
           accountHolderLabel: "Nom du titulaire du compte",
           accountHolderPlaceholder: "Jean Dupont",
+          showEmailType: true,
+          emailTypeOptions: [
+            { value: "personal", label: "Email personnel" },
+            { value: "professional", label: "Email professionnel" }
+          ]
         };
       case "lawyer":
         return {
           headerTitle: "Informations du cabinet",
           nameLabel: "Nom du cabinet",
           namePlaceholder: "Cabinet Dupont",
-          emailLabel: "Email professionnel",
+          emailLabel: "Email",
           emailPlaceholder: "contact@cabinet-dupont.fr",
           addressPlaceholder: "15 rue du Barreau, 75001 Paris",
           accountHolderLabel: "Nom du titulaire du compte",
           accountHolderPlaceholder: "Me Jean Dupont",
+          showEmailType: true,
+          emailTypeOptions: [
+            { value: "professional", label: "Email professionnel" },
+            { value: "personal", label: "Email personnel" }
+          ]
         };
       case "freelancer":
         return {
           headerTitle: "Informations professionnelles",
           nameLabel: "Nom professionnel",
           namePlaceholder: "Jean Dupont Freelance",
-          emailLabel: "Email professionnel",
+          emailLabel: "Email",
           emailPlaceholder: "jean.dupont@gmail.com",
           addressPlaceholder: "15 rue des Freelances, 75001 Paris",
           accountHolderLabel: "Nom du titulaire du compte",
           accountHolderPlaceholder: "Jean Dupont",
+          showEmailType: true,
+          emailTypeOptions: [
+            { value: "professional", label: "Email professionnel" },
+            { value: "personal", label: "Email personnel" }
+          ]
         };
       case "other":
         const customType = formData.businessTypeCustom || "Professionnel";
@@ -104,11 +121,16 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
           headerTitle: `Informations - ${customType}`,
           nameLabel: `Nom ${customType.toLowerCase()}`,
           namePlaceholder: `${customType} Jean Dupont`,
-          emailLabel: "Email professionnel",
+          emailLabel: "Email",
           emailPlaceholder: "contact@entreprise.fr",
           addressPlaceholder: "15 rue Principale, 75001 Paris",
           accountHolderLabel: "Nom du titulaire du compte",
           accountHolderPlaceholder: "Jean Dupont",
+          showEmailType: true,
+          emailTypeOptions: [
+            { value: "professional", label: "Email professionnel" },
+            { value: "personal", label: "Email personnel" }
+          ]
         };
       case "company":
       default:
@@ -116,11 +138,16 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
           headerTitle: "Informations de l'entreprise",
           nameLabel: "Nom de l'entreprise",
           namePlaceholder: "Entreprise Dupont",
-          emailLabel: "Email d'entreprise",
+          emailLabel: "Email",
           emailPlaceholder: "contact@entreprise-dupont.fr",
           addressPlaceholder: "15 rue de l'Entreprise, 75001 Paris",
           accountHolderLabel: "Nom du titulaire du compte",
           accountHolderPlaceholder: "Jean Dupont",
+          showEmailType: true,
+          emailTypeOptions: [
+            { value: "company", label: "Email d'entreprise" },
+            { value: "professional", label: "Email professionnel" }
+          ]
         };
     }
   };
@@ -187,6 +214,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
                 required
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">{labels.emailLabel}</Label>
               <Input 
@@ -198,6 +226,25 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
                 required
               />
             </div>
+
+            {labels.showEmailType && (
+              <div className="space-y-2">
+                <Label>Type d'email</Label>
+                <RadioGroup 
+                  value={formData.emailType || "professional"} 
+                  onValueChange={(value) => handleChange("emailType", value)}
+                  className="flex flex-col space-y-1"
+                >
+                  {labels.emailTypeOptions.map(option => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.value} id={`email-type-${option.value}`} />
+                      <Label htmlFor={`email-type-${option.value}`} className="font-normal cursor-pointer">{option.label}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="phone">Téléphone</Label>
               <Input 

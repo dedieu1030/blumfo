@@ -56,6 +56,21 @@ export const createStripeCheckoutSession = async (invoiceData: any) => {
         issuerTypeDisplay = 'Entreprise';
     }
     
+    // Get email type label
+    const emailType = invoiceData.issuerInfo?.emailType || 'professional';
+    let emailTypeDisplay = 'Professionnel';
+    
+    switch(emailType) {
+      case 'personal':
+        emailTypeDisplay = 'Personnel';
+        break;
+      case 'company':
+        emailTypeDisplay = 'Entreprise';
+        break;
+      default:
+        emailTypeDisplay = 'Professionnel';
+    }
+    
     // Create metadata for the invoice
     const metadata = {
       invoice_number: invoiceData.invoiceNumber,
@@ -64,6 +79,7 @@ export const createStripeCheckoutSession = async (invoiceData: any) => {
       due_date: dueDate.toISOString().split('T')[0],
       issuer_type: issuerTypeDisplay,
       issuer_name: invoiceData.issuerInfo?.name || '',
+      email_type: emailTypeDisplay,
     };
     
     // Simulate API response delay
