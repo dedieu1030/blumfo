@@ -1,3 +1,4 @@
+
 export interface CompanyProfile {
   name: string;
   address: string;
@@ -18,7 +19,6 @@ export interface CompanyProfile {
   payoneer?: string;
   profileType?: "personal" | "business";
   profileSubtype?: string;
-  defaultTaxConfigurationId?: string; // ID de la configuration fiscale par défaut
 }
 
 export type PaymentMethod = "card" | "transfer" | "paypal" | "check" | "cash" | "payoneer" | "other";
@@ -58,8 +58,6 @@ export interface InvoiceData {
   templateId: string;
   paymentTermsId?: string;
   customPaymentTerms?: string;
-  taxConfigurationId?: string; // ID de la configuration fiscale utilisée
-  appliedTaxes?: AppliedTax[]; // Détails des taxes appliquées
 }
 
 export interface ServiceLine {
@@ -67,19 +65,8 @@ export interface ServiceLine {
   description: string;
   quantity: string;
   unitPrice: string;
-  tva: string; // Maintenu pour rétrocompatibilité
+  tva: string;
   total: string;
-  appliedTaxes?: AppliedTax[]; // Nouvelles taxes appliquées par ligne
-}
-
-// Nouvelle interface pour les taxes appliquées
-export interface AppliedTax {
-  taxId: string;
-  name: string;
-  rate: number;
-  type: string;
-  amount: number;
-  isCompound: boolean;
 }
 
 // Interfaces pour la configuration des relances automatiques
