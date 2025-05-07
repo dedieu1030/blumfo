@@ -1,4 +1,3 @@
-
 export interface CompanyProfile {
   name: string;
   address: string;
@@ -19,6 +18,9 @@ export interface CompanyProfile {
   payoneer?: string;
   profileType?: "personal" | "business";
   profileSubtype?: string;
+  // Nouveaux champs pour la configuration fiscale
+  taxCountry?: string;
+  taxRegion?: string;
 }
 
 export type PaymentMethod = "card" | "transfer" | "paypal" | "check" | "cash" | "payoneer" | "other";
