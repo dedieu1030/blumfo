@@ -340,6 +340,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           name: "",
           address: "",
           email: "",
+          emailType: "professional", // Add the missing emailType property
           phone: "",
           bankAccount: "",
           bankName: "",
@@ -444,6 +445,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           name: "",
           address: "",
           email: "",
+          emailType: "professional", // Add the missing emailType property
           phone: "",
           bankAccount: "",
           bankName: "",
@@ -810,6 +812,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         name: "",
         address: "",
         email: "",
+        emailType: "professional", // Add the missing emailType property
         phone: "",
         bankAccount: "",
         bankName: "",
