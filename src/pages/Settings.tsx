@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -21,6 +20,8 @@ import { checkStripeConnection, initiateStripeConnect, disconnectStripeAccount }
 import { toast } from "sonner";
 import { ProfileWizard } from "@/components/profile/ProfileWizard";
 import { ProfileViewer } from "@/components/profile/ProfileViewer";
+import { CalendarIcon, Clock } from "lucide-react";
+import { ReminderScheduleEditor } from "@/components/ReminderScheduleEditor";
 
 export default function Settings() {
   const { toast: shadcnToast } = useToast();
@@ -327,6 +328,53 @@ export default function Settings() {
     }
   ];
 
+  // État pour les planifications de relance
+  const [reminderSchedules, setReminderSchedules] = useState<ReminderSchedule[]>([]);
+  const [editingSchedule, setEditingSchedule] = useState<ReminderSchedule | null>(null);
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+  const [showReminderConfig, setShowReminderConfig] = useState(false);
+  
+  // Récupérer les planifications de relance
+  useEffect(() => {
+    const savedSchedules = localStorage.getItem('reminderSchedules');
+    if (savedSchedules) {
+      try {
+        setReminderSchedules(JSON.parse(savedSchedules));
+      } catch (e) {
+        console.error("Erreur lors du parsing des planifications de relance", e);
+      }
+    } else {
+      // Créer une planification par défaut
+      const defaultSchedule: ReminderSchedule = {
+        id: "default",
+        name: "Relances standard",
+        enabled: false,
+        isDefault: true,
+        triggers: [
+          {
+            id: "trigger1",
+            triggerType: "days_after_due",
+            triggerValue: 3,
+            emailSubject: "Rappel de facture impayée",
+            emailBody: "Cher [NOM_CLIENT],\n\nNous vous rappelons que votre facture [NUM_FACTURE] d'un montant de [MONTANT] € est arrivée à échéance le [DATE_ECHEANCE] et n'a pas encore été réglée.\n\nNous vous invitons à procéder à son règlement dès que possible.\n\nCordialement,\n[VOTRE_NOM]"
+          },
+          {
+            id: "trigger2",
+            triggerType: "days_after_previous_reminder",
+            triggerValue: 7,
+            emailSubject: "Relance importante - Facture impayée",
+            emailBody: "Cher [NOM_CLIENT],\n\nMalgré notre précédent rappel, nous n'avons toujours pas reçu le paiement de votre facture [NUM_FACTURE] d'un montant de [MONTANT] €.\n\nNous vous invitons à procéder à son règlement dans les plus brefs délais afin d'éviter des frais supplémentaires.\n\nCordialement,\n[VOTRE_NOM]"
+          }
+        ]
+      };
+      setReminderSchedules([defaultSchedule]);
+    }
+  }, []);
+
+  const handleToggleAutoReminders = (enabled: boolean) => {
+    setShowReminderConfig(enabled);
+  };
+
   return (
     <>
       <Header 
@@ -440,10 +488,114 @@ export default function Settings() {
                   <Input id="next-invoice-number" placeholder="001" />
                 </div>
                 <div className="flex items-center space-x-2 md:col-span-2">
-                  <Switch id="auto-reminder" />
+                  <Switch 
+                    id="auto-reminder" 
+                    checked={showReminderConfig}
+                    onCheckedChange={handleToggleAutoReminders}
+                  />
                   <Label htmlFor="auto-reminder">Relancer automatiquement les factures impayées</Label>
                 </div>
               </div>
+
+              {showReminderConfig && (
+                <div className="mt-4 border-t pt-4">
+                  <h3 className="font-medium mb-4">Configuration des relances automatiques</h3>
+                  
+                  {reminderSchedules.length === 0 ? (
+                    <div className="text-center py-6">
+                      <p className="text-muted-foreground mb-4">
+                        Aucune planification de relances configurée
+                      </p>
+                      <Button onClick={() => openScheduleEditor()}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Créer une planification
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {reminderSchedules.map((schedule) => (
+                        <Card key={schedule.id} className="bg-gray-50">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-medium flex items-center">
+                                  {schedule.name}
+                                  {schedule.isDefault && (
+                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                      Par défaut
+                                    </span>
+                                  )}
+                                </h4>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {schedule.triggers.length} relance(s) configurée(s)
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Switch 
+                                  checked={schedule.enabled}
+                                  onCheckedChange={(checked) => {
+                                    const updated = reminderSchedules.map(s => 
+                                      s.id === schedule.id ? { ...s, enabled: checked } : s
+                                    );
+                                    setReminderSchedules(updated);
+                                    localStorage.setItem('reminderSchedules', JSON.stringify(updated));
+                                  }}
+                                />
+                                <div className="flex space-x-1">
+                                  <Button variant="outline" size="icon" onClick={() => openScheduleEditor(schedule)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  {!schedule.isDefault && (
+                                    <Button 
+                                      variant="outline" 
+                                      size="icon" 
+                                      onClick={() => deleteSchedule(schedule.id)}
+                                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4">
+                              {schedule.triggers.map((trigger, index) => (
+                                <div key={trigger.id} className="flex items-start space-x-4 mt-2 pb-2">
+                                  <div className="flex-shrink-0 mt-1">
+                                    {trigger.triggerType === "days_before_due" ? (
+                                      <CalendarIcon className="h-5 w-5 text-amber-500" />
+                                    ) : (
+                                      <Clock className="h-5 w-5 text-blue-500" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <span className="text-sm font-medium">
+                                      Relance {index + 1}:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground ml-1">
+                                      {trigger.triggerType === "days_before_due" 
+                                        ? `${trigger.triggerValue} jour(s) avant échéance` 
+                                        : trigger.triggerType === "days_after_due"
+                                          ? `${trigger.triggerValue} jour(s) après échéance`
+                                          : `${trigger.triggerValue} jour(s) après la dernière relance`}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      <Button variant="outline" onClick={() => openScheduleEditor()}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter une planification
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -943,6 +1095,26 @@ export default function Settings() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog d'édition de planification de relances */}
+      <Dialog open={isEditingSchedule} onOpenChange={setIsEditingSchedule}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingSchedule ? "Modifier la planification" : "Créer une planification de relances"}
+            </DialogTitle>
+            <DialogDescription>
+              Définissez quand et comment les relances seront envoyées aux clients
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ReminderScheduleEditor
+            schedule={editingSchedule || undefined}
+            onSave={handleSaveSchedule}
+            onCancel={() => setIsEditingSchedule(false)}
+          />
         </DialogContent>
       </Dialog>
     </>

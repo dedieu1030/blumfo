@@ -72,3 +72,20 @@ export interface ServiceLine {
   total: string;
 }
 
+// Nouvelles interfaces pour la configuration des relances automatiques
+export interface ReminderSchedule {
+  id: string;
+  name: string;
+  enabled: boolean;
+  triggers: ReminderTrigger[];
+  isDefault?: boolean;
+}
+
+export interface ReminderTrigger {
+  id: string;
+  triggerType: "days_before_due" | "days_after_due" | "days_after_previous_reminder" | "specific_date";
+  triggerValue: number; // Nombre de jours ou timestamp pour specific_date
+  emailTemplateId?: string;
+  emailSubject: string;
+  emailBody: string;
+}
