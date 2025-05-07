@@ -573,7 +573,7 @@ export function TaxSettings() {
                           type="number" 
                           value={rate.rate} 
                           onChange={(e) => {
-                            // Ensure we convert the input to a number and handle NaN
+                            // Ensure we convert the input to a number
                             const numValue = parseFloat(e.target.value);
                             handleTaxRateChange(index, 'rate', isNaN(numValue) ? 0 : numValue);
                           }}
