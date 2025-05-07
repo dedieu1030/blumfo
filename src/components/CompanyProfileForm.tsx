@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { CompanyProfile } from "@/types/invoice";
 
@@ -57,7 +57,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
     onSave(formData as CompanyProfile);
     toast({
       title: "Profil enregistré",
-      description: "Vos informations ont ét�� mises à jour avec succès."
+      description: "Vos informations ont été mises à jour avec succès."
     });
   };
 
@@ -221,19 +221,20 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
             </div>
 
             <div className="space-y-2">
-              <Label>Type d'email</Label>
-              <RadioGroup 
-                value={formData.emailType || "professional"} 
-                onValueChange={(value) => handleChange("emailType", value)}
-                className="flex flex-col space-y-1"
+              <Label htmlFor="email-type">Type d'email</Label>
+              <Select
+                value={formData.emailType}
+                onValueChange={(value) => handleChange("emailType", value as "personal" | "professional" | "company")}
               >
-                {emailTypeOptions.map(option => (
-                  <div key={option.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.value} id={`email-type-${option.value}`} />
-                    <Label htmlFor={`email-type-${option.value}`} className="font-normal cursor-pointer">{option.label}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
+                <SelectTrigger id="email-type">
+                  <SelectValue placeholder="Sélectionnez le type d'email" />
+                </SelectTrigger>
+                <SelectContent>
+                  {emailTypeOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
