@@ -19,6 +19,8 @@ interface InvoicePaymentConfirmationProps {
     amount: string;
     dueDate: string;
     status: "paid" | "pending" | "overdue" | "draft";
+    metadata?: any; // Make metadata optional
+    paymentUrl?: string;
   };
   onPaymentConfirmed: () => void;
 }
@@ -62,7 +64,8 @@ export function InvoicePaymentConfirmation({
             status: 'paid',
             paid_date: new Date(paymentDate).toISOString(),
             metadata: {
-              ...invoice.metadata,
+              // Use optional chaining to safely access metadata
+              ...(invoice.metadata || {}),
               payment_method: paymentMethod,
               payment_reference: paymentReference
             },

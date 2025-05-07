@@ -40,7 +40,7 @@ export function InvoicePaymentAlert({ dueDate, status }: InvoicePaymentAlertProp
   // Si l'échéance approche (moins de 3 jours)
   if (daysDifference <= 3) {
     return (
-      <Alert variant="warning" className="mt-2 bg-yellow-50 text-yellow-900 border-yellow-200">
+      <Alert variant="default" className="mt-2 bg-yellow-50 text-yellow-900 border-yellow-200">
         <Clock className="h-4 w-4" />
         <AlertTitle>Échéance proche</AlertTitle>
         <AlertDescription>
