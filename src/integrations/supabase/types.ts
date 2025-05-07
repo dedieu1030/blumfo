@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      stripe_connect_accounts: {
+        Row: {
+          access_token: string | null
+          account_details: Json | null
+          connected_at: string
+          created_at: string
+          disconnected_at: string | null
+          id: string
+          is_active: boolean
+          livemode: boolean
+          refresh_token: string | null
+          scope: string | null
+          stripe_account_id: string
+          token_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_details?: Json | null
+          connected_at?: string
+          created_at?: string
+          disconnected_at?: string | null
+          id?: string
+          is_active?: boolean
+          livemode?: boolean
+          refresh_token?: string | null
+          scope?: string | null
+          stripe_account_id: string
+          token_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          account_details?: Json | null
+          connected_at?: string
+          created_at?: string
+          disconnected_at?: string | null
+          id?: string
+          is_active?: boolean
+          livemode?: boolean
+          refresh_token?: string | null
+          scope?: string | null
+          stripe_account_id?: string
+          token_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stripe_customers: {
         Row: {
           address: string | null
@@ -106,6 +157,7 @@ export type Database = {
         Row: {
           amount_paid: number | null
           amount_total: number
+          connected_stripe_account_id: string | null
           created_at: string
           currency: string
           due_date: string | null
@@ -126,6 +178,7 @@ export type Database = {
         Insert: {
           amount_paid?: number | null
           amount_total: number
+          connected_stripe_account_id?: string | null
           created_at?: string
           currency?: string
           due_date?: string | null
@@ -146,6 +199,7 @@ export type Database = {
         Update: {
           amount_paid?: number | null
           amount_total?: number
+          connected_stripe_account_id?: string | null
           created_at?: string
           currency?: string
           due_date?: string | null

@@ -10,6 +10,7 @@ import Invoicing from "./pages/Invoicing";
 import Invoices from "./pages/Invoices";
 import Clients from "./pages/Clients";
 import Settings from "./pages/Settings";
+import StripeCallback from "./pages/StripeCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/stripe/callback" element={<StripeCallback />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>

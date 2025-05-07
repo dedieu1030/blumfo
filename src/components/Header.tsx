@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Menu, CheckCircle2 } from "lucide-react";
+import { PlusCircle, Menu, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { InvoiceDialog } from "./InvoiceDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { checkStripeConnection } from "@/services/stripeConnectClient";
 
 interface HeaderProps {
   title: string;
@@ -17,9 +18,34 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-  
-  // In a real app, this would come from an API or context
-  const stripeConnected = true; // Mock status - would be fetched from backend
+  const [stripeConnectionStatus, setStripeConnectionStatus] = useState<{
+    isChecking: boolean;
+    isConnected: boolean;
+  }>({
+    isChecking: true,
+    isConnected: false,
+  });
+
+  // Check Stripe connection status on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const status = await checkStripeConnection();
+        setStripeConnectionStatus({
+          isChecking: false,
+          isConnected: status.connected
+        });
+      } catch (error) {
+        console.error("Error checking Stripe connection:", error);
+        setStripeConnectionStatus({
+          isChecking: false,
+          isConnected: false
+        });
+      }
+    };
+
+    checkConnection();
+  }, []);
 
   return (
     <>
@@ -40,7 +66,21 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
         </div>
         
         <div className="mt-4 sm:mt-0 flex items-center gap-3">
-          {stripeConnected && (
+          {stripeConnectionStatus.isChecking ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center text-sm text-zinc-600 bg-zinc-100 px-3 py-1 rounded-full">
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    <span>Vérification Stripe...</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Vérification de la connexion avec Stripe</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : stripeConnectionStatus.isConnected ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -51,6 +91,23 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Votre compte Stripe est connecté et prêt à recevoir des paiements</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div 
+                    className="flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full cursor-pointer"
+                    onClick={() => navigate('/settings?tab=stripe')}
+                  >
+                    <XCircle className="mr-1 h-4 w-4" />
+                    <span>Stripe non connecté</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Connectez votre compte Stripe pour recevoir des paiements</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
