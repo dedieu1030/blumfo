@@ -31,14 +31,14 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   
-  // Filtrer les données en fonction du terme de recherche - Ajout de vérifications supplémentaires
-  const filteredInvoices = searchTerm && mockInvoices 
+  // Ensure we're safely filtering with null checks
+  const filteredInvoices = searchTerm && Array.isArray(mockInvoices) 
     ? mockInvoices.filter(invoice => 
         invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) || 
         invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()))
     : [];
   
-  const filteredClients = searchTerm && mockClients
+  const filteredClients = searchTerm && Array.isArray(mockClients)
     ? mockClients.filter(client => 
         client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         client.email.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -107,6 +107,9 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
     setSearchTerm(value);
   };
 
+  // Safety check to prevent rendering if Command components aren't ready
+  const canRenderCommand = typeof Command !== 'undefined';
+
   return (
     <div className="w-full max-w-md relative">
       <Popover open={open} onOpenChange={setOpen}>
@@ -140,121 +143,123 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
             )}
           </div>
         </PopoverTrigger>
-        <PopoverContent 
-          className="p-0 w-[500px] border shadow-md bg-popover" 
-          align="start" 
-          side="bottom" 
-          sideOffset={5}
-        >
-          <Command className="rounded-lg border shadow-md">
-            <CommandInput 
-              placeholder="Que recherchez-vous?"
-              value={searchTerm}
-              onValueChange={handleSearchChange}
-              className="border-none focus:ring-0"
-            />
-            
-            <div className="max-h-[400px] overflow-auto p-2">
-              {!searchTerm ? (
-                <>
-                  <div className="px-2 py-3 text-sm text-muted-foreground">
-                    FILTRES SUGGÉRÉS
-                  </div>
-                  <div className="space-y-2">
-                    {searchFilters.map((filter) => (
-                      <div 
-                        key={filter.label} 
-                        className="flex items-center justify-between px-2 py-1.5 text-sm hover:bg-muted/50 rounded-md cursor-pointer"
-                        onClick={() => handleSearchChange(filter.example)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium w-14">{filter.label}</span>
-                          <span className="text-muted-foreground">{filter.example.replace(`${filter.label}`, "")}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{filter.description}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="border-t mt-4 pt-2">
-                    <CommandGroup heading="Pages">
-                      <CommandItem value="dashboard" onSelect={handleSelect}>
-                        <Search className="mr-2 h-4 w-4" />
-                        <span>Tableau de bord</span>
-                      </CommandItem>
-                      <CommandItem value="invoices" onSelect={handleSelect}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        <span>Factures</span>
-                      </CommandItem>
-                      <CommandItem value="clients" onSelect={handleSelect}>
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>Clients</span>
-                      </CommandItem>
-                      <CommandItem value="settings" onSelect={handleSelect}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Paramètres</span>
-                      </CommandItem>
-                    </CommandGroup>
-                    
-                    <CommandGroup heading="Actions">
-                      <CommandItem value="new-invoice" onSelect={handleSelect}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        <span>Créer une nouvelle facture</span>
-                      </CommandItem>
-                    </CommandGroup>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <CommandEmpty>Aucun résultat trouvé pour "{searchTerm}".</CommandEmpty>
-                  
-                  {filteredInvoices && filteredInvoices.length > 0 && (
-                    <CommandGroup heading="Factures">
-                      {filteredInvoices.map((invoice) => (
-                        <CommandItem 
-                          key={invoice.id} 
-                          value={`invoice-${invoice.id}`} 
-                          onSelect={handleSelect}
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          <div className="flex-1">
-                            <span>{invoice.number}</span>
-                            <span className="ml-2 text-muted-foreground">- {invoice.clientName}</span>
-                          </div>
-                          <span className="text-muted-foreground">{invoice.amount}</span>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-                  
-                  {filteredClients && filteredClients.length > 0 && (
-                    <CommandGroup heading="Clients">
-                      {filteredClients.map((client) => (
-                        <CommandItem 
-                          key={client.id} 
-                          value={`client-${client.id}`} 
-                          onSelect={handleSelect}
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          <div className="flex-1">
-                            <span>{client.name}</span>
-                            <span className="ml-2 text-muted-foreground">- {client.email}</span>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-                </>
-              )}
+        {canRenderCommand && (
+          <PopoverContent 
+            className="p-0 w-[500px] border shadow-md bg-popover" 
+            align="start" 
+            side="bottom" 
+            sideOffset={5}
+          >
+            <Command className="rounded-lg border shadow-md">
+              <CommandInput 
+                placeholder="Que recherchez-vous?"
+                value={searchTerm}
+                onValueChange={handleSearchChange}
+                className="border-none focus:ring-0"
+              />
               
-              {!searchTerm && (
-                <div className="border-t mt-2 pt-2 px-2 text-xs text-muted-foreground flex items-center">
-                  <span className="mr-1">🔍</span>
-                  Conseils de recherche
-                </div>
-              )}
-            </div>
-          </Command>
-        </PopoverContent>
+              <div className="max-h-[400px] overflow-auto p-2">
+                {!searchTerm ? (
+                  <>
+                    <div className="px-2 py-3 text-sm text-muted-foreground">
+                      FILTRES SUGGÉRÉS
+                    </div>
+                    <div className="space-y-2">
+                      {Array.isArray(searchFilters) && searchFilters.map((filter) => (
+                        <div 
+                          key={filter.label} 
+                          className="flex items-center justify-between px-2 py-1.5 text-sm hover:bg-muted/50 rounded-md cursor-pointer"
+                          onClick={() => handleSearchChange(filter.example)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium w-14">{filter.label}</span>
+                            <span className="text-muted-foreground">{filter.example.replace(`${filter.label}`, "")}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{filter.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t mt-4 pt-2">
+                      <CommandGroup heading="Pages">
+                        <CommandItem value="dashboard" onSelect={handleSelect}>
+                          <Search className="mr-2 h-4 w-4" />
+                          <span>Tableau de bord</span>
+                        </CommandItem>
+                        <CommandItem value="invoices" onSelect={handleSelect}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          <span>Factures</span>
+                        </CommandItem>
+                        <CommandItem value="clients" onSelect={handleSelect}>
+                          <Users className="mr-2 h-4 w-4" />
+                          <span>Clients</span>
+                        </CommandItem>
+                        <CommandItem value="settings" onSelect={handleSelect}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Paramètres</span>
+                        </CommandItem>
+                      </CommandGroup>
+                      
+                      <CommandGroup heading="Actions">
+                        <CommandItem value="new-invoice" onSelect={handleSelect}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          <span>Créer une nouvelle facture</span>
+                        </CommandItem>
+                      </CommandGroup>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <CommandEmpty>Aucun résultat trouvé pour "{searchTerm}".</CommandEmpty>
+                    
+                    {Array.isArray(filteredInvoices) && filteredInvoices.length > 0 && (
+                      <CommandGroup heading="Factures">
+                        {filteredInvoices.map((invoice) => (
+                          <CommandItem 
+                            key={invoice.id} 
+                            value={`invoice-${invoice.id}`} 
+                            onSelect={handleSelect}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            <div className="flex-1">
+                              <span>{invoice.number}</span>
+                              <span className="ml-2 text-muted-foreground">- {invoice.clientName}</span>
+                            </div>
+                            <span className="text-muted-foreground">{invoice.amount}</span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+                    
+                    {Array.isArray(filteredClients) && filteredClients.length > 0 && (
+                      <CommandGroup heading="Clients">
+                        {filteredClients.map((client) => (
+                          <CommandItem 
+                            key={client.id} 
+                            value={`client-${client.id}`} 
+                            onSelect={handleSelect}
+                          >
+                            <Users className="mr-2 h-4 w-4" />
+                            <div className="flex-1">
+                              <span>{client.name}</span>
+                              <span className="ml-2 text-muted-foreground">- {client.email}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+                  </>
+                )}
+                
+                {!searchTerm && (
+                  <div className="border-t mt-2 pt-2 px-2 text-xs text-muted-foreground flex items-center">
+                    <span className="mr-1">🔍</span>
+                    Conseils de recherche
+                  </div>
+                )}
+              </div>
+            </Command>
+          </PopoverContent>
+        )}
       </Popover>
     </div>
   );
