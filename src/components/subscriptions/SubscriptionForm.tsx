@@ -248,7 +248,7 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] p-0">
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>
             {subscription ? "Modifier l'abonnement" : "Nouvel abonnement"}
@@ -348,7 +348,7 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" sideOffset={4} className="min-w-[180px]">
                     <SelectItem value="day">Jour(s)</SelectItem>
                     <SelectItem value="week">Semaine(s)</SelectItem>
                     <SelectItem value="month">Mois</SelectItem>
@@ -431,7 +431,7 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un produit" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent position="popper" sideOffset={4} className="min-w-[220px]">
                             {products.map((product) => (
                               <SelectItem key={product.id} value={product.id}>
                                 {product.name} - {formatPrice(product.price_cents)}
