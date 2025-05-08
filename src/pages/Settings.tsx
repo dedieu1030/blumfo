@@ -12,7 +12,6 @@ import { ProfileViewer } from "@/components/profile/ProfileViewer";
 import { Plus } from "lucide-react";
 
 // Import des composants de paramètres
-import { BillingSettings } from "@/components/settings/BillingSettings";
 import { PaymentMethodsSettings } from "@/components/settings/PaymentMethodsSettings";
 import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings";
 import { InvoiceTemplateSettings } from "@/components/settings/InvoiceTemplateSettings";
@@ -31,9 +30,6 @@ export default function Settings() {
   const [hasProfile, setHasProfile] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  
-  // État pour le système de relances
-  const [showReminderConfig, setShowReminderConfig] = useState(false);
 
   // Récupérer les données du profil d'entreprise
   useEffect(() => {
@@ -45,17 +41,6 @@ export default function Settings() {
         setHasProfile(true);
       } catch (e) {
         console.error("Erreur lors du parsing du profil d'entreprise", e);
-      }
-    }
-    
-    // Vérifier si les relances sont activées
-    const reminderSchedules = localStorage.getItem('reminderSchedules');
-    if (reminderSchedules) {
-      try {
-        const schedules = JSON.parse(reminderSchedules);
-        setShowReminderConfig(schedules.some(s => s.enabled));
-      } catch (e) {
-        console.error("Erreur lors du parsing des planifications de relance", e);
       }
     }
   }, []);
@@ -89,12 +74,6 @@ export default function Settings() {
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Profil
-          </TabsTrigger>
-          <TabsTrigger 
-            value="billing"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
-          >
-            Facturation
           </TabsTrigger>
           <TabsTrigger 
             value="tax"
@@ -158,13 +137,6 @@ export default function Settings() {
               onEdit={() => setIsEditingProfile(true)}
             />
           )}
-        </TabsContent>
-        
-        <TabsContent value="billing">
-          <BillingSettings 
-            showReminderConfig={showReminderConfig} 
-            onToggleReminders={setShowReminderConfig} 
-          />
         </TabsContent>
         
         <TabsContent value="tax">

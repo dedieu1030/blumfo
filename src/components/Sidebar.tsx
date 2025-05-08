@@ -6,7 +6,7 @@ import {
   FileText, 
   Users, 
   Settings, 
-  PlusCircle,
+  CreditCard,
   Package
 } from "lucide-react";
 
@@ -23,7 +23,7 @@ export function Sidebar({ className }: SidebarProps) {
   
   const navigationItems = [
     { icon: BarChart2, name: "Dashboard", path: "/" },
-    { icon: PlusCircle, name: "Facturation", path: "/invoicing" },
+    { icon: CreditCard, name: "Facturation", path: "/invoicing" },
     { icon: FileText, name: "Mes factures", path: "/invoices" },
     { icon: Users, name: "Clients", path: "/clients" },
     { icon: Package, name: "Produits & Services", path: "/products" },
