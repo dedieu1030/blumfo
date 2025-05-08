@@ -11,6 +11,7 @@ import Invoices from "./pages/Invoices";
 import Clients from "./pages/Clients";
 import ProductsServices from "./pages/ProductsServices";
 import Settings from "./pages/Settings";
+import Templates from "./pages/Templates";
 import StripeCallback from "./pages/StripeCallback";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/products" element={<ProductsServices />} />
+                <Route path="/templates" element={<Templates />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/stripe/callback" element={<StripeCallback />} />
                 <Route path="*" element={<NotFound />} />

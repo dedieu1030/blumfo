@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { InvoiceNumberingConfig, Currency, ReminderSchedule } from "@/types/invoice";
+import { InvoiceNumberingConfig, Currency, ReminderSchedule, InvoiceData } from "@/types/invoice";
 import { 
   getInvoiceNumberingConfig, 
   saveInvoiceNumberingConfig,

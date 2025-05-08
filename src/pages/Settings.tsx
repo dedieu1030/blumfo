@@ -14,7 +14,6 @@ import { Plus } from "lucide-react";
 // Import des composants de paramètres
 import { PaymentMethodsSettings } from "@/components/settings/PaymentMethodsSettings";
 import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings";
-import { InvoiceTemplateSettings } from "@/components/settings/InvoiceTemplateSettings";
 import { PaymentsSettings } from "@/components/settings/PaymentsSettings";
 import { TaxSettings } from "@/components/settings/TaxSettings";
 
@@ -94,12 +93,6 @@ export default function Settings() {
             Méthodes de paiement
           </TabsTrigger>
           <TabsTrigger 
-            value="template"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
-          >
-            Template
-          </TabsTrigger>
-          <TabsTrigger 
             value="payments"
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
@@ -149,10 +142,6 @@ export default function Settings() {
         
         <TabsContent value="payment-methods">
           <PaymentMethodsSettings companyProfile={hasProfile ? companyProfile as CompanyProfile : undefined} />
-        </TabsContent>
-        
-        <TabsContent value="template">
-          <InvoiceTemplateSettings />
         </TabsContent>
         
         <TabsContent value="payments">

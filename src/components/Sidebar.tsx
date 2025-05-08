@@ -7,7 +7,8 @@ import {
   Users, 
   Settings, 
   CreditCard,
-  Package
+  Package,
+  LayoutTemplate
 } from "lucide-react";
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ export function Sidebar({ className }: SidebarProps) {
     { icon: BarChart2, name: "Dashboard", path: "/" },
     { icon: CreditCard, name: "Facturation", path: "/invoicing" },
     { icon: FileText, name: "Mes factures", path: "/invoices" },
+    { icon: LayoutTemplate, name: "Templates", path: "/templates" },
     { icon: Users, name: "Clients", path: "/clients" },
     { icon: Package, name: "Produits & Services", path: "/products" },
     { icon: Settings, name: "Paramètres", path: "/settings" }
