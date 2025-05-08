@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -50,8 +49,10 @@ export async function fetchProducts(includeInactive: boolean = false) {
     return data.map(product => ({
       ...product,
       category_id: product.product_categories?.id,
-      category_name: product.product_categories?.name
-    }));
+      category_name: product.product_categories?.name,
+      recurring_interval: validateRecurringInterval(product.recurring_interval),
+      product_type: validateProductType(product.product_type)
+    })) as Product[];
   } catch (error) {
     console.error('Error fetching products:', error);
     toast.error('Erreur lors du chargement des produits');
@@ -75,13 +76,34 @@ export async function fetchProduct(id: string) {
     return {
       ...data,
       category_id: data.product_categories?.id,
-      category_name: data.product_categories?.name
-    };
+      category_name: data.product_categories?.name,
+      recurring_interval: validateRecurringInterval(data.recurring_interval),
+      product_type: validateProductType(data.product_type)
+    } as Product;
   } catch (error) {
     console.error('Error fetching product:', error);
     toast.error('Erreur lors du chargement du produit');
     return null;
   }
+}
+
+// Helper functions to validate and cast types
+function validateRecurringInterval(interval: string | null): 'day' | 'week' | 'month' | 'year' | null {
+  if (!interval) return null;
+  if (['day', 'week', 'month', 'year'].includes(interval)) {
+    return interval as 'day' | 'week' | 'month' | 'year';
+  }
+  console.warn(`Invalid recurring interval value: ${interval}, defaulting to null`);
+  return null;
+}
+
+function validateProductType(type: string | null): 'product' | 'service' | null {
+  if (!type) return null;
+  if (['product', 'service'].includes(type)) {
+    return type as 'product' | 'service';
+  }
+  console.warn(`Invalid product type value: ${type}, defaulting to null`);
+  return null;
 }
 
 export async function createProduct(product: Partial<Product>) {
@@ -107,7 +129,7 @@ export async function createProduct(product: Partial<Product>) {
     if (error) throw error;
     
     toast.success('Produit créé avec succès');
-    return data;
+    return data as Product;
   } catch (error) {
     console.error('Error creating product:', error);
     toast.error('Erreur lors de la création du produit');
@@ -140,7 +162,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
     if (error) throw error;
     
     toast.success('Produit mis à jour avec succès');
-    return data;
+    return data as Product;
   } catch (error) {
     console.error('Error updating product:', error);
     toast.error('Erreur lors de la mise à jour du produit');
@@ -176,7 +198,7 @@ export async function fetchCategories() {
     
     if (error) throw error;
     
-    return data;
+    return data as Category[];
   } catch (error) {
     console.error('Error fetching categories:', error);
     toast.error('Erreur lors du chargement des catégories');
@@ -198,7 +220,7 @@ export async function createCategory(category: Partial<Category>) {
     if (error) throw error;
     
     toast.success('Catégorie créée avec succès');
-    return data;
+    return data as Category;
   } catch (error) {
     console.error('Error creating category:', error);
     toast.error('Erreur lors de la création de la catégorie');
@@ -222,7 +244,7 @@ export async function updateCategory(id: string, category: Partial<Category>) {
     if (error) throw error;
     
     toast.success('Catégorie mise à jour avec succès');
-    return data;
+    return data as Category;
   } catch (error) {
     console.error('Error updating category:', error);
     toast.error('Erreur lors de la mise à jour de la catégorie');

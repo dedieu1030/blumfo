@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Product } from "./productService";
@@ -36,6 +35,24 @@ export interface SubscriptionItem {
   updated_at: string;
 }
 
+// Helper function to validate recurring interval
+function validateRecurringInterval(interval: string | null): 'day' | 'week' | 'month' | 'year' {
+  if (!interval || !['day', 'week', 'month', 'year'].includes(interval)) {
+    console.warn(`Invalid recurring interval value: ${interval}, defaulting to 'month'`);
+    return 'month';
+  }
+  return interval as 'day' | 'week' | 'month' | 'year';
+}
+
+// Helper function to validate subscription status
+function validateStatus(status: string | null): 'active' | 'paused' | 'cancelled' | 'completed' {
+  if (!status || !['active', 'paused', 'cancelled', 'completed'].includes(status)) {
+    console.warn(`Invalid status value: ${status}, defaulting to 'active'`);
+    return 'active';
+  }
+  return status as 'active' | 'paused' | 'cancelled' | 'completed';
+}
+
 export async function fetchSubscriptions() {
   try {
     const { data, error } = await supabase
@@ -51,8 +68,10 @@ export async function fetchSubscriptions() {
     return data.map(subscription => ({
       ...subscription,
       client_name: subscription.clients?.name,
-      client_email: subscription.clients?.email
-    }));
+      client_email: subscription.clients?.email,
+      recurring_interval: validateRecurringInterval(subscription.recurring_interval),
+      status: validateStatus(subscription.status)
+    })) as Subscription[];
   } catch (error) {
     console.error('Error fetching subscriptions:', error);
     toast.error('Erreur lors du chargement des abonnements');
@@ -87,11 +106,13 @@ export async function fetchSubscription(id: string) {
       ...subscription,
       client_name: subscription.clients?.name,
       client_email: subscription.clients?.email,
+      recurring_interval: validateRecurringInterval(subscription.recurring_interval),
+      status: validateStatus(subscription.status),
       items: items.map(item => ({
         ...item,
         product: item.stripe_products
       }))
-    };
+    } as Subscription;
   } catch (error) {
     console.error('Error fetching subscription:', error);
     toast.error('Erreur lors du chargement de l\'abonnement');
