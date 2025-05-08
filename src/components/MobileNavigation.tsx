@@ -9,9 +9,11 @@ import {
   FileText, 
   Users, 
   Settings, 
-  PlusCircle
+  PlusCircle,
+  Globe
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "./LanguageSelector";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -61,6 +63,12 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Sélecteur de langue dans le menu de navigation mobile */}
+              <div className="px-4 py-3 mt-4">
+                <p className="text-sm font-medium text-gray-600 mb-2">{t('language')}</p>
+                <LanguageSelector />
+              </div>
             </div>
           </div>
           

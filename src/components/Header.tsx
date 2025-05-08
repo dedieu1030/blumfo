@@ -56,15 +56,13 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                   {t('newInvoice')}
                 </Button>
                 
-                {/* Sélecteur de langue juste après le bouton nouvelle facture */}
+                {/* Sélecteur de langue juste après le bouton nouvelle facture - uniquement en desktop */}
                 <LanguageSelector />
               </div>
             )}
             
             {/* Cloche de notification tout à droite */}
-            <div className={`flex items-center ${isMobile ? 'ml-1' : 'ml-4'}`}>
-              {/* En version mobile, le sélecteur de langue avant la cloche */}
-              {isMobile && <LanguageSelector />}
+            <div className="flex items-center ml-1">
               <NotificationBell />
             </div>
           </div>
