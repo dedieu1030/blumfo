@@ -17,7 +17,7 @@ export const fetchNotifications = async (): Promise<Notification[]> => {
       throw error;
     }
     
-    return data || [];
+    return (data as unknown as Notification[]) || [];
   } catch (error) {
     console.error("Error fetching notifications:", error);
     return [];

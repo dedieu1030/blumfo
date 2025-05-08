@@ -1,7 +1,7 @@
 
 export interface Notification {
   id: string;
-  type: 'payment_received' | 'invoice_created' | 'invoice_due_soon' | 'invoice_overdue' | 'other';
+  type: 'payment_received' | 'invoice_created' | 'invoice_due_soon' | 'invoice_overdue' | 'other' | string;
   title: string;
   message: string;
   is_read: boolean;
