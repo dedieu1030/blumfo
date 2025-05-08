@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, FileText, Users, Settings, Plus, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
   CommandDialog, 
@@ -17,9 +17,37 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
+// Données factices pour la démonstration
+const mockInvoices = [
+  { id: "inv-001", number: "INV-001", clientName: "SCI Legalis", amount: "1,200.00 €" },
+  { id: "inv-002", number: "INV-002", clientName: "Cabinet Lefort", amount: "850.00 €" },
+  { id: "inv-003", number: "INV-003", clientName: "Me. Dubois", amount: "1,400.00 €" },
+];
+
+const mockClients = [
+  { id: "client-001", name: "SCI Legalis", email: "contact@sci-legalis.fr" },
+  { id: "client-002", name: "Cabinet Lefort", email: "info@cabinet-lefort.fr" },
+  { id: "client-003", name: "Me. Dubois", email: "dubois@avocat.fr" },
+  { id: "client-004", name: "Me. Martin", email: "martin@avocat.fr" },
+];
+
 export function SearchBar({ placeholder = "Rechercher dans l'application..." }: SearchBarProps) {
   const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+
+  // Filtrer les données en fonction du terme de recherche
+  const filteredInvoices = searchTerm 
+    ? mockInvoices.filter(invoice => 
+        invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()))
+    : [];
+  
+  const filteredClients = searchTerm 
+    ? mockClients.filter(client => 
+        client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        client.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    : [];
 
   // Ouvrir la boîte de dialogue avec le raccourci clavier Cmd+K ou Ctrl+K
   useEffect(() => {
@@ -38,23 +66,35 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
     setOpen(false);
     
     // Navigation en fonction de la sélection
-    switch (value) {
-      case "dashboard":
-        navigate("/");
-        break;
-      case "invoices":
-        navigate("/invoices");
-        break;
-      case "clients":
-        navigate("/clients");
-        break;
-      case "new-invoice":
-        navigate("/invoicing");
-        break;
-      case "settings":
-        navigate("/settings");
-        break;
+    if (value.startsWith("invoice-")) {
+      const invoiceId = value.replace("invoice-", "");
+      navigate(`/invoices?id=${invoiceId}`);
+    } else if (value.startsWith("client-")) {
+      const clientId = value.replace("client-", "");
+      navigate(`/clients?id=${clientId}`);
+    } else {
+      switch (value) {
+        case "dashboard":
+          navigate("/");
+          break;
+        case "invoices":
+          navigate("/invoices");
+          break;
+        case "clients":
+          navigate("/clients");
+          break;
+        case "new-invoice":
+          navigate("/invoicing");
+          break;
+        case "settings":
+          navigate("/settings");
+          break;
+      }
     }
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
   };
 
   return (
@@ -71,35 +111,82 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
       </div>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Que recherchez-vous?" />
+        <CommandInput 
+          placeholder="Que recherchez-vous?" 
+          value={searchTerm}
+          onValueChange={handleSearchChange}
+        />
         <CommandList>
-          <CommandEmpty>Aucun résultat trouvé.</CommandEmpty>
+          <CommandEmpty>Aucun résultat trouvé pour "{searchTerm}".</CommandEmpty>
           
-          <CommandGroup heading="Pages">
-            <CommandItem value="dashboard" onSelect={handleSelect}>
-              <Search className="mr-2 h-4 w-4" />
-              <span>Tableau de bord</span>
-            </CommandItem>
-            <CommandItem value="invoices" onSelect={handleSelect}>
-              <Search className="mr-2 h-4 w-4" />
-              <span>Factures</span>
-            </CommandItem>
-            <CommandItem value="clients" onSelect={handleSelect}>
-              <Search className="mr-2 h-4 w-4" />
-              <span>Clients</span>
-            </CommandItem>
-            <CommandItem value="settings" onSelect={handleSelect}>
-              <Search className="mr-2 h-4 w-4" />
-              <span>Paramètres</span>
-            </CommandItem>
-          </CommandGroup>
-          
-          <CommandGroup heading="Actions">
-            <CommandItem value="new-invoice" onSelect={handleSelect}>
-              <Search className="mr-2 h-4 w-4" />
-              <span>Créer une nouvelle facture</span>
-            </CommandItem>
-          </CommandGroup>
+          {searchTerm ? (
+            <>
+              {filteredInvoices.length > 0 && (
+                <CommandGroup heading="Factures">
+                  {filteredInvoices.map((invoice) => (
+                    <CommandItem 
+                      key={invoice.id} 
+                      value={`invoice-${invoice.id}`} 
+                      onSelect={handleSelect}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      <div className="flex-1">
+                        <span>{invoice.number}</span>
+                        <span className="ml-2 text-muted-foreground">- {invoice.clientName}</span>
+                      </div>
+                      <span className="text-muted-foreground">{invoice.amount}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              
+              {filteredClients.length > 0 && (
+                <CommandGroup heading="Clients">
+                  {filteredClients.map((client) => (
+                    <CommandItem 
+                      key={client.id} 
+                      value={`client-${client.id}`} 
+                      onSelect={handleSelect}
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      <div className="flex-1">
+                        <span>{client.name}</span>
+                        <span className="ml-2 text-muted-foreground">- {client.email}</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </>
+          ) : (
+            <>
+              <CommandGroup heading="Pages">
+                <CommandItem value="dashboard" onSelect={handleSelect}>
+                  <Search className="mr-2 h-4 w-4" />
+                  <span>Tableau de bord</span>
+                </CommandItem>
+                <CommandItem value="invoices" onSelect={handleSelect}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>Factures</span>
+                </CommandItem>
+                <CommandItem value="clients" onSelect={handleSelect}>
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Clients</span>
+                </CommandItem>
+                <CommandItem value="settings" onSelect={handleSelect}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Paramètres</span>
+                </CommandItem>
+              </CommandGroup>
+              
+              <CommandGroup heading="Actions">
+                <CommandItem value="new-invoice" onSelect={handleSelect}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span>Créer une nouvelle facture</span>
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </CommandList>
       </CommandDialog>
     </>
