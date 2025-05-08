@@ -412,7 +412,7 @@ export default function Invoicing() {
       
       {/* Dialog d'édition de planification de relances */}
       <Dialog open={isEditingSchedule} onOpenChange={setIsEditingSchedule}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>
               {editingSchedule ? t("editReminder") : t("createReminder")}

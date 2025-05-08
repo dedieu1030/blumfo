@@ -215,18 +215,20 @@ export function ReminderSettings() {
       
       {/* Dialog d'édition de planification de relances */}
       <Dialog open={isEditingSchedule} onOpenChange={setIsEditingSchedule}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>
               {editingSchedule ? "Modifier la planification" : "Créer une planification de relances"}
             </DialogTitle>
           </DialogHeader>
           
-          <ReminderScheduleEditor
-            schedule={editingSchedule || undefined}
-            onSave={handleSaveSchedule}
-            onCancel={() => setIsEditingSchedule(false)}
-          />
+          <div className="overflow-y-auto max-h-[70vh]">
+            <ReminderScheduleEditor
+              schedule={editingSchedule || undefined}
+              onSave={handleSaveSchedule}
+              onCancel={() => setIsEditingSchedule(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </>

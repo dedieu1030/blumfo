@@ -67,7 +67,7 @@ export function ReminderScheduleEditor({ schedule, onSave, onCancel }: ReminderS
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-1">
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
@@ -77,7 +77,7 @@ export function ReminderScheduleEditor({ schedule, onSave, onCancel }: ReminderS
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Relances standard"
-              className="mt-1"
+              className="mt-1 w-full"
             />
           </div>
           <div className="flex items-center space-x-2 mt-7">
