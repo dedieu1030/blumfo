@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 @tailwind base;
@@ -16,7 +15,7 @@
     --popover: 35 33% 98%;
     --popover-foreground: 25 25% 12%;
 
-    --primary: 14 95% 62%; /* Nouvelle couleur corail: #FA7043 */
+    --primary: 164 100% 10%; /* Vert foncé: #003427 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 24 18% 93%; /* Beige clair: #F0EBE7 */
@@ -48,19 +47,19 @@
 
     --border: 24 15% 85%; /* Beige border: #e1dcd7 */
     --input: 24 15% 85%; /* Beige border: #e1dcd7 */
-    --ring: 14 95% 62%; /* Nouvelle couleur corail: #FA7043 */
+    --ring: 164 100% 10%; /* Vert foncé: #003427 */
 
     --radius: 0.75rem;
 
-    /* Sidebar specific colors */
+    /* Sidebar specific colors - already good */
     --sidebar-background: 24 18% 93%; /* #F0EBE7 */
     --sidebar-foreground: 25 25% 12%;
-    --sidebar-primary: 14 95% 62%; /* Nouvelle couleur corail: #FA7043 */
+    --sidebar-primary: 164 100% 10%; /* Vert foncé: #003427 */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 84 98% 66%; /* Vert Lime: #d6fd51 */
     --sidebar-accent-foreground: 25 25% 12%;
     --sidebar-border: 24 15% 80%; /* #d5cdc6 */
-    --sidebar-ring: 14 95% 62%; /* Nouvelle couleur corail: #FA7043 */
+    --sidebar-ring: 164 100% 10%; /* Vert foncé: #003427 */
   }
 
   .dark {
@@ -73,7 +72,7 @@
     --popover: 25 30% 10%;
     --popover-foreground: 24 15% 90%;
 
-    --primary: 14 95% 62%; /* Nouvelle couleur corail: #FA7043 */
+    --primary: 164 100% 10%; /* Vert foncé: #003427 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 25 25% 20%;
@@ -90,7 +89,7 @@
 
     --border: 25 25% 30%;
     --input: 25 25% 30%;
-    --ring: 14 95% 62%; /* Nouvelle couleur corail: #FA7043 */
+    --ring: 164 100% 10%; /* Vert foncé: #003427 */
   }
 }
 
