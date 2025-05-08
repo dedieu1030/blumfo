@@ -27,44 +27,57 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
         {/* Barre supérieure avec recherche, boutons d'action et notifications */}
         <div className="mb-4">
           <div className="flex items-center justify-between">
-            {isMobile && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="mr-1" 
-                onClick={onOpenMobileMenu}
-              >
-                <Menu className="h-6 w-6" />
-              </Button>
-            )}
-            
-            {/* Barre de recherche - plus large sur mobile mais pas trop */}
-            <div className={`${isMobile ? 'flex-1 max-w-[65%]' : 'flex-1 mr-4'}`}>
-              <SearchBar />
-            </div>
-            
-            {/* En version desktop: boutons d'action + langue au milieu */}
-            {!isMobile && (
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="default"
-                  size="sm"
-                  onClick={() => setInvoiceDialogOpen(true)}
-                  className="gap-1"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  {t('newInvoice')}
-                </Button>
+            {/* Version mobile: barre de recherche à gauche, notification et menu à droite */}
+            {isMobile ? (
+              <>
+                {/* Barre de recherche - plus large sur mobile */}
+                <div className="flex-1 max-w-[70%]">
+                  <SearchBar />
+                </div>
                 
-                {/* Sélecteur de langue juste après le bouton nouvelle facture - uniquement en desktop */}
-                <LanguageSelector />
-              </div>
+                {/* Zone des boutons à droite en mobile */}
+                <div className="flex items-center">
+                  {/* Cloche de notification d'abord */}
+                  <NotificationBell />
+                  
+                  {/* Bouton menu à l'extrême droite */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="ml-1"
+                    onClick={onOpenMobileMenu}
+                  >
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Version desktop: recherche à gauche, boutons au milieu, notification à droite */}
+                <div className="flex-1 mr-4">
+                  <SearchBar />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    onClick={() => setInvoiceDialogOpen(true)}
+                    className="gap-1"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    {t('newInvoice')}
+                  </Button>
+                  
+                  {/* Sélecteur de langue uniquement en desktop */}
+                  <LanguageSelector />
+                </div>
+                
+                <div className="flex items-center ml-1">
+                  <NotificationBell />
+                </div>
+              </>
             )}
-            
-            {/* Cloche de notification tout à droite */}
-            <div className="flex items-center ml-1">
-              <NotificationBell />
-            </div>
           </div>
         </div>
         
