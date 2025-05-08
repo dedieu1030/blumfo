@@ -13,7 +13,6 @@ import { Plus } from "lucide-react";
 
 // Import des composants de paramètres
 import { BillingSettings } from "@/components/settings/BillingSettings";
-import { ReminderSettings } from "@/components/settings/ReminderSettings";
 import { PaymentMethodsSettings } from "@/components/settings/PaymentMethodsSettings";
 import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings";
 import { InvoiceTemplateSettings } from "@/components/settings/InvoiceTemplateSettings";
@@ -166,8 +165,6 @@ export default function Settings() {
             showReminderConfig={showReminderConfig} 
             onToggleReminders={setShowReminderConfig} 
           />
-          
-          {showReminderConfig && <ReminderSettings />}
         </TabsContent>
         
         <TabsContent value="tax">
