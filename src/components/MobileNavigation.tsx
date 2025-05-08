@@ -34,11 +34,11 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-credornoir border-t border-[#2a2a2a] p-0">
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-[#F0EBE7] border-t border-sidebar-border p-0">
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-[#2a2a2a]">
-            <h1 className="text-xl font-bold text-white">LexFacture</h1>
-            <p className="text-sm text-white/60">Facturez sans friction</p>
+          <div className="p-6 border-b border-taupe/30">
+            <h1 className="text-xl font-bold text-gray-800">LexFacture</h1>
+            <p className="text-sm text-gray-600">Facturez sans friction</p>
           </div>
           
           <div className="flex-1 overflow-auto py-4">
@@ -50,25 +50,25 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
                   onClick={() => onOpenChange(false)}
                   className={`flex items-center px-4 py-3 rounded-md text-base font-medium ${
                     isActive(item.path)
-                      ? "bg-white/10 text-vertlime"
-                      : "text-white/80 hover:text-white"
+                      ? "bg-white/50 text-[#003427]"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-white/20"
                   }`}
                 >
-                  <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-vertlime" : ""}`} />
+                  <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-[#003427]" : ""}`} />
                   {item.name}
                 </Link>
               ))}
             </div>
           </div>
           
-          <div className="p-4 border-t border-[#2a2a2a]">
+          <div className="p-4 border-t border-taupe/30">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-violet rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">MD</span>
               </div>
               <div className="ml-3">
-                <div className="text-sm font-medium text-white">Me Dupont</div>
-                <div className="text-xs text-white/60">Cabinet Dupont</div>
+                <div className="text-sm font-medium text-gray-800">Me Dupont</div>
+                <div className="text-xs text-gray-600">Cabinet Dupont</div>
               </div>
             </div>
           </div>
