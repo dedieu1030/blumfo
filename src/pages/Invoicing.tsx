@@ -131,8 +131,8 @@ export default function Invoicing() {
       setIsEditingSchedule(false);
       
       toast.success(editingSchedule 
-        ? t("scheduleUpdated", { name: schedule.name }, `La planification "${schedule.name}" a été mise à jour`)
-        : t("scheduleCreated", { name: schedule.name }, `La planification "${schedule.name}" a été créée`)
+        ? t("scheduleUpdated", { name: schedule.name })
+        : t("scheduleCreated", { name: schedule.name })
       );
     } else {
       toast.error(result.error || t("scheduleSaveError", "Une erreur est survenue lors de l'enregistrement de la planification"));
