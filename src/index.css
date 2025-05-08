@@ -109,8 +109,8 @@
   
   /* Styles pour les barres de défilement natives */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 3px;
+    height: 3px;
   }
   
   ::-webkit-scrollbar-track {
@@ -118,18 +118,19 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    background-color: #C8C8C9;
+    background-color: rgba(200, 200, 201, 0.5);
     border-radius: 9999px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background-color: #9F9EA1;
+    background-color: rgba(159, 158, 161, 0.5);
   }
   
   /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #C8C8C9 transparent;
+    scrollbar-color: rgba(200, 200, 201, 0.5) transparent;
   }
 }
+
 
