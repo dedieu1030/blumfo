@@ -38,9 +38,13 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
               </Button>
             )}
             
+            {/* Barre de recherche à gauche */}
+            <div className="flex-1 mr-4">
+              <SearchBar />
+            </div>
+            
+            {/* Bouton nouvelle facture au milieu */}
             <div className="flex items-center gap-2">
-              <LanguageSelector />
-              
               <Button 
                 variant="outline"
                 size="sm"
@@ -50,13 +54,13 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                 <PlusCircle className="h-4 w-4" />
                 {t('newInvoice')}
               </Button>
+              
+              {/* Sélecteur de langue juste après le bouton nouvelle facture */}
+              <LanguageSelector />
             </div>
             
-            <div className="flex-1 mx-4">
-              <SearchBar />
-            </div>
-            
-            <div className="flex items-center">
+            {/* Cloche de notification tout à droite */}
+            <div className="flex items-center ml-4">
               <NotificationBell />
             </div>
           </div>
