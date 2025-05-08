@@ -9,7 +9,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { checkStripeConnection } from "@/services/stripeConnectClient";
 import { SearchBar } from "./SearchBar";
 import { NotificationBell } from "./NotificationBell";
-import { Separator } from "@/components/ui/separator";
 
 interface HeaderProps {
   title: string;
@@ -52,101 +51,107 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
 
   return (
     <>
-      <div className="flex flex-col gap-6 mb-8">
-        {/* Top navigation bar with search and actions */}
-        <div className="flex items-center justify-between py-4">
-          {/* Left side - Mobile menu button */}
-          <div className="flex-shrink-0">
-            {isMobile && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="-ml-3" 
-                onClick={onOpenMobileMenu}
-              >
-                <Menu className="h-6 w-6" />
-              </Button>
-            )}
-          </div>
-          
-          {/* Center - Search bar */}
-          <div className="flex-1 flex justify-center max-w-3xl mx-auto px-4">
-            <SearchBar />
-          </div>
-          
-          {/* Right side - Status indicators and actions */}
-          <div className="flex items-center gap-3">
-            {/* Stripe connection status indicators */}
-            {stripeConnectionStatus.isChecking ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center text-sm text-zinc-600 bg-zinc-100 px-3 py-1 rounded-full">
-                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                      <span className="hidden md:inline">Vérification Stripe...</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Vérification de la connexion avec Stripe</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : stripeConnectionStatus.isConnected ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                      <CheckCircle2 className="mr-1 h-4 w-4" />
-                      <span className="hidden md:inline">Stripe connecté</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Votre compte Stripe est connecté et prêt à recevoir des paiements</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div 
-                      className="flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full cursor-pointer"
-                      onClick={() => navigate('/settings?tab=stripe')}
-                    >
-                      <XCircle className="mr-1 h-4 w-4" />
-                      <span className="hidden md:inline">Stripe non connecté</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Connectez votre compte Stripe pour recevoir des paiements</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
-            {/* Notification Bell */}
-            <NotificationBell />
-            
-            {/* New Invoice Button */}
+      {/* Header navigation bar with logo, search and actions */}
+      <div className="flex items-center justify-between py-4 mb-8">
+        {/* Left side - Mobile menu button or title */}
+        <div className="flex-shrink-0">
+          {isMobile ? (
             <Button 
-              className="bg-violet hover:bg-violet/90"
-              onClick={() => setInvoiceDialogOpen(true)}
+              variant="ghost" 
+              size="icon" 
+              className="-ml-3" 
+              onClick={onOpenMobileMenu}
             >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              <span className="hidden md:inline">Nouvelle facture</span>
+              <Menu className="h-6 w-6" />
             </Button>
-          </div>
+          ) : (
+            <h1 className="text-2xl font-bold">{title}</h1>
+          )}
         </div>
         
-        {/* Separator */}
-        <Separator className="mt-1 mb-4" />
+        {/* Center - Search bar */}
+        <div className="flex-1 flex justify-center max-w-3xl mx-auto px-4">
+          <SearchBar />
+        </div>
         
-        {/* Page title and description */}
-        <div>
-          <h1 className="text-2xl font-bold">{title}</h1>
-          {description && <p className="text-muted-foreground mt-1">{description}</p>}
+        {/* Right side - Status indicators and actions */}
+        <div className="flex items-center gap-3">
+          {/* Stripe connection status indicators */}
+          {stripeConnectionStatus.isChecking ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center text-sm text-zinc-600 bg-zinc-100 px-3 py-1 rounded-full">
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    <span className="hidden md:inline">Vérification Stripe...</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Vérification de la connexion avec Stripe</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : stripeConnectionStatus.isConnected ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                    <CheckCircle2 className="mr-1 h-4 w-4" />
+                    <span className="hidden md:inline">Stripe connecté</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Votre compte Stripe est connecté et prêt à recevoir des paiements</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div 
+                    className="flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full cursor-pointer"
+                    onClick={() => navigate('/settings?tab=stripe')}
+                  >
+                    <XCircle className="mr-1 h-4 w-4" />
+                    <span className="hidden md:inline">Stripe non connecté</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Connectez votre compte Stripe pour recevoir des paiements</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
+          {/* Notification Bell */}
+          <NotificationBell />
+          
+          {/* New Invoice Button - only icon */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  className="bg-violet hover:bg-violet/90 h-10 w-10 p-0 rounded-full"
+                  onClick={() => setInvoiceDialogOpen(true)}
+                >
+                  <PlusCircle className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Nouvelle facture</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
+      
+      {/* Page description shown below the header */}
+      {!isMobile && description && (
+        <div className="mb-8">
+          <p className="text-muted-foreground">{description}</p>
+        </div>
+      )}
 
       <InvoiceDialog 
         open={invoiceDialogOpen} 
