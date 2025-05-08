@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { PersonalProfileSubtype } from "./ProfileSubtypeSelector";
 import { CompanyProfile } from "@/types/invoice";
+import { TaxRateSelector } from "@/components/settings/TaxRateSelector";
 
 interface PersonalProfileFormProps {
   subtype: PersonalProfileSubtype;
@@ -254,15 +254,10 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
       <div className="pt-4 border-t">
         <h3 className="text-lg font-medium mb-4">Paramètres de facturation</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="tax-rate">Taux de TVA par défaut (%)</Label>
-            <Input 
-              id="tax-rate" 
-              type="number" 
-              placeholder="20" 
-              value={formData.taxRate || ""}
-              onChange={(e) => handleChange("taxRate", e.target.value)}
-              required
+          <div className="space-y-2 md:col-span-2">
+            <TaxRateSelector
+              defaultValue={formData.taxRate || "20"}
+              onChange={(value) => handleChange("taxRate", value)}
             />
           </div>
           <div className="space-y-2">
