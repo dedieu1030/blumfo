@@ -9,10 +9,14 @@ import { NewClientForm } from "./NewClientForm";
 export interface Client {
   id: string;
   name: string;
-  email?: string;
+  email: string;
   phone?: string;
   address?: string;
-  invoiceCount?: number; // Add this property to the interface
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  invoiceCount?: number;
 }
 
 interface ClientSelectorProps {

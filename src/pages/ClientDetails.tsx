@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -7,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvoiceStatus } from "@/components/InvoiceStatus";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, Save, Mail, Phone, Building, Calendar, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
@@ -407,7 +405,7 @@ export default function ClientDetails() {
                                 {formatCurrency(invoice.amount_total / 100, invoice.currency)}
                               </TableCell>
                               <TableCell>
-                                <InvoiceStatus status={invoice.status} />
+                                <InvoiceStatus status={invoice.status as "paid" | "pending" | "overdue" | "draft"} />
                               </TableCell>
                               <TableCell className="text-right">
                                 <Button 

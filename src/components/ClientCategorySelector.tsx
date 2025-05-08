@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -113,11 +112,19 @@ export function ClientCategorySelector({
     setIsSaving(true);
     
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Utilisateur non authentifié");
+      }
+      
       const { data, error } = await supabase
         .from('client_categories')
         .insert({
           name: newCategoryName.trim(),
-          color: newCategoryColor
+          color: newCategoryColor,
+          user_id: user.id
         })
         .select()
         .single();

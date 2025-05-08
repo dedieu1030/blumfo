@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -328,7 +329,7 @@ export default function Clients() {
         // Mettre à jour l'état local
         setClients(prevClients => 
           prevClients.map(c => 
-            c.id === clientData.id ? { ...c, ...clientData } as ClientWithCategories : c
+            c.id === clientData.id ? { ...c, ...clientData as Client } as ClientWithCategories : c
           )
         );
       } else {
@@ -350,7 +351,8 @@ export default function Clients() {
         if (data && data.length > 0) {
           const newClient = {
             ...data[0],
-            invoiceCount: 0
+            invoiceCount: 0,
+            categories: []
           } as ClientWithCategories;
           
           toast({
