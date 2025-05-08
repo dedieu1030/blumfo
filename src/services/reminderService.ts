@@ -134,13 +134,25 @@ export async function saveReminderSchedule(schedule: ReminderSchedule): Promise<
   error?: string;
 }> {
   try {
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "User not authenticated"
+      };
+    }
+
+    // Now include the user_id when upserting the schedule
     const { data: savedSchedule, error: scheduleError } = await supabase
       .from('reminder_schedules')
       .upsert({
         id: schedule.id,
         name: schedule.name,
         enabled: schedule.enabled,
-        is_default: schedule.isDefault
+        is_default: schedule.isDefault,
+        user_id: user.id
       })
       .select('*')
       .single();
