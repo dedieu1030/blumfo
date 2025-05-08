@@ -1,174 +1,137 @@
-import { useState, useEffect } from "react";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, UserPlus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
-// Type for a client
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { User } from "lucide-react";
+import { NewClientForm } from "./NewClientForm";
+
 export interface Client {
   id: string;
   name: string;
-  email: string;
-  phone: string | null;
-  address: string | null;
-  invoiceCount: number;
-  user_id: string; // Add this field to match the database schema
+  email?: string;
+  phone?: string;
+  address?: string;
 }
 
 interface ClientSelectorProps {
   onClientSelect: (client: Client) => void;
+  buttonText?: string;
 }
 
-export function ClientSelector({ onClientSelect }: ClientSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau client" }: ClientSelectorProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showNewClientForm, setShowNewClientForm] = useState(false);
 
-  // Fetch clients from Supabase
   useEffect(() => {
     const fetchClients = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        const { data: clientsData, error } = await supabase
+        const { data, error } = await supabase
           .from('clients')
-          .select('*');
-
+          .select('*')
+          .order('name');
+        
         if (error) throw error;
-
-        // Format the data and add invoice count
-        const formattedClients = await Promise.all(clientsData.map(async (client) => {
-          const { data: countData } = await supabase.rpc(
-            'get_client_invoice_count', 
-            { client_id: client.id }
-          );
-          
-          return {
-            ...client,
-            invoiceCount: countData || 0
-          } as Client;
-        }));
-
-        setClients(formattedClients);
-        setFilteredClients(formattedClients);
+        
+        setClients(data || []);
+        setFilteredClients(data || []);
       } catch (error) {
-        console.error("Error fetching clients:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les clients. Veuillez réessayer.",
-          variant: "destructive"
-        });
+        console.error('Error fetching clients:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
-    if (isOpen) {
-      fetchClients();
-    }
-  }, [isOpen, toast]);
-
-  // Filter clients based on search term
+    
+    fetchClients();
+  }, []);
+  
   useEffect(() => {
-    if (!searchTerm.trim()) {
+    if (searchQuery.trim() === '') {
       setFilteredClients(clients);
-      return;
+    } else {
+      const lowercaseQuery = searchQuery.toLowerCase();
+      const filtered = clients.filter(client => 
+        client.name.toLowerCase().includes(lowercaseQuery) || 
+        (client.email && client.email.toLowerCase().includes(lowercaseQuery))
+      );
+      setFilteredClients(filtered);
     }
-
-    const filtered = clients.filter(
-      (client) =>
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (client.address && client.address.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-
-    setFilteredClients(filtered);
-  }, [searchTerm, clients]);
-
-  const handleClientSelect = (client: Client) => {
-    onClientSelect(client);
-    setIsOpen(false);
-    toast({
-      title: "Client sélectionné",
-      description: `${client.name} a été sélectionné pour cette facture.`
-    });
+  }, [searchQuery, clients]);
+  
+  const handleClientCreated = (newClient: Client) => {
+    // Add the new client to the clients list
+    setClients(prevClients => [...prevClients, newClient]);
+    
+    // Select the newly created client
+    onClientSelect(newClient);
+    
+    // Close the form
+    setShowNewClientForm(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Choisir un client existant</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Sélectionner un client</DialogTitle>
-        </DialogHeader>
-        
-        <div className="relative w-full mt-4 mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Rechercher un client..." 
-            className="pl-10 bg-background" 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+    <>
+      <div className="space-y-4">
+        <div className="relative">
+          <Input
+            type="search"
+            placeholder="Rechercher un client..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
           />
         </div>
 
-        <div className="space-y-4 max-h-[50vh] overflow-y-auto">
-          {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Chargement des clients...</p>
-            </div>
-          ) : filteredClients.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Aucun client trouvé</p>
-            </div>
-          ) : (
-            filteredClients.map((client) => (
+        {isLoading ? (
+          <div className="text-center p-4">
+            <span className="animate-spin inline-block h-6 w-6 border-t-2 border-primary rounded-full" />
+          </div>
+        ) : filteredClients.length > 0 ? (
+          <div className="border rounded-md overflow-hidden max-h-[300px] overflow-y-auto">
+            {filteredClients.map((client) => (
               <div
                 key={client.id}
-                className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition-colors"
-                onClick={() => handleClientSelect(client)}
+                className="p-3 border-b last:border-0 flex items-center justify-between hover:bg-muted/50 cursor-pointer"
+                onClick={() => onClientSelect(client)}
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">{client.name}</h3>
-                    <p className="text-sm text-muted-foreground">{client.email}</p>
-                    <p className="text-sm text-muted-foreground">{client.phone}</p>
-                    <p className="text-sm text-muted-foreground">{client.address}</p>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {client.invoiceCount} facture{client.invoiceCount > 1 ? "s" : ""}
-                  </div>
+                <div>
+                  <div className="font-medium">{client.name}</div>
+                  {client.email && (
+                    <div className="text-sm text-muted-foreground">{client.email}</div>
+                  )}
                 </div>
+                <Button variant="ghost" size="sm" onClick={() => onClientSelect(client)}>
+                  Sélectionner
+                </Button>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-4 border rounded-md">
+            <p className="text-muted-foreground">Aucun client trouvé</p>
+          </div>
+        )}
 
-        <div className="mt-4">
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={() => setIsOpen(false)}
-            size="sm"
-          >
-            <UserPlus className="mr-2 h-4 w-4" />
-            Créer un nouveau client
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full flex items-center gap-2"
+          onClick={() => setShowNewClientForm(true)}
+        >
+          <User className="h-4 w-4" />
+          {buttonText}
+        </Button>
+      </div>
+
+      <NewClientForm 
+        open={showNewClientForm} 
+        onOpenChange={setShowNewClientForm} 
+        onClientCreated={handleClientCreated} 
+      />
+    </>
   );
-}
+};

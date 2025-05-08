@@ -12,8 +12,9 @@ export interface Subscription {
   client_email?: string;
   start_date: string;
   end_date: string | null;
-  recurring_interval: 'day' | 'week' | 'month' | 'year';
+  recurring_interval: 'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year' | 'custom';
   recurring_interval_count: number;
+  custom_days?: number | null;
   next_invoice_date: string;
   last_invoice_date: string | null;
   status: 'active' | 'paused' | 'cancelled' | 'completed';
@@ -36,12 +37,12 @@ export interface SubscriptionItem {
 }
 
 // Helper function to validate recurring interval
-function validateRecurringInterval(interval: string | null): 'day' | 'week' | 'month' | 'year' {
-  if (!interval || !['day', 'week', 'month', 'year'].includes(interval)) {
+function validateRecurringInterval(interval: string | null): 'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year' | 'custom' {
+  if (!interval || !['day', 'week', 'month', 'quarter', 'semester', 'year', 'custom'].includes(interval)) {
     console.warn(`Invalid recurring interval value: ${interval}, defaulting to 'month'`);
     return 'month';
   }
-  return interval as 'day' | 'week' | 'month' | 'year';
+  return interval as 'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year' | 'custom';
 }
 
 // Helper function to validate subscription status
@@ -288,8 +289,9 @@ export async function updateSubscriptionStatus(id: string, status: 'active' | 'p
 
 export function calculateNextInvoiceDate(
   startDate: Date | string,
-  interval: 'day' | 'week' | 'month' | 'year',
-  intervalCount: number
+  interval: 'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year' | 'custom',
+  intervalCount: number,
+  customDays?: number | null
 ): Date {
   const date = typeof startDate === 'string' ? new Date(startDate) : startDate;
   
@@ -300,20 +302,33 @@ export function calculateNextInvoiceDate(
       return addWeeks(date, intervalCount);
     case 'month':
       return addMonths(date, intervalCount);
+    case 'quarter':
+      return addMonths(date, intervalCount * 3);
+    case 'semester':
+      return addMonths(date, intervalCount * 6);
     case 'year':
       return addYears(date, intervalCount);
+    case 'custom':
+      return addDays(date, customDays || intervalCount);
     default:
       return date;
   }
 }
 
-export function formatRecurringInterval(interval: string, count: number) {
+export function formatRecurringInterval(interval: string, count: number, customDays?: number | null) {
   const intervalMap = {
     day: count > 1 ? 'jours' : 'jour',
     week: count > 1 ? 'semaines' : 'semaine',
     month: count > 1 ? 'mois' : 'mois',
+    quarter: count > 1 ? 'trimestres' : 'trimestre',
+    semester: count > 1 ? 'semestres' : 'semestre',
     year: count > 1 ? 'ans' : 'an',
+    custom: 'jours personnalisés'
   };
+  
+  if (interval === 'custom' && customDays) {
+    return `Tous les ${customDays} jours`;
+  }
   
   return `Tous les ${count} ${intervalMap[interval as keyof typeof intervalMap]}`;
 }

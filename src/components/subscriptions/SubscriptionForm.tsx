@@ -27,7 +27,6 @@ import {
 } from "@/services/subscriptionService";
 import { ClientSelector, Client } from "@/components/ClientSelector";
 import { fetchProducts, formatPrice, Product } from "@/services/productService";
-import { addDays } from "date-fns";
 import { toast } from "sonner";
 
 interface SubscriptionFormProps {
@@ -50,6 +49,7 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
   const [endDate, setEndDate] = useState("");
   const [recurringInterval, setRecurringInterval] = useState<string>("month");
   const [recurringIntervalCount, setRecurringIntervalCount] = useState<string>("1");
+  const [customDays, setCustomDays] = useState<string>("");
   const [selectedProducts, setSelectedProducts] = useState<Array<{
     productId: string;
     quantity: number;
@@ -81,6 +81,7 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
         setRecurringInterval(subscription.recurring_interval);
         setRecurringIntervalCount(subscription.recurring_interval_count.toString());
         setNextInvoiceDate(new Date(subscription.next_invoice_date).toISOString().split('T')[0]);
+        setCustomDays(subscription.custom_days?.toString() || "");
         
         // Load subscription items
         const fetchItems = async () => {
@@ -107,6 +108,7 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
         setEndDate("");
         setRecurringInterval("month");
         setRecurringIntervalCount("1");
+        setCustomDays("");
         setNextInvoiceDate(
           calculateNextInvoiceDate(
             new Date(), 
@@ -122,15 +124,20 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
   // Update next invoice date when start date or interval changes
   useEffect(() => {
     if (startDate) {
+      const intervalValue = recurringInterval as 'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year' | 'custom';
+      const intervalCountValue = parseInt(recurringIntervalCount) || 1;
+      const customDaysValue = intervalValue === 'custom' ? parseInt(customDays) || intervalCountValue : undefined;
+      
       setNextInvoiceDate(
         calculateNextInvoiceDate(
           new Date(startDate), 
-          recurringInterval as 'day' | 'week' | 'month' | 'year', 
-          parseInt(recurringIntervalCount) || 1
+          intervalValue, 
+          intervalCountValue,
+          customDaysValue
         ).toISOString().split('T')[0]
       );
     }
-  }, [startDate, recurringInterval, recurringIntervalCount]);
+  }, [startDate, recurringInterval, recurringIntervalCount, customDays]);
   
   const handleClientSelect = (client: Client) => {
     setClientId(client.id);
@@ -186,6 +193,12 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
         return;
       }
       
+      if (recurringInterval === 'custom' && !customDays) {
+        toast.error("Veuillez spécifier un nombre de jours pour la périodicité personnalisée");
+        setIsLoading(false);
+        return;
+      }
+      
       // Prepare subscription items
       const items: Partial<SubscriptionItem>[] = selectedProducts
         .filter(p => p.productId && p.product)
@@ -203,8 +216,9 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
         client_id: clientId,
         start_date: startDate,
         end_date: endDate || null,
-        recurring_interval: recurringInterval as 'day' | 'week' | 'month' | 'year',
+        recurring_interval: recurringInterval as 'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year' | 'custom',
         recurring_interval_count: parseInt(recurringIntervalCount) || 1,
+        custom_days: recurringInterval === 'custom' ? parseInt(customDays) || null : null,
         next_invoice_date: nextInvoiceDate,
         status: 'active'
       };
@@ -281,7 +295,10 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
                 </Button>
               </div>
             ) : (
-              <ClientSelector onClientSelect={handleClientSelect} />
+              <ClientSelector 
+                onClientSelect={handleClientSelect}
+                buttonText="Créer un nouveau client" 
+              />
             )}
           </div>
           
@@ -333,10 +350,28 @@ export function SubscriptionForm({ open, onOpenChange, subscription, onUpdate }:
                   <SelectItem value="day">Jour(s)</SelectItem>
                   <SelectItem value="week">Semaine(s)</SelectItem>
                   <SelectItem value="month">Mois</SelectItem>
+                  <SelectItem value="quarter">Trimestre(s)</SelectItem>
+                  <SelectItem value="semester">Semestre(s)</SelectItem>
                   <SelectItem value="year">Année(s)</SelectItem>
+                  <SelectItem value="custom">Personnalisé</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            
+            {recurringInterval === 'custom' && (
+              <div className="mt-4">
+                <Label htmlFor="custom-days">Nombre de jours personnalisé *</Label>
+                <Input
+                  id="custom-days"
+                  type="number"
+                  min="1"
+                  value={customDays}
+                  onChange={(e) => setCustomDays(e.target.value)}
+                  placeholder="30"
+                  className="mt-2"
+                />
+              </div>
+            )}
           </div>
           
           <div className="space-y-2">
