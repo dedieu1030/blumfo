@@ -154,7 +154,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-hidden p-0">
+      <DialogContent className="sm:max-w-[750px] max-h-[85vh] overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>
             {product ? "Modifier le produit" : "Nouveau produit/service"}
@@ -177,7 +177,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
                 >
                   <SelectValue placeholder="Sélectionnez un type" />
                 </SelectTrigger>
-                <SelectContent position="popper" className="w-full min-w-[220px]">
+                <SelectContent position="popper" className="w-full min-w-[250px]">
                   <SelectItem value="product">Produit</SelectItem>
                   <SelectItem value="service">Service</SelectItem>
                 </SelectContent>
@@ -233,7 +233,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
                   <SelectTrigger>
                     <SelectValue placeholder="EUR" />
                   </SelectTrigger>
-                  <SelectContent position="popper" sideOffset={4} className="min-w-[180px]">
+                  <SelectContent position="popper" sideOffset={4} className="min-w-[220px]">
                     {availableCurrencies.map((c) => (
                       <SelectItem key={c.code} value={c.code}>
                         {c.symbol} - {c.name}
@@ -292,7 +292,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
                     <SelectTrigger>
                       <SelectValue placeholder="Intervalle" />
                     </SelectTrigger>
-                    <SelectContent position="popper" sideOffset={4} className="min-w-[180px]">
+                    <SelectContent position="popper" sideOffset={4} className="min-w-[220px]">
                       <SelectItem value="day">Jour(s)</SelectItem>
                       <SelectItem value="week">Semaine(s)</SelectItem>
                       <SelectItem value="month">Mois</SelectItem>
@@ -317,7 +317,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
                 >
                   <SelectValue placeholder="Sélectionnez une catégorie (optionnel)" />
                 </SelectTrigger>
-                <SelectContent position="popper" sideOffset={4} className="min-w-[220px]">
+                <SelectContent position="popper" sideOffset={4} className="min-w-[250px]">
                   <SelectItem value="none">Aucune catégorie</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
