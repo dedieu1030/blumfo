@@ -306,7 +306,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
               Catégorie
             </Label>
             <Select
-              value={categoryId || ""}
+              value={categoryId || "none"}
               onValueChange={setCategoryId}
             >
               <SelectTrigger
@@ -316,7 +316,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
                 <SelectValue placeholder="Sélectionnez une catégorie (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucune catégorie</SelectItem>
+                <SelectItem value="none">Aucune catégorie</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
