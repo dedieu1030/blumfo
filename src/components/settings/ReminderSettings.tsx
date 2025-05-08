@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash, CalendarIcon, Clock } from "lucide-react";
 import { ReminderSchedule } from "@/types/invoice";
-import { getReminderSchedules, saveReminderSchedules } from "@/services/invoiceSettingsService";
+import { getReminderSchedules, saveReminderSchedule, deleteReminderSchedule } from "@/services/reminderService";
 import { ReminderScheduleEditor } from "@/components/ReminderScheduleEditor";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -15,11 +15,27 @@ export function ReminderSettings() {
   const [reminderSchedules, setReminderSchedules] = useState<ReminderSchedule[]>([]);
   const [editingSchedule, setEditingSchedule] = useState<ReminderSchedule | null>(null);
   const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Charger les planifications au chargement du composant
   useEffect(() => {
-    setReminderSchedules(getReminderSchedules());
-  }, []);
+    const loadSchedules = async () => {
+      setIsLoading(true);
+      const result = await getReminderSchedules();
+      if (result.success && result.schedules) {
+        setReminderSchedules(result.schedules);
+      } else {
+        toast({
+          title: "Erreur",
+          description: result.error || "Impossible de charger les planifications de relance",
+          variant: "destructive"
+        });
+      }
+      setIsLoading(false);
+    };
+    
+    loadSchedules();
+  }, [toast]);
   
   const openScheduleEditor = (schedule?: ReminderSchedule) => {
     if (schedule) {
@@ -30,51 +46,65 @@ export function ReminderSettings() {
     setIsEditingSchedule(true);
   };
 
-  const handleSaveSchedule = (schedule: ReminderSchedule) => {
-    let updatedSchedules: ReminderSchedule[];
+  const handleSaveSchedule = async (schedule: ReminderSchedule) => {
+    const result = await saveReminderSchedule(schedule);
     
-    if (editingSchedule) {
-      // Mise à jour d'une planification existante
-      updatedSchedules = reminderSchedules.map(s => 
-        s.id === schedule.id ? schedule : schedule.isDefault ? { ...s, isDefault: false } : s
-      );
-    } else {
-      // Création d'une nouvelle planification
-      if (schedule.isDefault) {
-        updatedSchedules = reminderSchedules.map(s => ({ ...s, isDefault: false }));
-      } else {
-        updatedSchedules = [...reminderSchedules];
+    if (result.success) {
+      // Refresh schedules list
+      const refreshResult = await getReminderSchedules();
+      if (refreshResult.success && refreshResult.schedules) {
+        setReminderSchedules(refreshResult.schedules);
       }
-      updatedSchedules.push(schedule);
+      
+      setIsEditingSchedule(false);
+      
+      toast({
+        title: editingSchedule ? "Planification mise à jour" : "Planification créée",
+        description: `La planification "${schedule.name}" a été ${editingSchedule ? "mise à jour" : "créée"} avec succès`
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Une erreur est survenue lors de l'enregistrement de la planification",
+        variant: "destructive"
+      });
     }
-    
-    setReminderSchedules(updatedSchedules);
-    saveReminderSchedules(updatedSchedules);
-    setIsEditingSchedule(false);
-    
-    toast({
-      title: editingSchedule ? "Planification mise à jour" : "Planification créée",
-      description: `La planification "${schedule.name}" a été ${editingSchedule ? "mise à jour" : "créée"} avec succès`
-    });
   };
   
-  const deleteSchedule = (scheduleId: string) => {
-    const updatedSchedules = reminderSchedules.filter(s => s.id !== scheduleId);
-    setReminderSchedules(updatedSchedules);
-    saveReminderSchedules(updatedSchedules);
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    const result = await deleteReminderSchedule(scheduleId);
     
-    toast({
-      title: "Planification supprimée",
-      description: "La planification de relances a été supprimée"
-    });
+    if (result.success) {
+      setReminderSchedules(reminderSchedules.filter(s => s.id !== scheduleId));
+      
+      toast({
+        title: "Planification supprimée",
+        description: "La planification de relances a été supprimée"
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Une erreur est survenue lors de la suppression de la planification",
+        variant: "destructive"
+      });
+    }
   };
 
-  const toggleScheduleStatus = (scheduleId: string, enabled: boolean) => {
-    const updated = reminderSchedules.map(s => 
-      s.id === scheduleId ? { ...s, enabled } : s
-    );
-    setReminderSchedules(updated);
-    saveReminderSchedules(updated);
+  const handleToggleScheduleStatus = async (schedule: ReminderSchedule, enabled: boolean) => {
+    const updatedSchedule = { ...schedule, enabled };
+    const result = await saveReminderSchedule(updatedSchedule);
+    
+    if (result.success) {
+      setReminderSchedules(reminderSchedules.map(s => 
+        s.id === schedule.id ? { ...s, enabled } : s
+      ));
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Une erreur est survenue lors de la mise à jour de la planification",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -90,7 +120,11 @@ export function ReminderSettings() {
           <p>Vous pouvez configurer plusieurs planifications avec des déclencheurs différents (avant/après échéance, ou après une précédente relance).</p>
         </div>
         
-        {reminderSchedules.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        ) : reminderSchedules.length === 0 ? (
           <div className="text-center py-6">
             <p className="text-muted-foreground mb-4">
               Aucune planification de relances configurée
@@ -122,7 +156,7 @@ export function ReminderSettings() {
                     <div className="flex items-center space-x-2">
                       <Switch 
                         checked={schedule.enabled}
-                        onCheckedChange={(checked) => toggleScheduleStatus(schedule.id, checked)}
+                        onCheckedChange={(checked) => handleToggleScheduleStatus(schedule, checked)}
                       />
                       <div className="flex space-x-1">
                         <Button variant="outline" size="icon" onClick={() => openScheduleEditor(schedule)}>
@@ -132,7 +166,7 @@ export function ReminderSettings() {
                           <Button 
                             variant="outline" 
                             size="icon" 
-                            onClick={() => deleteSchedule(schedule.id)}
+                            onClick={() => handleDeleteSchedule(schedule.id)}
                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
                           >
                             <Trash className="h-4 w-4" />

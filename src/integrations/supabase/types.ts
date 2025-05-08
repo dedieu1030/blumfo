@@ -45,6 +45,54 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_reminders: {
+        Row: {
+          email_body: string | null
+          email_subject: string | null
+          id: string
+          invoice_id: string
+          metadata: Json | null
+          reminder_rule_id: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          invoice_id: string
+          metadata?: Json | null
+          reminder_rule_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Update: {
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          invoice_id?: string
+          metadata?: Json | null
+          reminder_rule_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_reminders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "stripe_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_reminders_reminder_rule_id_fkey"
+            columns: ["reminder_rule_id"]
+            isOneToOne: false
+            referencedRelation: "reminder_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_templates: {
         Row: {
           created_at: string
@@ -99,6 +147,77 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminder_rules: {
+        Row: {
+          created_at: string
+          email_body: string
+          email_subject: string
+          id: string
+          schedule_id: string
+          trigger_type: string
+          trigger_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_body: string
+          email_subject: string
+          id?: string
+          schedule_id: string
+          trigger_type: string
+          trigger_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_body?: string
+          email_subject?: string
+          id?: string
+          schedule_id?: string
+          trigger_type?: string
+          trigger_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_rules_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "reminder_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_schedules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
           name?: string
           updated_at?: string
           user_id?: string

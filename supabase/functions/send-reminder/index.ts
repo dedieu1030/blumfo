@@ -87,15 +87,22 @@ serve(async (req) => {
     })
 
     // Get reminder template if ID is provided
-    let reminderTemplate = null;
+    let reminderRule = null;
+    let emailSubject = null;
+    let emailBody = null;
+    
     if (reminderId) {
       const { data: reminderData } = await supabaseClient
-        .from('reminder_templates')
+        .from('reminder_rules')
         .select('*')
         .eq('id', reminderId)
         .single();
       
-      reminderTemplate = reminderData;
+      if (reminderData) {
+        reminderRule = reminderData;
+        emailSubject = reminderData.email_subject;
+        emailBody = reminderData.email_body;
+      }
     }
 
     // Update reminder history
@@ -103,9 +110,14 @@ serve(async (req) => {
       .from('invoice_reminders')
       .insert({
         invoice_id: invoice.id,
-        reminder_template_id: reminderId || null,
+        reminder_rule_id: reminderId || null,
         sent_at: new Date().toISOString(),
         status: 'sent',
+        email_subject: emailSubject,
+        email_body: emailBody,
+        metadata: {
+          manual: reminderId ? false : true,
+        }
       })
       .select()
       .single();

@@ -75,12 +75,146 @@ Deno.serve(async (req) => {
     const overdueWithClients = await getClientDetails(overdueInvoices);
     const nearDueWithClients = await getClientDetails(nearDueInvoices);
 
+    // Check for invoices that need automatic reminders
+    const checkInvoicesForAutomaticReminders = async () => {
+      try {
+        // Get all active reminder schedules
+        const { data: schedules } = await supabaseClient
+          .from('reminder_schedules')
+          .select('*, reminder_rules(*)')
+          .eq('enabled', true);
+
+        if (!schedules || schedules.length === 0) return [];
+
+        const reminderCandidates = [];
+
+        // Process each schedule and its rules
+        for (const schedule of schedules) {
+          const userId = schedule.user_id;
+          
+          // Get user's unpaid invoices
+          const { data: invoices } = await supabaseClient
+            .from('stripe_invoices')
+            .select('*, invoice_reminders(*)')
+            .eq('user_id', userId)
+            .eq('status', 'unpaid');
+
+          if (!invoices || invoices.length === 0) continue;
+
+          for (const invoice of invoices) {
+            for (const rule of schedule.reminder_rules) {
+              const shouldSendReminder = await checkReminderRule(rule, invoice, supabaseClient);
+              
+              if (shouldSendReminder) {
+                reminderCandidates.push({
+                  invoiceId: invoice.id,
+                  stripeInvoiceId: invoice.stripe_invoice_id,
+                  ruleId: rule.id,
+                  scheduleId: schedule.id,
+                  userId: userId
+                });
+              }
+            }
+          }
+        }
+
+        return reminderCandidates;
+      } catch (error) {
+        console.error('Error checking automated reminders:', error);
+        return [];
+      }
+    };
+
+    const checkReminderRule = async (rule, invoice, supabase) => {
+      // Skip if no due date on invoice
+      if (!invoice.due_date && rule.trigger_type !== 'days_after_previous_reminder') {
+        return false;
+      }
+
+      const now = new Date();
+
+      // Check if we've already sent a reminder based on this rule recently
+      const { data: recentReminders } = await supabase
+        .from('invoice_reminders')
+        .select('*')
+        .eq('invoice_id', invoice.id)
+        .eq('reminder_rule_id', rule.id)
+        .order('sent_at', { ascending: false })
+        .limit(1);
+
+      const lastReminderDate = recentReminders && recentReminders.length > 0 
+        ? new Date(recentReminders[0].sent_at) 
+        : null;
+
+      // If this is a "days after previous reminder" rule and we don't have a previous
+      // reminder for this invoice, we should skip
+      if (rule.trigger_type === 'days_after_previous_reminder') {
+        const { data: anyReminders } = await supabase
+          .from('invoice_reminders')
+          .select('*')
+          .eq('invoice_id', invoice.id)
+          .order('sent_at', { ascending: false })
+          .limit(1);
+
+        // No previous reminders, so can't trigger a "days after previous" rule
+        if (!anyReminders || anyReminders.length === 0) {
+          return false;
+        }
+
+        // Check if enough days have passed since the last reminder
+        const lastReminderSent = new Date(anyReminders[0].sent_at);
+        const daysToAdd = rule.trigger_value;
+        const triggerDate = new Date(lastReminderSent);
+        triggerDate.setDate(triggerDate.getDate() + daysToAdd);
+
+        // Check if we've reached the trigger date and haven't sent this specific rule's reminder yet
+        if (now >= triggerDate && (!lastReminderDate || lastReminderDate !== lastReminderSent)) {
+          return true;
+        }
+      } 
+      // For days_before_due rules
+      else if (rule.trigger_type === 'days_before_due') {
+        const dueDate = new Date(invoice.due_date);
+        const daysToSubtract = rule.trigger_value;
+        const triggerDate = new Date(dueDate);
+        triggerDate.setDate(triggerDate.getDate() - daysToSubtract);
+        
+        // Check if today is the trigger date (or has just passed it) and we haven't sent this reminder yet
+        const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+        const startOfTriggerDate = new Date(triggerDate.setHours(0, 0, 0, 0));
+        
+        if (startOfToday >= startOfTriggerDate && !lastReminderDate) {
+          return true;
+        }
+      }
+      // For days_after_due rules
+      else if (rule.trigger_type === 'days_after_due') {
+        const dueDate = new Date(invoice.due_date);
+        const daysToAdd = rule.trigger_value;
+        const triggerDate = new Date(dueDate);
+        triggerDate.setDate(triggerDate.getDate() + daysToAdd);
+        
+        // Check if today is the trigger date (or has just passed it) and we haven't sent this reminder yet
+        const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+        const startOfTriggerDate = new Date(triggerDate.setHours(0, 0, 0, 0));
+        
+        if (startOfToday >= startOfTriggerDate && !lastReminderDate) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    const reminderCandidates = await checkInvoicesForAutomaticReminders();
+
     return new Response(
       JSON.stringify({
         overdue: overdueWithClients || [],
         nearDue: nearDueWithClients || [],
         overdueCount: overdueWithClients?.length || 0,
-        nearDueCount: nearDueWithClients?.length || 0
+        nearDueCount: nearDueWithClients?.length || 0,
+        reminderCandidates: reminderCandidates
       }),
       {
         headers: {
