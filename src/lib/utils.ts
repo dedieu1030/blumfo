@@ -12,3 +12,16 @@ export function formatCurrency(amount: number, currency: string = 'EUR'): string
     currency: currency || 'EUR'
   }).format(amount)
 }
+
+export function formatDate(date: string | Date): string {
+  if (!date) return '';
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(dateObj);
+}

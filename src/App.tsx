@@ -15,6 +15,8 @@ import Settings from "./pages/Settings";
 import Templates from "./pages/Templates";
 import StripeCallback from "./pages/StripeCallback";
 import NotFound from "./pages/NotFound";
+import Notifications from "./pages/Notifications";
+import { NotificationsProvider } from "./context/NotificationsContext";
 
 const queryClient = new QueryClient();
 
@@ -23,27 +25,30 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <div className="flex-1 overflow-auto md:ml-64">
-            <div className="container mx-auto px-4 py-8">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/invoicing" element={<Invoicing />} />
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/clients" element={<Clients />} />
-                <Route path="/clients/:id" element={<ClientDetails />} />
-                <Route path="/products" element={<ProductsServices />} />
-                <Route path="/templates" element={<Templates />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/stripe/callback" element={<StripeCallback />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+      <NotificationsProvider>
+        <BrowserRouter>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="flex-1 overflow-auto md:ml-64">
+              <div className="container mx-auto px-4 py-8">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/invoicing" element={<Invoicing />} />
+                  <Route path="/invoices" element={<Invoices />} />
+                  <Route path="/clients" element={<Clients />} />
+                  <Route path="/clients/:id" element={<ClientDetails />} />
+                  <Route path="/products" element={<ProductsServices />} />
+                  <Route path="/templates" element={<Templates />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/stripe/callback" element={<StripeCallback />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
             </div>
           </div>
-        </div>
-      </BrowserRouter>
+        </BrowserRouter>
+      </NotificationsProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

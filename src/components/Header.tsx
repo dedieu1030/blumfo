@@ -8,6 +8,7 @@ import { InvoiceDialog } from "./InvoiceDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { checkStripeConnection } from "@/services/stripeConnectClient";
 import { SearchBar } from "./SearchBar";
+import { NotificationBell } from "./NotificationBell";
 
 interface HeaderProps {
   title: string;
@@ -65,6 +66,10 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
               </Button>
             )}
             <SearchBar />
+            
+            <div className="ml-2">
+              <NotificationBell />
+            </div>
           </div>
         </div>
         
