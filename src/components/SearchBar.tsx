@@ -33,7 +33,6 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
-  const searchRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Filtrer les données en fonction du terme de recherche
@@ -96,19 +95,34 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
     }
   };
 
+  // Gérer le focus sur l'input lors de l'ouverture du popover
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    
+    // Si on ouvre le popover, mettre le focus sur l'input
+    if (isOpen && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }
+  };
+
   return (
     <div className="relative w-full max-w-sm">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <div className="flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2">
+          <div className="flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2 cursor-pointer">
             <Search className="h-4 w-4 mr-2 text-muted-foreground" />
             <input
               ref={inputRef}
-              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm"
+              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm cursor-pointer"
               placeholder={placeholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onFocus={() => setOpen(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(true);
+              }}
             />
             {searchTerm && (
               <button 
