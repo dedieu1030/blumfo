@@ -122,6 +122,12 @@ export async function fetchSubscription(id: string) {
 
 export async function createSubscription(subscription: Partial<Subscription>, items: Partial<SubscriptionItem>[]) {
   try {
+    // Get the current user
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error("No authenticated user");
+    }
+
     // Create the subscription first
     const { data: newSubscription, error: subscriptionError } = await supabase
       .from('subscriptions')
@@ -135,7 +141,8 @@ export async function createSubscription(subscription: Partial<Subscription>, it
         recurring_interval_count: subscription.recurring_interval_count,
         next_invoice_date: subscription.next_invoice_date,
         status: subscription.status || 'active',
-        metadata: subscription.metadata || {}
+        metadata: subscription.metadata || {},
+        user_id: session.user.id
       })
       .select()
       .single();

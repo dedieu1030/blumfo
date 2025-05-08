@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -33,10 +34,7 @@ export async function fetchProducts(includeInactive: boolean = false) {
   try {
     let query = supabase
       .from('stripe_products')
-      .select(`
-        *,
-        product_categories(id, name)
-      `);
+      .select('*');
     
     if (!includeInactive) {
       query = query.eq('active', true);
@@ -46,10 +44,16 @@ export async function fetchProducts(includeInactive: boolean = false) {
     
     if (error) throw error;
     
+    // Also fetch categories to use for mapping
+    const { data: categories } = await supabase
+      .from('product_categories')
+      .select('*');
+    
+    // Map products with their categories
     return data.map(product => ({
       ...product,
-      category_id: product.product_categories?.id,
-      category_name: product.product_categories?.name,
+      category_id: product.category_id || undefined,
+      category_name: categories?.find(c => c.id === product.category_id)?.name,
       recurring_interval: validateRecurringInterval(product.recurring_interval),
       product_type: validateProductType(product.product_type)
     })) as Product[];
@@ -64,19 +68,26 @@ export async function fetchProduct(id: string) {
   try {
     const { data, error } = await supabase
       .from('stripe_products')
-      .select(`
-        *,
-        product_categories(id, name)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
     
     if (error) throw error;
     
+    // Fetch category if there's a category_id
+    let categoryName;
+    if (data.category_id) {
+      const { data: category } = await supabase
+        .from('product_categories')
+        .select('name')
+        .eq('id', data.category_id)
+        .single();
+      categoryName = category?.name;
+    }
+    
     return {
       ...data,
-      category_id: data.product_categories?.id,
-      category_name: data.product_categories?.name,
+      category_name: categoryName,
       recurring_interval: validateRecurringInterval(data.recurring_interval),
       product_type: validateProductType(data.product_type)
     } as Product;
@@ -108,6 +119,12 @@ function validateProductType(type: string | null): 'product' | 'service' | null 
 
 export async function createProduct(product: Partial<Product>) {
   try {
+    // Get the current user
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error("No authenticated user");
+    }
+    
     const { data, error } = await supabase
       .from('stripe_products')
       .insert({
@@ -121,7 +138,8 @@ export async function createProduct(product: Partial<Product>) {
         recurring_interval_count: product.recurring_interval_count,
         product_type: product.product_type,
         active: product.active !== undefined ? product.active : true,
-        metadata: product.metadata || {}
+        metadata: product.metadata || {},
+        category_id: product.category_id
       })
       .select()
       .single();
@@ -153,6 +171,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
         product_type: product.product_type,
         active: product.active,
         metadata: product.metadata,
+        category_id: product.category_id,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -208,11 +227,18 @@ export async function fetchCategories() {
 
 export async function createCategory(category: Partial<Category>) {
   try {
+    // Get the current user
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error("No authenticated user");
+    }
+
     const { data, error } = await supabase
       .from('product_categories')
       .insert({
         name: category.name,
-        description: category.description
+        description: category.description,
+        user_id: session.user.id
       })
       .select()
       .single();
