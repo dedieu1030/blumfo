@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "./ui/button";
 import { Download, Send, Eye, Save, Loader2, CreditCard, ExternalLink } from "lucide-react";
@@ -6,11 +5,13 @@ import { useToast } from "@/hooks/use-toast";
 import { generateAndDownloadInvoicePdf } from '@/services/invoiceApiClient';
 import { InvoiceData } from '@/types/invoice';
 import { createPaymentLink, sendInvoice } from '@/services/stripeApiClient';
+import { InvoiceReminder } from './InvoiceReminder';
 
 interface InvoiceActionsProps {
   invoiceData: InvoiceData;
   templateId: string;
   stripeInvoiceId?: string;
+  clientEmail?: string;
   onPreview?: () => void;
   onSave?: () => void;
   onSend?: () => void;
@@ -21,6 +22,7 @@ export function InvoiceActions({
   invoiceData,
   templateId,
   stripeInvoiceId,
+  clientEmail,
   onPreview, 
   onSave,
   onSend,
@@ -219,6 +221,13 @@ export function InvoiceActions({
             )}
             {isSending ? "Envoi..." : "Envoyer par email"}
           </Button>
+          
+          {/* Ajout du bouton de rappel */}
+          <InvoiceReminder 
+            invoiceId={invoiceData.id}
+            stripeInvoiceId={stripeInvoiceId}
+            clientEmail={clientEmail}
+          />
           
           {!paymentUrl ? (
             <Button 

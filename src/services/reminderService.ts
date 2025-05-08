@@ -39,3 +39,38 @@ export async function checkOverdueInvoices() {
     };
   }
 }
+
+/**
+ * Envoie un rappel pour une facture spécifique
+ * @param invoiceId ID de la facture Stripe
+ * @param reminderId ID du modèle de rappel (optionnel)
+ */
+export async function sendInvoiceReminder(invoiceId: string, reminderId?: string) {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-reminder', {
+      body: {
+        invoiceId,
+        reminderId
+      }
+    });
+    
+    if (error) {
+      console.error('Error sending reminder:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+    
+    return {
+      success: true,
+      data
+    };
+  } catch (error) {
+    console.error('Error sending invoice reminder:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error sending reminder'
+    };
+  }
+}
