@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -420,11 +419,13 @@ export default function Invoicing() {
             </DialogTitle>
           </DialogHeader>
           
-          <ReminderScheduleEditor
-            schedule={editingSchedule || undefined}
-            onSave={handleSaveSchedule}
-            onCancel={() => setIsEditingSchedule(false)}
-          />
+          <div className="overflow-y-auto pr-1">
+            <ReminderScheduleEditor
+              schedule={editingSchedule || undefined}
+              onSave={handleSaveSchedule}
+              onCancel={() => setIsEditingSchedule(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
