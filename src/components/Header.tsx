@@ -38,8 +38,8 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
               </Button>
             )}
             
-            {/* Barre de recherche - plus étroite sur mobile */}
-            <div className={`${isMobile ? 'flex-1 max-w-[180px]' : 'flex-1 mr-4'}`}>
+            {/* Barre de recherche - plus large sur mobile mais pas trop */}
+            <div className={`${isMobile ? 'flex-1 max-w-[65%]' : 'flex-1 mr-4'}`}>
               <SearchBar />
             </div>
             

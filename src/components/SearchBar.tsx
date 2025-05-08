@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Search, FileText, Users, Settings, Plus, X } from "lucide-react";
 import { 
@@ -147,11 +146,10 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                 <X className="h-3 w-3" />
               </button>
             )}
-            {!isMobile && (
-              <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                <span className="text-xs">⌘</span>K
-              </kbd>
-            )}
+            {/* Afficher le raccourci clavier même sur mobile */}
+            <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <span className="text-xs">⌘</span>K
+            </kbd>
           </div>
         </PopoverTrigger>
         <PopoverContent 
