@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 // Types pour les méthodes de paiement
 type PaymentMethod = "bank_transfer" | "check" | "cash" | "stripe" | "other";
@@ -37,6 +38,7 @@ export function InvoicePaymentConfirmation({
   onConfirm 
 }: InvoicePaymentConfirmationProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank_transfer");
   const [reference, setReference] = useState("");
@@ -45,8 +47,8 @@ export function InvoicePaymentConfirmation({
   const handleSubmit = async () => {
     if (!paymentDate) {
       toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner une date de paiement",
+        title: t("error", "Erreur"),
+        description: t("selectPaymentDate", "Veuillez sélectionner une date de paiement"),
         variant: "destructive"
       });
       return;
@@ -75,8 +77,8 @@ export function InvoicePaymentConfirmation({
       if (error) throw error;
       
       toast({
-        title: "Paiement confirmé",
-        description: `La facture ${invoice.number} a été marquée comme payée.`,
+        title: t("paymentConfirmed"),
+        description: t("invoiceMarkedAsPaid", { number: invoice.number }),
       });
       
       onConfirm();
@@ -84,8 +86,8 @@ export function InvoicePaymentConfirmation({
     } catch (error) {
       console.error("Erreur lors de la confirmation du paiement:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de confirmer le paiement. Veuillez réessayer.",
+        title: t("error", "Erreur"),
+        description: t("paymentConfirmError"),
         variant: "destructive"
       });
     } finally {
@@ -99,18 +101,18 @@ export function InvoicePaymentConfirmation({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CalendarCheck className="h-5 w-5" /> 
-            Confirmer le paiement
+            {t("confirmPayment")}
           </DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <div>
-            <p className="mb-2 font-medium">Facture: {invoice.number}</p>
-            <p className="text-sm text-muted-foreground mb-4">Montant: {invoice.amount}</p>
+            <p className="mb-2 font-medium">{t("invoice")}: {invoice.number}</p>
+            <p className="text-sm text-muted-foreground mb-4">{t("amount")}: {invoice.amount}</p>
           </div>
           
           <div className="space-y-2">
-            <p className="text-sm font-medium">Date de paiement</p>
+            <p className="text-sm font-medium">{t("paymentDate")}</p>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -118,7 +120,7 @@ export function InvoicePaymentConfirmation({
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {paymentDate ? format(paymentDate, "PPP", { locale: fr }) : "Sélectionner une date"}
+                  {paymentDate ? format(paymentDate, "PPP", { locale: fr }) : t("selectDate")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -133,47 +135,47 @@ export function InvoicePaymentConfirmation({
           </div>
           
           <div className="space-y-2">
-            <p className="text-sm font-medium">Méthode de paiement</p>
+            <p className="text-sm font-medium">{t("paymentMethod")}</p>
             <Select 
               defaultValue={paymentMethod} 
               onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une méthode" />
+                <SelectValue placeholder={t("selectPaymentMethod")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
-                <SelectItem value="check">Chèque</SelectItem>
-                <SelectItem value="cash">Espèces</SelectItem>
-                <SelectItem value="stripe">Stripe (hors plateforme)</SelectItem>
-                <SelectItem value="other">Autre</SelectItem>
+                <SelectItem value="bank_transfer">{t("bankTransfer")}</SelectItem>
+                <SelectItem value="check">{t("check")}</SelectItem>
+                <SelectItem value="cash">{t("cash")}</SelectItem>
+                <SelectItem value="stripe">{t("stripeOffPlatform")}</SelectItem>
+                <SelectItem value="other">{t("other")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-2">
-            <p className="text-sm font-medium">Référence de paiement (optionnel)</p>
+            <p className="text-sm font-medium">{t("paymentReference")}</p>
             <Input
-              placeholder="Ex: N° de chèque, référence de virement..."
+              placeholder={t("referenceExample")}
               value={reference}
               onChange={(e) => setReference(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Ajoutez une référence pour mieux identifier ce paiement ultérieurement.
+              {t("referenceHelp")}
             </p>
           </div>
         </div>
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
+            {t("cancel")}
           </Button>
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}
             className="bg-violet hover:bg-violet/90"
           >
-            {isSubmitting ? "Confirmation..." : "Confirmer le paiement"}
+            {isSubmitting ? t("confirming") : t("confirmPaymentButton")}
           </Button>
         </DialogFooter>
       </DialogContent>

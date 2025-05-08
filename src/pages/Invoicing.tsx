@@ -29,9 +29,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ReminderScheduleEditor } from "@/components/ReminderScheduleEditor";
 import { useNavigate } from "react-router-dom";
 import { InvoiceDialog } from "@/components/InvoiceDialog";
+import { useTranslation } from "react-i18next";
 
 export default function Invoicing() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -81,7 +83,7 @@ export default function Invoicing() {
       if (result.success && result.schedules) {
         setReminderSchedules(result.schedules);
       } else {
-        toast.error(result.error || "Impossible de charger les planifications de relance");
+        toast.error(result.error || t("unableToLoadReminders", "Impossible de charger les planifications de relance"));
       }
       setIsLoading(false);
     }
@@ -106,7 +108,7 @@ export default function Invoicing() {
       saveDefaultPaymentTerm(defaultPaymentTerm);
     }
     
-    toast.success("Paramètres de facturation enregistrés");
+    toast.success(t("settingsSaved", "Paramètres de facturation enregistrés"));
   };
   
   // Fonctions pour gérer les relances
@@ -129,11 +131,11 @@ export default function Invoicing() {
       setIsEditingSchedule(false);
       
       toast.success(editingSchedule 
-        ? `La planification "${schedule.name}" a été mise à jour` 
-        : `La planification "${schedule.name}" a été créée`
+        ? t("scheduleUpdated", { name: schedule.name }, `La planification "${schedule.name}" a été mise à jour`)
+        : t("scheduleCreated", { name: schedule.name }, `La planification "${schedule.name}" a été créée`)
       );
     } else {
-      toast.error(result.error || "Une erreur est survenue lors de l'enregistrement de la planification");
+      toast.error(result.error || t("scheduleSaveError", "Une erreur est survenue lors de l'enregistrement de la planification"));
     }
   };
   
@@ -151,52 +153,52 @@ export default function Invoicing() {
   return (
     <>
       <Header 
-        title="Facturation" 
-        description="Paramétrez votre système de facturation et créez des factures"
+        title={t("invoicing")} 
+        description={t("invoicingDescription")}
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
       />
       
       <div className="flex justify-end mb-6">
         <Button onClick={handleGenerateInvoice} className="bg-primary hover:bg-primary/90">
           <Plus className="mr-2 h-4 w-4" />
-          Nouvelle facture
+          {t("newInvoice")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Configuration de facturation</CardTitle>
-          <CardDescription>Personnalisez vos paramètres de facturation</CardDescription>
+          <CardTitle>{t("billingConfiguration")}</CardTitle>
+          <CardDescription>{t("customizeYourBillingSettings")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Configuration de la numérotation des factures */}
             <div className="md:col-span-2 border p-4 rounded-md space-y-4">
-              <h3 className="font-medium text-lg">Numérotation des factures</h3>
+              <h3 className="font-medium text-lg">{t("invoiceNumbering")}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Définissez le format des numéros de facture qui seront générés automatiquement
+                {t("defineFormatOfInvoiceNumbers")}
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="invoice-prefix">Préfixe</Label>
+                  <Label htmlFor="invoice-prefix">{t("prefix")}</Label>
                   <Input 
                     id="invoice-prefix" 
                     value={numberingConfig.prefix}
                     onChange={(e) => setNumberingConfig({...numberingConfig, prefix: e.target.value})}
                     placeholder="Ex: FACT-"
                   />
-                  <p className="text-xs text-muted-foreground">Texte apparaissant avant le numéro</p>
+                  <p className="text-xs text-muted-foreground">{t("textBeforeNumber")}</p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="padding">Remplissage</Label>
+                  <Label htmlFor="padding">{t("padding")}</Label>
                   <Select 
                     value={numberingConfig.padding.toString()} 
                     onValueChange={(value) => setNumberingConfig({...numberingConfig, padding: parseInt(value)})}
                   >
                     <SelectTrigger id="padding">
-                      <SelectValue placeholder="Choisir" />
+                      <SelectValue placeholder={t("chooseDelay")} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">Sans zéros (1, 2, 3...)</SelectItem>
@@ -206,18 +208,18 @@ export default function Invoicing() {
                       <SelectItem value="5">5 chiffres (00001, 00002...)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">Nombre de chiffres avec zéros</p>
+                  <p className="text-xs text-muted-foreground">{t("numberOfDigitsWithZeros")}</p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="invoice-suffix">Suffixe (optionnel)</Label>
+                  <Label htmlFor="invoice-suffix">{t("suffix")}</Label>
                   <Input 
                     id="invoice-suffix" 
                     value={numberingConfig.suffix || ""}
                     onChange={(e) => setNumberingConfig({...numberingConfig, suffix: e.target.value})}
                     placeholder="Ex: -FR"
                   />
-                  <p className="text-xs text-muted-foreground">Texte apparaissant après le numéro</p>
+                  <p className="text-xs text-muted-foreground">{t("textAfterNumber")}</p>
                 </div>
                 
                 <div className="flex items-center space-x-2 pt-6">
@@ -227,23 +229,23 @@ export default function Invoicing() {
                     onCheckedChange={(checked) => setNumberingConfig({...numberingConfig, resetAnnually: checked})}
                   />
                   <Label htmlFor="reset-annually">
-                    Réinitialiser la numérotation chaque année
+                    {t("resetAnnually")}
                   </Label>
                 </div>
               </div>
               
               <div className="mt-4 bg-muted p-3 rounded-md flex items-center justify-between">
-                <span className="text-sm font-medium">Aperçu du format:</span>
+                <span className="text-sm font-medium">{t("previewFormat")}</span>
                 <span className="font-mono bg-background px-3 py-1 rounded border">{previewNumber}</span>
               </div>
             </div>
             
             {/* Devise par défaut */}
             <div className="space-y-2">
-              <Label htmlFor="currency">Devise par défaut</Label>
+              <Label htmlFor="currency">{t("defaultCurrency")}</Label>
               <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choisir une devise" />
+                  <SelectValue placeholder={t("chooseDelay")} />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
                   {availableCurrencies.map((currency) => (
@@ -256,33 +258,33 @@ export default function Invoicing() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">Cette devise sera utilisée par défaut pour toutes les factures</p>
+              <p className="text-xs text-muted-foreground">{t("currencyUsedForAllInvoices")}</p>
             </div>
             
             {/* Délai de paiement par défaut */}
             <div className="space-y-2">
-              <Label htmlFor="default-payment-term">Délai de paiement par défaut</Label>
+              <Label htmlFor="default-payment-term">{t("defaultPaymentTerm")}</Label>
               <Select 
                 value={defaultPaymentTerm} 
                 onValueChange={setDefaultPaymentTerm}
               >
                 <SelectTrigger id="default-payment-term">
-                  <SelectValue placeholder="Choisir un délai" />
+                  <SelectValue placeholder={t("chooseDelay")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="immediate">Paiement immédiat</SelectItem>
-                  <SelectItem value="7">7 jours</SelectItem>
-                  <SelectItem value="15">15 jours</SelectItem>
-                  <SelectItem value="30">30 jours</SelectItem>
-                  <SelectItem value="45">45 jours</SelectItem>
-                  <SelectItem value="60">60 jours</SelectItem>
-                  <SelectItem value="90">90 jours</SelectItem>
-                  <SelectItem value="custom">Date personnalisée</SelectItem>
+                  <SelectItem value="immediate">{t("immediatePayment")}</SelectItem>
+                  <SelectItem value="7">7 {t("days")}</SelectItem>
+                  <SelectItem value="15">15 {t("days")}</SelectItem>
+                  <SelectItem value="30">30 {t("days")}</SelectItem>
+                  <SelectItem value="45">45 {t("days")}</SelectItem>
+                  <SelectItem value="60">60 {t("days")}</SelectItem>
+                  <SelectItem value="90">90 {t("days")}</SelectItem>
+                  <SelectItem value="custom">{t("customDate")}</SelectItem>
                 </SelectContent>
               </Select>
               {defaultPaymentTerm === 'custom' && (
                 <div className="mt-2">
-                  <Label htmlFor="custom-due-date">Date d'échéance personnalisée</Label>
+                  <Label htmlFor="custom-due-date">{t("customDueDate")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -294,7 +296,7 @@ export default function Invoicing() {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {customDueDate ? format(customDueDate, 'dd/MM/yyyy') : <span>Sélectionner une date</span>}
+                        {customDueDate ? format(customDueDate, 'dd/MM/yyyy') : <span>{t("selectDate")}</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -307,10 +309,10 @@ export default function Invoicing() {
                       />
                     </PopoverContent>
                   </Popover>
-                  <p className="text-xs text-muted-foreground mt-1">Date spécifique pour l'échéance</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("specificDueDate")}</p>
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">Ce délai sera proposé par défaut lors de la création d'une facture</p>
+              <p className="text-xs text-muted-foreground">{t("termUsedByDefault")}</p>
             </div>
             
             {/* Configuration des relances automatiques */}
@@ -323,8 +325,8 @@ export default function Invoicing() {
                     onCheckedChange={setShowReminderConfig}
                   />
                   <div>
-                    <Label htmlFor="auto-reminder" className="font-medium">Relancer automatiquement les factures impayées</Label>
-                    <p className="text-xs text-muted-foreground">Configure l'envoi automatique d'emails de relance pour les factures non payées</p>
+                    <Label htmlFor="auto-reminder" className="font-medium">{t("automaticallyRemindUnpaidInvoices")}</Label>
+                    <p className="text-xs text-muted-foreground">{t("configureAutoEmailReminders")}</p>
                   </div>
                 </div>
               </div>
@@ -333,8 +335,8 @@ export default function Invoicing() {
               {showReminderConfig && (
                 <div className="mt-4 space-y-4">
                   <div className="text-sm text-muted-foreground mb-2">
-                    <p>Les relances automatiques permettent d'envoyer des emails de rappel aux clients lorsque leurs factures restent impayées.</p>
-                    <p>Vous pouvez configurer plusieurs planifications avec des déclencheurs différents (avant/après échéance, ou après une précédente relance).</p>
+                    <p>{t("autoRemindersDescription")}</p>
+                    <p>{t("remindersConfigDescription")}</p>
                   </div>
                   
                   {isLoading ? (
@@ -344,11 +346,11 @@ export default function Invoicing() {
                   ) : reminderSchedules.length === 0 ? (
                     <div className="text-center py-4">
                       <p className="text-muted-foreground mb-4">
-                        Aucune planification de relances configurée
+                        {t("noRemindersConfigured")}
                       </p>
                       <Button onClick={() => openScheduleEditor()}>
                         <Plus className="h-4 w-4 mr-2" />
-                        Créer une planification
+                        {t("createSchedule")}
                       </Button>
                     </div>
                   ) : (
@@ -361,16 +363,16 @@ export default function Invoicing() {
                                 {schedule.name}
                                 {schedule.isDefault && (
                                   <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                    Par défaut
+                                    {t("defaultLabel")}
                                   </span>
                                 )}
                               </span>
                               <Button variant="outline" size="sm" onClick={() => openScheduleEditor(schedule)}>
-                                Modifier
+                                {t("editSchedule")}
                               </Button>
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">
-                              {schedule.triggers.length} relance(s) configurée(s)
+                              {schedule.triggers.length} {t("remindersConfigured")}
                             </p>
                           </li>
                         ))}
@@ -378,7 +380,7 @@ export default function Invoicing() {
                       
                       <Button variant="outline" onClick={() => openScheduleEditor()}>
                         <Plus className="h-4 w-4 mr-2" />
-                        Ajouter une planification
+                        {t("addSchedule")}
                       </Button>
                     </div>
                   )}
@@ -389,7 +391,7 @@ export default function Invoicing() {
           
           <div className="mt-4 flex justify-end">
             <Button onClick={handleSaveConfig}>
-              Enregistrer les paramètres
+              {t("saveSettings")}
             </Button>
           </div>
         </CardContent>
@@ -398,12 +400,12 @@ export default function Invoicing() {
       <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Mes factures</CardTitle>
-            <CardDescription>Accédez rapidement à vos factures existantes</CardDescription>
+            <CardTitle>{t("myInvoices")}</CardTitle>
+            <CardDescription>{t("accessYourExistingInvoices")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="outline" onClick={() => navigate("/invoices")} className="w-full">
-              Voir toutes mes factures
+              {t("viewAllMyInvoices")}
             </Button>
           </CardContent>
         </Card>
@@ -414,7 +416,7 @@ export default function Invoicing() {
         <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>
-              {editingSchedule ? "Modifier la planification" : "Créer une planification de relances"}
+              {editingSchedule ? t("editReminder") : t("createReminder")}
             </DialogTitle>
           </DialogHeader>
           

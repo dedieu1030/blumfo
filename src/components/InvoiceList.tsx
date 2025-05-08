@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import { InvoicePaymentConfirmation } from "./InvoicePaymentConfirmation";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface Invoice {
   id: string;
@@ -42,14 +43,15 @@ export function InvoiceList({
 }: InvoiceListProps) {
   const displayedInvoices = limit ? invoices.slice(0, limit) : invoices;
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   
   const handleCopyLink = (paymentUrl: string) => {
     navigator.clipboard.writeText(paymentUrl);
     toast({
-      title: "Lien copié",
-      description: "Le lien de paiement a été copié dans le presse-papier"
+      title: t("linkCopied"),
+      description: t("paymentLinkCopiedToClipboard")
     });
   };
 
@@ -70,7 +72,7 @@ export function InvoiceList({
         <h2 className="text-lg font-medium">{title}</h2>
         {showViewAll && (
           <Button variant="link" className="text-violet">
-            Voir toutes
+            {t("viewAll")}
           </Button>
         )}
       </div>
@@ -79,12 +81,12 @@ export function InvoiceList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Facture</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("invoice")}</TableHead>
+              <TableHead>{t("client")}</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("amount")}</TableHead>
+              <TableHead>{t("status")}</TableHead>
+              <TableHead className="text-right">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -109,7 +111,7 @@ export function InvoiceList({
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Télécharger la facture</p>
+                        <p>{t("downloadInvoice")}</p>
                       </TooltipContent>
                     </Tooltip>
                     
@@ -120,7 +122,7 @@ export function InvoiceList({
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Envoyer par email</p>
+                        <p>{t("sendByEmail")}</p>
                       </TooltipContent>
                     </Tooltip>
                     
@@ -137,7 +139,7 @@ export function InvoiceList({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Copier le lien de paiement</p>
+                            <p>{t("copyPaymentLink")}</p>
                           </TooltipContent>
                         </Tooltip>
                         
@@ -152,7 +154,7 @@ export function InvoiceList({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Ouvrir le lien de paiement</p>
+                            <p>{t("openPaymentLink")}</p>
                           </TooltipContent>
                         </Tooltip>
                         
@@ -163,7 +165,7 @@ export function InvoiceList({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Afficher le QR code</p>
+                            <p>{t("showQrCode")}</p>
                           </TooltipContent>
                         </Tooltip>
                       </>
@@ -183,7 +185,7 @@ export function InvoiceList({
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Marquer comme payée</p>
+                          <p>{t("markAsPaid")}</p>
                         </TooltipContent>
                       </Tooltip>
                     )}

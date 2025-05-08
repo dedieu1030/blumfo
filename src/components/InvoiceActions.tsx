@@ -7,6 +7,7 @@ import { generateAndDownloadInvoicePdf } from '@/services/invoiceApiClient';
 import { InvoiceData } from '@/types/invoice';
 import { createPaymentLink, sendInvoice } from '@/services/stripeApiClient';
 import { InvoiceReminder } from './InvoiceReminder';
+import { useTranslation } from "react-i18next";
 
 interface InvoiceActionsProps {
   invoiceData: InvoiceData;
@@ -30,6 +31,7 @@ export function InvoiceActions({
   className = ""
 }: InvoiceActionsProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
@@ -38,8 +40,8 @@ export function InvoiceActions({
   const handleDownloadPdf = async () => {
     if (!invoiceData) {
       toast({
-        title: "Erreur",
-        description: "Données de facture manquantes pour générer le PDF",
+        title: t("error", "Erreur"),
+        description: t("missingInvoiceData", "Données de facture manquantes pour générer le PDF"),
         variant: "destructive"
       });
       return;
@@ -47,8 +49,8 @@ export function InvoiceActions({
 
     setIsDownloading(true);
     toast({
-      title: "Génération du PDF",
-      description: "Préparation du PDF en cours..."
+      title: t("generatingPdf"),
+      description: t("pdfPreparation", "Préparation du PDF en cours...")
     });
 
     try {
@@ -60,21 +62,21 @@ export function InvoiceActions({
 
       if (success) {
         toast({
-          title: "Téléchargement démarré",
-          description: "Votre PDF a été généré avec succès"
+          title: t("downloadStarted", "Téléchargement démarré"),
+          description: t("pdfGeneratedSuccessfully", "Votre PDF a été généré avec succès")
         });
       } else {
         toast({
-          title: "Erreur",
-          description: "Impossible de générer le PDF",
+          title: t("error", "Erreur"),
+          description: t("cannotGeneratePdf", "Impossible de générer le PDF"),
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Erreur lors du téléchargement:", error);
       toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de la génération du PDF",
+        title: t("error", "Erreur"),
+        description: t("pdfGenerationError", "Une erreur s'est produite lors de la génération du PDF"),
         variant: "destructive"
       });
     } finally {
@@ -85,8 +87,8 @@ export function InvoiceActions({
   const handleSendInvoice = async () => {
     if (!stripeInvoiceId) {
       toast({
-        title: "Erreur",
-        description: "ID de facture Stripe manquant",
+        title: t("error", "Erreur"),
+        description: t("missingStripeId", "ID de facture Stripe manquant"),
         variant: "destructive"
       });
       return;
@@ -94,8 +96,8 @@ export function InvoiceActions({
 
     setIsSending(true);
     toast({
-      title: "Envoi en cours",
-      description: "Envoi de la facture au client..."
+      title: t("sending"),
+      description: t("sendingToClient", "Envoi de la facture au client...")
     });
 
     try {
@@ -103,8 +105,8 @@ export function InvoiceActions({
 
       if (response.success) {
         toast({
-          title: "Facture envoyée",
-          description: "La facture a été envoyée au client avec succès"
+          title: t("invoiceSent", "Facture envoyée"),
+          description: t("invoiceSentSuccess", "La facture a été envoyée au client avec succès")
         });
         
         if (onSend) {
@@ -112,16 +114,16 @@ export function InvoiceActions({
         }
       } else {
         toast({
-          title: "Erreur",
-          description: response.error || "Impossible d'envoyer la facture",
+          title: t("error", "Erreur"),
+          description: response.error || t("cannotSendInvoice", "Impossible d'envoyer la facture"),
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Erreur lors de l'envoi:", error);
       toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de l'envoi de la facture",
+        title: t("error", "Erreur"),
+        description: t("invoiceSendingError", "Une erreur s'est produite lors de l'envoi de la facture"),
         variant: "destructive"
       });
     } finally {
@@ -132,8 +134,8 @@ export function InvoiceActions({
   const handleCreatePaymentLink = async () => {
     if (!stripeInvoiceId) {
       toast({
-        title: "Erreur",
-        description: "ID de facture Stripe manquant",
+        title: t("error", "Erreur"),
+        description: t("missingStripeId", "ID de facture Stripe manquant"),
         variant: "destructive"
       });
       return;
@@ -141,8 +143,8 @@ export function InvoiceActions({
 
     setIsCreatingPaymentLink(true);
     toast({
-      title: "Création en cours",
-      description: "Création du lien de paiement..."
+      title: t("creatingPaymentLink"),
+      description: t("creatingPaymentLinkDesc", "Création du lien de paiement...")
     });
 
     try {
@@ -151,21 +153,21 @@ export function InvoiceActions({
       if (response.success && response.paymentUrl) {
         setPaymentUrl(response.paymentUrl);
         toast({
-          title: "Lien créé",
-          description: "Le lien de paiement a été créé avec succès"
+          title: t("linkCreated", "Lien créé"),
+          description: t("paymentLinkCreatedSuccess", "Le lien de paiement a été créé avec succès")
         });
       } else {
         toast({
-          title: "Erreur",
-          description: response.error || "Impossible de créer le lien de paiement",
+          title: t("error", "Erreur"),
+          description: response.error || t("cannotCreatePaymentLink", "Impossible de créer le lien de paiement"),
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Erreur lors de la création du lien de paiement:", error);
       toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de la création du lien de paiement",
+        title: t("error", "Erreur"),
+        description: t("paymentLinkError", "Une erreur s'est produite lors de la création du lien de paiement"),
         variant: "destructive"
       });
     } finally {
@@ -184,14 +186,14 @@ export function InvoiceActions({
       {onPreview && (
         <Button variant="outline" onClick={onPreview}>
           <Eye className="mr-2 h-4 w-4" />
-          Prévisualiser
+          {t("preview")}
         </Button>
       )}
       
       {onSave && (
         <Button variant="outline" onClick={onSave}>
           <Save className="mr-2 h-4 w-4" />
-          Enregistrer
+          {t("save")}
         </Button>
       )}
       
@@ -205,7 +207,7 @@ export function InvoiceActions({
         ) : (
           <Download className="mr-2 h-4 w-4" />
         )}
-        {isDownloading ? "Génération..." : "Télécharger PDF"}
+        {isDownloading ? t("generatingPdf") : t("downloadPdf")}
       </Button>
       
       {stripeInvoiceId && (
@@ -220,7 +222,7 @@ export function InvoiceActions({
             ) : (
               <Send className="mr-2 h-4 w-4" />
             )}
-            {isSending ? "Envoi..." : "Envoyer par email"}
+            {isSending ? t("sending") : t("sendByEmailButton")}
           </Button>
           
           {/* Ajout du bouton de rappel */}
@@ -241,7 +243,7 @@ export function InvoiceActions({
               ) : (
                 <CreditCard className="mr-2 h-4 w-4" />
               )}
-              {isCreatingPaymentLink ? "Création..." : "Lien de paiement"}
+              {isCreatingPaymentLink ? t("creatingPaymentLink") : t("paymentLink")}
             </Button>
           ) : (
             <Button 
@@ -249,7 +251,7 @@ export function InvoiceActions({
               onClick={openPaymentLink}
             >
               <ExternalLink className="mr-2 h-4 w-4" />
-              Ouvrir lien de paiement
+              {t("openPaymentLinkButton")}
             </Button>
           )}
         </>
@@ -258,7 +260,7 @@ export function InvoiceActions({
       {onSend && !stripeInvoiceId && (
         <Button className="bg-violet hover:bg-violet/90" onClick={onSend}>
           <Send className="mr-2 h-4 w-4" />
-          Générer et envoyer
+          {t("generateAndSend")}
         </Button>
       )}
     </div>

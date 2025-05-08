@@ -6,6 +6,7 @@ import { Copy, Download, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateAndDownloadInvoicePdf } from "@/services/invoiceApiClient";
 import { QRCodeDisplay } from "./QRCodeDisplay";
+import { useTranslation } from "react-i18next";
 
 interface InvoicePaymentLinkProps {
   paymentUrl: string;
@@ -19,21 +20,22 @@ export function InvoicePaymentLink({
   templateId 
 }: InvoicePaymentLinkProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isDownloading, setIsDownloading] = React.useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(paymentUrl);
     toast({
-      title: "Lien copié",
-      description: "Le lien de paiement a été copié dans le presse-papier"
+      title: t("linkCopied"),
+      description: t("paymentLinkCopiedToClipboard")
     });
   };
 
   const handleDownloadInvoice = async () => {
     if (!invoiceData || !templateId) {
       toast({
-        title: "Erreur",
-        description: "Données de facture manquantes",
+        title: t("error", "Erreur"),
+        description: t("missingInvoiceData", "Données de facture manquantes"),
         variant: "destructive"
       });
       return;
@@ -41,8 +43,8 @@ export function InvoicePaymentLink({
 
     setIsDownloading(true);
     toast({
-      title: "Génération du PDF",
-      description: "Préparation du PDF en cours..."
+      title: t("generatingPdf"),
+      description: t("pdfPreparation", "Préparation du PDF en cours...")
     });
 
     try {
@@ -53,21 +55,21 @@ export function InvoicePaymentLink({
 
       if (success) {
         toast({
-          title: "Téléchargement démarré",
-          description: "Votre facture PDF a été générée avec succès"
+          title: t("downloadStarted", "Téléchargement démarré"),
+          description: t("pdfGeneratedSuccessfully", "Votre facture PDF a été générée avec succès")
         });
       } else {
         toast({
-          title: "Erreur",
-          description: "Impossible de générer le PDF",
+          title: t("error", "Erreur"),
+          description: t("cannotGeneratePdf", "Impossible de générer le PDF"),
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Erreur lors du téléchargement:", error);
       toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de la génération du PDF",
+        title: t("error", "Erreur"),
+        description: t("pdfGenerationError", "Une erreur s'est produite lors de la génération du PDF"),
         variant: "destructive"
       });
     } finally {
@@ -77,7 +79,7 @@ export function InvoicePaymentLink({
 
   return (
     <div className="mt-6 p-4 border rounded-md bg-gray-50">
-      <h3 className="font-medium mb-2">Lien de paiement Stripe généré</h3>
+      <h3 className="font-medium mb-2">{t("paymentLinkGenerated")}</h3>
       <div className="flex flex-col md:flex-row items-center gap-4">
         <div className="flex-shrink-0">
           <QRCodeDisplay 
@@ -88,7 +90,7 @@ export function InvoicePaymentLink({
         </div>
         <div className="flex-1">
           <p className="text-sm text-muted-foreground mb-2">
-            Scannez ce QR code ou utilisez le lien ci-dessous pour effectuer le paiement:
+            {t("scanQrCodeOrUseLink")}
           </p>
           <div className="flex items-center gap-2">
             <Input 
@@ -101,7 +103,7 @@ export function InvoicePaymentLink({
               onClick={() => window.open(paymentUrl, '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-1" />
-              Ouvrir
+              {t("open")}
             </Button>
             <Button
               size="sm"
@@ -123,7 +125,7 @@ export function InvoicePaymentLink({
                 className="w-full"
               >
                 <Download className="h-4 w-4 mr-1" />
-                {isDownloading ? "Génération..." : "Télécharger la facture (PDF)"}
+                {isDownloading ? t("generating") : t("downloadInvoicePdf")}
               </Button>
             </div>
           )}
