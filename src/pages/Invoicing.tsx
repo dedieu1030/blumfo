@@ -140,6 +140,13 @@ export default function Invoicing() {
   const handleGenerateInvoice = () => {
     setInvoiceDialogOpen(true);
   };
+  
+  // Fix: Make this function return a Promise<void> as expected by InvoiceDialog
+  const handleInvoiceGenerated = async (invoiceData: InvoiceData): Promise<void> => {
+    setInvoiceDialogOpen(false);
+    navigate("/invoices");
+    return Promise.resolve();
+  };
 
   return (
     <>
@@ -423,10 +430,7 @@ export default function Invoicing() {
       <InvoiceDialog 
         open={invoiceDialogOpen} 
         onOpenChange={setInvoiceDialogOpen}
-        onGenerateInvoice={() => {
-          setInvoiceDialogOpen(false);
-          navigate("/invoices");
-        }}
+        onGenerateInvoice={handleInvoiceGenerated} 
         isGenerating={isGenerating}
       />
       
