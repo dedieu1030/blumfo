@@ -25,7 +25,7 @@
     --muted: 24 15% 88%; /* Beige plus léger: #e7e2dd */
     --muted-foreground: 25 10% 40%; /* Brun moyen: #766b62 */
 
-    --accent: 14 95% 62%; /* Corail: #FA7043 - changé depuis vert lime */
+    --accent: 65 96% 60%; /* Vert lime vif: #E5FC37 - changé depuis corail */
     --accent-foreground: 25 25% 12%;
 
     --destructive: 0 74% 57%; /* Rouge: #ea384c */
@@ -57,7 +57,7 @@
     --sidebar-foreground: 25 25% 12%;
     --sidebar-primary: 164 100% 10%; /* Vert foncé: #003427 */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 14 95% 62%; /* Corail: #FA7043 - changé depuis vert lime */
+    --sidebar-accent: 65 96% 60%; /* Vert lime vif: #E5FC37 - changé depuis corail */
     --sidebar-accent-foreground: 25 25% 12%;
     --sidebar-border: 24 15% 80%; /* #d5cdc6 */
     --sidebar-ring: 164 100% 10%; /* Vert foncé: #003427 */
@@ -82,7 +82,7 @@
     --muted: 25 25% 25%;
     --muted-foreground: 24 10% 70%;
 
-    --accent: 84 98% 66%; /* Vert Lime: #d6fd51 */
+    --accent: 65 96% 60%; /* Vert lime vif: #E5FC37 */
     --accent-foreground: 25 25% 12%;
 
     --destructive: 0 62.8% 30.6%;
