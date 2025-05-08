@@ -7,8 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { InvoiceDialog } from "./InvoiceDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { checkStripeConnection } from "@/services/stripeConnectClient";
-import { SearchBar } from "./SearchBar";
-import { NotificationBell } from "./NotificationBell";
 
 interface HeaderProps {
   title: string;
@@ -51,41 +49,30 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
 
   return (
     <>
-      {/* Header navigation bar with logo, search and actions */}
-      <div className="flex items-center justify-between py-4 mb-8">
-        {/* Left side - Mobile menu button or title */}
-        <div className="flex-shrink-0">
-          {isMobile ? (
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
+        <div>
+          {isMobile && (
             <Button 
               variant="ghost" 
               size="icon" 
-              className="-ml-3" 
+              className="mb-4 -ml-3" 
               onClick={onOpenMobileMenu}
             >
               <Menu className="h-6 w-6" />
             </Button>
-          ) : (
-            <h1 className="text-2xl font-bold mt-1">{title}</h1>
           )}
+          <h1 className="text-2xl font-bold">{title}</h1>
+          {description && <p className="text-muted-foreground mt-1">{description}</p>}
         </div>
         
-        {/* Center - Search bar - adjusted height and padding for vertical alignment */}
-        <div className="flex-1 flex justify-center max-w-3xl mx-auto px-4">
-          <div className="pt-1">
-            <SearchBar />
-          </div>
-        </div>
-        
-        {/* Right side - Status indicators and actions */}
-        <div className="flex items-center gap-3">
-          {/* Stripe connection status indicators */}
+        <div className="mt-4 sm:mt-0 flex items-center gap-3">
           {stripeConnectionStatus.isChecking ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex items-center text-sm text-zinc-600 bg-zinc-100 px-3 py-1 rounded-full">
                     <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                    <span className="hidden md:inline">Vérification Stripe...</span>
+                    <span>Vérification Stripe...</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -99,7 +86,7 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                 <TooltipTrigger asChild>
                   <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
                     <CheckCircle2 className="mr-1 h-4 w-4" />
-                    <span className="hidden md:inline">Stripe connecté</span>
+                    <span>Stripe connecté</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -116,7 +103,7 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                     onClick={() => navigate('/settings?tab=stripe')}
                   >
                     <XCircle className="mr-1 h-4 w-4" />
-                    <span className="hidden md:inline">Stripe non connecté</span>
+                    <span>Stripe non connecté</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -126,34 +113,15 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
             </TooltipProvider>
           )}
           
-          {/* Notification Bell */}
-          <NotificationBell />
-          
-          {/* New Invoice Button - only icon */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  className="bg-violet hover:bg-violet/90 h-10 w-10 p-0 rounded-full"
-                  onClick={() => setInvoiceDialogOpen(true)}
-                >
-                  <PlusCircle className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Nouvelle facture</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button 
+            className="bg-violet hover:bg-violet/90"
+            onClick={() => setInvoiceDialogOpen(true)}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nouvelle facture
+          </Button>
         </div>
       </div>
-      
-      {/* Page description shown below the header */}
-      {!isMobile && description && (
-        <div className="mb-8">
-          <p className="text-muted-foreground">{description}</p>
-        </div>
-      )}
 
       <InvoiceDialog 
         open={invoiceDialogOpen} 
