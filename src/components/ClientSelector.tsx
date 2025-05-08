@@ -12,6 +12,7 @@ export interface Client {
   email?: string;
   phone?: string;
   address?: string;
+  invoiceCount?: number; // Add this property to the interface
 }
 
 interface ClientSelectorProps {
