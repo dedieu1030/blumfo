@@ -65,13 +65,15 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
               <Menu className="h-6 w-6" />
             </Button>
           ) : (
-            <h1 className="text-2xl font-bold">{title}</h1>
+            <h1 className="text-2xl font-bold mt-1">{title}</h1>
           )}
         </div>
         
-        {/* Center - Search bar */}
+        {/* Center - Search bar - adjusted height and padding for vertical alignment */}
         <div className="flex-1 flex justify-center max-w-3xl mx-auto px-4">
-          <SearchBar />
+          <div className="pt-1">
+            <SearchBar />
+          </div>
         </div>
         
         {/* Right side - Status indicators and actions */}
