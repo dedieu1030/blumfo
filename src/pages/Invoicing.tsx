@@ -419,7 +419,7 @@ export default function Invoicing() {
             </DialogTitle>
           </DialogHeader>
           
-          <div className="overflow-y-auto pr-1">
+          <div className="overflow-y-auto max-h-[70vh] pr-1">
             <ReminderScheduleEditor
               schedule={editingSchedule || undefined}
               onSave={handleSaveSchedule}
