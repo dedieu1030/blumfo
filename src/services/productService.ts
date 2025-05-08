@@ -51,8 +51,9 @@ export async function fetchProducts(includeInactive: boolean = false) {
     
     // Map products with their categories
     return data.map(product => {
-      // Category might be stored in metadata
-      const categoryId = product.metadata?.category_id;
+      // Get category_id from metadata if it exists
+      const metadata = product.metadata as Record<string, any> | null;
+      const categoryId = metadata?.category_id;
       const categoryObj = categories?.find(c => c.id === categoryId);
       
       return {
@@ -80,13 +81,17 @@ export async function fetchProduct(id: string) {
     
     if (error) throw error;
     
+    // Get category_id from metadata if it exists
+    const metadata = data.metadata as Record<string, any> | null;
+    const categoryId = metadata?.category_id;
+    
     // Fetch category if there's a category_id in metadata
     let categoryName;
-    if (data.metadata?.category_id) {
+    if (categoryId) {
       const { data: category } = await supabase
         .from('product_categories')
         .select('name')
-        .eq('id', data.metadata.category_id)
+        .eq('id', categoryId)
         .maybeSingle();
         
       categoryName = category?.name;
@@ -94,7 +99,7 @@ export async function fetchProduct(id: string) {
     
     return {
       ...data,
-      category_id: data.metadata?.category_id,
+      category_id: categoryId,
       category_name: categoryName,
       recurring_interval: validateRecurringInterval(data.recurring_interval),
       product_type: validateProductType(data.product_type)
