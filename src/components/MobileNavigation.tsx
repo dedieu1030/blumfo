@@ -11,6 +11,7 @@ import {
   Settings, 
   PlusCircle
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -19,17 +20,18 @@ interface MobileNavigationProps {
 
 export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps) {
   const location = useLocation();
+  const { t } = useTranslation();
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
   
   const navigationItems = [
-    { icon: BarChart2, name: "Dashboard", path: "/" },
-    { icon: PlusCircle, name: "Facturation", path: "/invoicing" },
-    { icon: FileText, name: "Mes factures", path: "/invoices" },
-    { icon: Users, name: "Clients", path: "/clients" },
-    { icon: Settings, name: "Paramètres", path: "/settings" }
+    { icon: BarChart2, name: t('dashboard'), path: "/" },
+    { icon: PlusCircle, name: t('invoicing'), path: "/invoicing" },
+    { icon: FileText, name: t('invoices'), path: "/invoices" },
+    { icon: Users, name: t('clients'), path: "/clients" },
+    { icon: Settings, name: t('settings'), path: "/settings" }
   ];
 
   return (

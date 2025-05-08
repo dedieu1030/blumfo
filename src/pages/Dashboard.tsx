@@ -5,6 +5,7 @@ import { DashboardStats } from "@/components/DashboardStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InvoiceList } from "@/components/InvoiceList";
 import { MobileNavigation } from "@/components/MobileNavigation";
+import { useTranslation } from "react-i18next";
 
 // Mock data for demonstration
 const recentInvoices = [
@@ -51,12 +52,13 @@ const draftInvoices = [
 
 export default function Dashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <>
       <Header 
-        title="Dashboard" 
-        description="Vue d'ensemble de votre activité de facturation"
+        title={t('dashboard')} 
+        description={t('dashboardDescription')}
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
       />
       
@@ -64,14 +66,14 @@ export default function Dashboard() {
         <DashboardStats />
         
         <InvoiceList 
-          title="Factures récentes" 
+          title={t('recentInvoices')}
           invoices={recentInvoices} 
           showViewAll
         />
         
         <Card>
           <CardHeader>
-            <CardTitle>Reprendre un brouillon</CardTitle>
+            <CardTitle>{t('resumeDraft')}</CardTitle>
           </CardHeader>
           <CardContent>
             {draftInvoices.length > 0 ? (
@@ -80,7 +82,7 @@ export default function Dashboard() {
                 invoices={draftInvoices}
               />
             ) : (
-              <p className="text-muted-foreground">Aucun brouillon à afficher.</p>
+              <p className="text-muted-foreground">{t('noDrafts')}</p>
             )}
           </CardContent>
         </Card>

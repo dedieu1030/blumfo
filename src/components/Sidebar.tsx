@@ -10,6 +10,7 @@ import {
   Package,
   LayoutTemplate
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface SidebarProps {
   className?: string;
@@ -17,19 +18,20 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const location = useLocation();
+  const { t } = useTranslation();
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
   
   const navigationItems = [
-    { icon: BarChart2, name: "Dashboard", path: "/" },
-    { icon: CreditCard, name: "Facturation", path: "/invoicing" },
-    { icon: FileText, name: "Mes factures", path: "/invoices" },
-    { icon: LayoutTemplate, name: "Templates", path: "/templates" },
-    { icon: Users, name: "Clients", path: "/clients" },
-    { icon: Package, name: "Produits & Services", path: "/products" },
-    { icon: Settings, name: "Paramètres", path: "/settings" }
+    { icon: BarChart2, name: t('dashboard'), path: "/" },
+    { icon: CreditCard, name: t('invoicing'), path: "/invoicing" },
+    { icon: FileText, name: t('invoices'), path: "/invoices" },
+    { icon: LayoutTemplate, name: t('templates'), path: "/templates" },
+    { icon: Users, name: t('clients'), path: "/clients" },
+    { icon: Package, name: t('products'), path: "/products" },
+    { icon: Settings, name: t('settings'), path: "/settings" }
   ];
 
   return (

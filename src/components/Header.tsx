@@ -9,6 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { checkStripeConnection } from "@/services/stripeConnectClient";
 import { SearchBar } from "./SearchBar";
 import { NotificationBell } from "./NotificationBell";
+import { LanguageSelector } from "./LanguageSelector";
+import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   title: string;
@@ -20,6 +22,7 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const { t } = useTranslation();
   const [stripeConnectionStatus, setStripeConnectionStatus] = useState<{
     isChecking: boolean;
     isConnected: boolean;
@@ -67,7 +70,8 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
             )}
             <SearchBar />
             
-            <div className="ml-2">
+            <div className="flex items-center gap-2 ml-2">
+              <LanguageSelector />
               <NotificationBell />
             </div>
           </div>
@@ -87,11 +91,11 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                   <TooltipTrigger asChild>
                     <div className="flex items-center text-sm text-zinc-600 bg-zinc-100 px-3 py-1 rounded-full">
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                      <span>Vérification Stripe...</span>
+                      <span>{t('checkingStripe')}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Vérification de la connexion avec Stripe</p>
+                    <p>{t('checkingStripe')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -101,11 +105,11 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                   <TooltipTrigger asChild>
                     <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
                       <CheckCircle2 className="mr-1 h-4 w-4" />
-                      <span>Stripe connecté</span>
+                      <span>{t('stripeConnected')}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Votre compte Stripe est connecté et prêt à recevoir des paiements</p>
+                    <p>{t('stripeConnectedDesc')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -118,11 +122,11 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                       onClick={() => navigate('/settings?tab=stripe')}
                     >
                       <XCircle className="mr-1 h-4 w-4" />
-                      <span>Stripe non connecté</span>
+                      <span>{t('stripeNotConnected')}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Connectez votre compte Stripe pour recevoir des paiements</p>
+                    <p>{t('stripeNotConnectedDesc')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -133,7 +137,7 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
               onClick={() => setInvoiceDialogOpen(true)}
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Nouvelle facture
+              {t('newInvoice')}
             </Button>
           </div>
         </div>
