@@ -31,14 +31,14 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   
-  // Filtrer les données en fonction du terme de recherche
-  const filteredInvoices = searchTerm 
+  // Filtrer les données en fonction du terme de recherche - Ajout de vérifications supplémentaires
+  const filteredInvoices = searchTerm && mockInvoices 
     ? mockInvoices.filter(invoice => 
         invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) || 
         invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()))
     : [];
   
-  const filteredClients = searchTerm 
+  const filteredClients = searchTerm && mockClients
     ? mockClients.filter(client => 
         client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         client.email.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -141,7 +141,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
           </div>
         </PopoverTrigger>
         <PopoverContent 
-          className="p-0 w-[500px] border shadow-md" 
+          className="p-0 w-[500px] border shadow-md bg-popover" 
           align="start" 
           side="bottom" 
           sideOffset={5}
@@ -155,7 +155,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
             />
             
             <div className="max-h-[400px] overflow-auto p-2">
-              {searchTerm === "" ? (
+              {!searchTerm ? (
                 <>
                   <div className="px-2 py-3 text-sm text-muted-foreground">
                     FILTRES SUGGÉRÉS
@@ -207,7 +207,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                 <>
                   <CommandEmpty>Aucun résultat trouvé pour "{searchTerm}".</CommandEmpty>
                   
-                  {filteredInvoices.length > 0 && (
+                  {filteredInvoices && filteredInvoices.length > 0 && (
                     <CommandGroup heading="Factures">
                       {filteredInvoices.map((invoice) => (
                         <CommandItem 
@@ -226,7 +226,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                     </CommandGroup>
                   )}
                   
-                  {filteredClients.length > 0 && (
+                  {filteredClients && filteredClients.length > 0 && (
                     <CommandGroup heading="Clients">
                       {filteredClients.map((client) => (
                         <CommandItem 
@@ -246,7 +246,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                 </>
               )}
               
-              {searchTerm === "" && (
+              {!searchTerm && (
                 <div className="border-t mt-2 pt-2 px-2 text-xs text-muted-foreground flex items-center">
                   <span className="mr-1">🔍</span>
                   Conseils de recherche
