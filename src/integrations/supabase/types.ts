@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      client_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_category_mappings: {
+        Row: {
+          category_id: string
+          client_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          category_id: string
+          client_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          category_id?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_category_mappings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "client_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_category_mappings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -651,6 +717,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_client_categories: {
+        Args: { p_client_id: string }
+        Returns: {
+          category_id: string
+          category_name: string
+          category_color: string
+        }[]
+      }
       get_client_invoice_count: {
         Args: { client_id: string }
         Returns: number

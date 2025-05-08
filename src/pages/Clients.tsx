@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Mail, Phone, Building, FileText, PlusCircle, Loader2 } from "lucide-react";
+import { Search, Mail, Phone, Building, FileText, PlusCircle, Loader2, Tag } from "lucide-react";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import {
   Dialog,
@@ -19,6 +20,30 @@ import { Client } from "@/components/ClientSelector";
 import { supabase } from "@/integrations/supabase/client";
 import InvoicePaymentAlert from "@/components/InvoicePaymentAlert";
 import { checkOverdueInvoices } from "@/services/reminderService";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Type definitions
+interface Category {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
+interface ClientWithCategories extends Client {
+  categories: {
+    category_id: string;
+    category_name: string;
+    category_color: string;
+  }[];
+}
 
 // Composant pour le formulaire d'ajout/modification de client
 interface ClientFormProps {
@@ -33,6 +58,7 @@ function ClientForm({ client, onSubmit, onCancel, isSubmitting }: ClientFormProp
   const [email, setEmail] = useState(client.email || "");
   const [phone, setPhone] = useState(client.phone || "");
   const [address, setAddress] = useState(client.address || "");
+  const [notes, setNotes] = useState(client.notes || "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +68,7 @@ function ClientForm({ client, onSubmit, onCancel, isSubmitting }: ClientFormProp
       email,
       phone,
       address,
+      notes,
     });
   };
 
@@ -87,6 +114,16 @@ function ClientForm({ client, onSubmit, onCancel, isSubmitting }: ClientFormProp
         />
       </div>
       
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea
+          id="notes"
+          value={notes || ""}
+          onChange={(e) => setNotes(e.target.value)}
+          className="min-h-[80px]"
+        />
+      </div>
+      
       <DialogFooter>
         <Button 
           type="button" 
@@ -109,9 +146,10 @@ function ClientForm({ client, onSubmit, onCancel, isSubmitting }: ClientFormProp
 }
 
 export default function Clients() {
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [clients, setClients] = useState<ClientWithCategories[]>([]);
+  const [filteredClients, setFilteredClients] = useState<ClientWithCategories[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [currentClient, setCurrentClient] = useState<Partial<Client>>({});
@@ -119,6 +157,8 @@ export default function Clients() {
   const [isLoading, setIsLoading] = useState(true);
   const [overdueCount, setOverdueCount] = useState(0);
   const [nearDueCount, setNearDueCount] = useState(0);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Charger les clients depuis Supabase
@@ -146,21 +186,45 @@ export default function Clients() {
 
         if (error) throw error;
 
-        // Récupérer le nombre de factures pour chaque client
-        const clientsWithCounts = await Promise.all(clientsData.map(async (client) => {
+        // Fetch categories for all clients
+        const clientsWithCategories = await Promise.all(clientsData.map(async (client) => {
+          // Récupérer le nombre de factures pour chaque client
           const { data: countData } = await supabase.rpc(
             'get_client_invoice_count', 
             { client_id: client.id }
           );
           
+          // Récupérer les catégories pour chaque client
+          const { data: categoryData, error: categoryError } = await supabase.rpc(
+            'get_client_categories',
+            { p_client_id: client.id }
+          );
+          
+          if (categoryError) {
+            console.error("Error fetching client categories:", categoryError);
+          }
+          
           return {
             ...client,
-            invoiceCount: countData || 0
-          } as Client;
+            invoiceCount: countData || 0,
+            categories: categoryData || []
+          } as ClientWithCategories;
         }));
 
-        setClients(clientsWithCounts);
-        setFilteredClients(clientsWithCounts);
+        setClients(clientsWithCategories);
+        setFilteredClients(clientsWithCategories);
+        
+        // Also fetch all categories for the filter dropdown
+        const { data: allCategories, error: categoriesError } = await supabase
+          .from('client_categories')
+          .select('id, name, color')
+          .order('name');
+          
+        if (categoriesError) {
+          console.error("Error fetching categories:", categoriesError);
+        } else {
+          setCategories(allCategories || []);
+        }
       } catch (error) {
         console.error("Erreur lors du chargement des clients:", error);
         toast({
@@ -190,23 +254,31 @@ export default function Clients() {
     fetchOverdueData();
   }, [toast]);
 
-  // Filtrer les clients selon le terme de recherche
+  // Apply filters (search and category)
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredClients(clients);
-      return;
+    let result = [...clients];
+    
+    // Apply search term filter
+    if (searchTerm.trim()) {
+      result = result.filter(
+        (client) =>
+          client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (client.address && client.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (client.notes && client.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    // Apply category filter
+    if (selectedCategoryId) {
+      result = result.filter(client => 
+        client.categories.some(cat => cat.category_id === selectedCategoryId)
+      );
     }
 
-    const filtered = clients.filter(
-      (client) =>
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (client.address && client.address.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-
-    setFilteredClients(filtered);
-  }, [searchTerm, clients]);
+    setFilteredClients(result);
+  }, [searchTerm, selectedCategoryId, clients]);
 
   // Ouvrir la boîte de dialogue pour ajouter un nouveau client
   const openAddClientDialog = () => {
@@ -241,6 +313,7 @@ export default function Clients() {
             email: clientData.email,
             phone: clientData.phone,
             address: clientData.address,
+            notes: clientData.notes,
             updated_at: new Date().toISOString()
           })
           .eq('id', clientData.id);
@@ -255,7 +328,7 @@ export default function Clients() {
         // Mettre à jour l'état local
         setClients(prevClients => 
           prevClients.map(c => 
-            c.id === clientData.id ? { ...c, ...clientData } as Client : c
+            c.id === clientData.id ? { ...c, ...clientData } as ClientWithCategories : c
           )
         );
       } else {
@@ -267,6 +340,7 @@ export default function Clients() {
             email: clientData.email,
             phone: clientData.phone,
             address: clientData.address,
+            notes: clientData.notes,
             user_id: user.id // Add the user_id field
           })
           .select();
@@ -277,7 +351,7 @@ export default function Clients() {
           const newClient = {
             ...data[0],
             invoiceCount: 0
-          } as Client;
+          } as ClientWithCategories;
           
           toast({
             title: "Client ajouté",
@@ -302,16 +376,14 @@ export default function Clients() {
     }
   };
 
+  // Fonction pour voir les détails d'un client
+  const viewClientDetails = (client: Client) => {
+    navigate(`/clients/${client.id}`);
+  };
+
   // Fonction pour facturer un client
   const invoiceClient = (client: Client) => {
-    // Rediriger vers la page de facturation avec les informations du client pré-remplies
-    toast({
-      title: "Facturation",
-      description: `Redirection vers la facturation pour ${client.name}...`
-    });
-    
-    // Dans une vraie application, vous pourriez utiliser la navigation pour rediriger avec les params
-    // navigate('/invoicing', { state: { client } });
+    navigate(`/invoicing?client=${client.id}`);
   };
 
   // Voir les factures en retard
@@ -331,6 +403,11 @@ export default function Clients() {
       description: "Redirection vers les factures à échéance proche..."
     });
     // Dans une vraie application, vous redirigeriez vers /invoices avec un filtre approprié
+  };
+  
+  // Reset category filter
+  const clearCategoryFilter = () => {
+    setSelectedCategoryId(null);
   };
 
   return (
@@ -352,17 +429,63 @@ export default function Clients() {
         )}
 
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Rechercher un client..." 
-              className="pl-10 bg-background" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Rechercher un client..." 
+                className="pl-10 bg-background" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            {categories.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant={selectedCategoryId ? "secondary" : "outline"}>
+                    <Tag className="mr-2 h-4 w-4" />
+                    {selectedCategoryId 
+                      ? categories.find(c => c.id === selectedCategoryId)?.name || "Catégorie"
+                      : "Catégories"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Filtrer par catégorie</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {categories.map(category => (
+                    <DropdownMenuItem 
+                      key={category.id}
+                      onClick={() => setSelectedCategoryId(category.id)}
+                      className="cursor-pointer flex items-center"
+                    >
+                      {category.color && (
+                        <span 
+                          className="h-3 w-3 rounded-full mr-2"
+                          style={{ backgroundColor: category.color }}
+                        ></span>
+                      )}
+                      {category.name}
+                    </DropdownMenuItem>
+                  ))}
+                  {selectedCategoryId && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={clearCategoryFilter}
+                        className="cursor-pointer text-primary"
+                      >
+                        Effacer le filtre
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
+          
           <Button 
-            className="bg-violet hover:bg-violet/90"
+            className="bg-primary hover:bg-primary/90"
             onClick={openAddClientDialog}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -372,7 +495,7 @@ export default function Clients() {
         
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-violet" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -393,7 +516,26 @@ export default function Clients() {
                 <Card key={client.id} className="overflow-hidden">
                   <CardContent className="p-0">
                     <div className="p-6">
-                      <h3 className="text-lg font-medium mb-2">{client.name}</h3>
+                      <h3 className="text-lg font-medium mb-1">{client.name}</h3>
+                      
+                      {client.categories && client.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {client.categories.map(category => (
+                            <Badge 
+                              key={category.category_id} 
+                              variant="outline"
+                              style={{ 
+                                backgroundColor: category.category_color || undefined,
+                                color: category.category_color ? '#ffffff' : undefined 
+                              }}
+                              className="text-xs"
+                            >
+                              {category.category_name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      
                       <div className="space-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center">
                           <Mail className="h-4 w-4 mr-2" />
@@ -421,9 +563,9 @@ export default function Clients() {
                       <Button 
                         variant="ghost" 
                         className="flex-1 rounded-none h-12"
-                        onClick={() => openEditClientDialog(client)}
+                        onClick={() => viewClientDetails(client)}
                       >
-                        Modifier
+                        Détails
                       </Button>
                       <div className="border-l h-12" />
                       <Button 
