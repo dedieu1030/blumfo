@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -157,12 +158,7 @@ export default function Invoicing() {
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
       />
       
-      <div className="flex justify-end mb-6">
-        <Button onClick={handleGenerateInvoice} className="bg-primary hover:bg-primary/90">
-          <Plus className="mr-2 h-4 w-4" />
-          {t("newInvoice")}
-        </Button>
-      </div>
+      {/* J'ai supprimé le bouton "Nouvelle facture" ici comme demandé */}
 
       <Card>
         <CardHeader>
