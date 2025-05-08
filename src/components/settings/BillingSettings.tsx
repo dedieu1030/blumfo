@@ -38,12 +38,20 @@ export function BillingSettings({
   
   // Générer l'aperçu du numéro de facture
   useEffect(() => {
-    const paddedNumber = numberingConfig.nextNumber.toString().padStart(numberingConfig.padding, '0');
+    const paddedNumber = "001".padStart(numberingConfig.padding, '0');
     setPreviewNumber(`${numberingConfig.prefix}${paddedNumber}${numberingConfig.suffix || ''}`);
   }, [numberingConfig]);
   
   const handleSaveConfig = () => {
-    saveInvoiceNumberingConfig(numberingConfig);
+    // Sauvegarder la configuration sans le prochain numéro
+    // Nous utilisons toujours 1 comme nextNumber mais c'est juste pour 
+    // la structure de données, ce champ ne sera plus utilisé
+    const configToSave = {
+      ...numberingConfig,
+      nextNumber: 1
+    };
+    
+    saveInvoiceNumberingConfig(configToSave);
     saveDefaultCurrency(defaultCurrency);
     
     // Save default payment term with custom date if applicable
@@ -71,7 +79,7 @@ export function BillingSettings({
               Définissez le format des numéros de facture qui seront générés automatiquement
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="invoice-prefix">Préfixe</Label>
                 <Input 
@@ -81,18 +89,6 @@ export function BillingSettings({
                   placeholder="Ex: FACT-"
                 />
                 <p className="text-xs text-muted-foreground">Texte apparaissant avant le numéro</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="next-invoice-number">Prochain numéro</Label>
-                <Input 
-                  id="next-invoice-number" 
-                  type="number"
-                  min="1"
-                  value={numberingConfig.nextNumber}
-                  onChange={(e) => setNumberingConfig({...numberingConfig, nextNumber: parseInt(e.target.value) || 1})}
-                />
-                <p className="text-xs text-muted-foreground">Numéro de la prochaine facture</p>
               </div>
               
               <div className="space-y-2">
@@ -126,7 +122,7 @@ export function BillingSettings({
                 <p className="text-xs text-muted-foreground">Texte apparaissant après le numéro</p>
               </div>
               
-              <div className="md:col-span-2 flex items-center space-x-2 pt-6">
+              <div className="flex items-center space-x-2 pt-6">
                 <Switch 
                   id="reset-annually" 
                   checked={numberingConfig.resetAnnually}

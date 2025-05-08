@@ -156,7 +156,7 @@ export function getInvoiceNumberingConfig(): InvoiceNumberingConfig {
   if (!savedConfig) {
     const defaultConfig: InvoiceNumberingConfig = {
       prefix: "INV-",
-      nextNumber: 1,
+      nextNumber: 1, // Ce champ sera ignoré lors de la génération
       padding: 3, // Pour obtenir 001, 002, etc.
       resetAnnually: false
     };
@@ -215,16 +215,53 @@ export function saveDefaultCurrency(currency: string): void {
   localStorage.setItem('defaultCurrency', currency);
 }
 
+// Récupérer le compteur actuel des factures
+function getCurrentInvoiceCounter(): number {
+  const counter = localStorage.getItem('invoiceCounter');
+  return counter ? parseInt(counter) : 0;
+}
+
+// Sauvegarder le compteur actuel des factures
+function saveCurrentInvoiceCounter(counter: number): void {
+  localStorage.setItem('invoiceCounter', counter.toString());
+}
+
+// Récupérer le compteur de l'année en cours
+function getCurrentYearCounter(): number {
+  const currentYear = new Date().getFullYear().toString();
+  const yearCounterKey = `invoiceCounter_${currentYear}`;
+  const counter = localStorage.getItem(yearCounterKey);
+  return counter ? parseInt(counter) : 0;
+}
+
+// Sauvegarder le compteur de l'année en cours
+function saveCurrentYearCounter(counter: number): void {
+  const currentYear = new Date().getFullYear().toString();
+  const yearCounterKey = `invoiceCounter_${currentYear}`;
+  localStorage.setItem(yearCounterKey, counter.toString());
+}
+
 // Générer un numéro de facture formaté selon la configuration
 export function generateInvoiceNumber(config: InvoiceNumberingConfig): string {
-  const { prefix, nextNumber, suffix, padding } = config;
+  const { prefix, padding, suffix, resetAnnually } = config;
+  
+  let nextNumber: number;
+  
+  if (resetAnnually) {
+    // Si réinitialisation annuelle, utiliser le compteur de l'année en cours
+    nextNumber = getCurrentYearCounter() + 1;
+    saveCurrentYearCounter(nextNumber);
+  } else {
+    // Sinon, utiliser le compteur global
+    nextNumber = getCurrentInvoiceCounter() + 1;
+    saveCurrentInvoiceCounter(nextNumber);
+  }
+  
   const paddedNumber = nextNumber.toString().padStart(padding, '0');
   return `${prefix}${paddedNumber}${suffix || ''}`;
 }
 
-// Incrémenter le prochain numéro de facture après utilisation
+// Cette fonction devient un alias pour compatibilité avec le code existant
 export function incrementInvoiceNumber(): void {
-  const config = getInvoiceNumberingConfig();
-  config.nextNumber += 1;
-  saveInvoiceNumberingConfig(config);
+  // Ne fait plus rien car incrementInvoiceNumber() est désormais géré directement dans generateInvoiceNumber()
 }
