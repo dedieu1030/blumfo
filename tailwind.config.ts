@@ -92,7 +92,7 @@ export default {
 				credornoir: '#141414',
 				violet: '#003427', // Vert foncé (anciennement violet)
 				beige: '#F0EBE7', // Beige clair (anciennement bleuclair)
-				vertlime: '#d6fd51',
+				vertlime: '#FA7043', // Modifié de #d6fd51 à #FA7043
 				alerte: '#ea384c',
 				success: '#38d26c',
 				info: '#0EA5E9',

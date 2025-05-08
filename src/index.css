@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 @tailwind base;
@@ -24,7 +25,7 @@
     --muted: 24 15% 88%; /* Beige plus léger: #e7e2dd */
     --muted-foreground: 25 10% 40%; /* Brun moyen: #766b62 */
 
-    --accent: 84 98% 66%; /* Vert Lime: #d6fd51 */
+    --accent: 14 95% 62%; /* Corail: #FA7043 - changé depuis vert lime */
     --accent-foreground: 25 25% 12%;
 
     --destructive: 0 74% 57%; /* Rouge: #ea384c */
@@ -56,7 +57,7 @@
     --sidebar-foreground: 25 25% 12%;
     --sidebar-primary: 164 100% 10%; /* Vert foncé: #003427 */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 84 98% 66%; /* Vert Lime: #d6fd51 */
+    --sidebar-accent: 14 95% 62%; /* Corail: #FA7043 - changé depuis vert lime */
     --sidebar-accent-foreground: 25 25% 12%;
     --sidebar-border: 24 15% 80%; /* #d5cdc6 */
     --sidebar-ring: 164 100% 10%; /* Vert foncé: #003427 */
