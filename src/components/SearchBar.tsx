@@ -1,10 +1,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search, FileText, Users, Settings, Plus, Calendar, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { 
   Command,
-  CommandInput, 
   CommandList, 
   CommandEmpty, 
   CommandGroup, 
@@ -36,15 +34,16 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Filtrer les données en fonction du terme de recherche
-  const filteredInvoices = searchTerm && mockInvoices
+  const filteredInvoices = searchTerm 
     ? mockInvoices.filter(invoice => 
         invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) || 
         invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()))
     : [];
   
-  const filteredClients = searchTerm && mockClients
+  const filteredClients = searchTerm 
     ? mockClients.filter(client => 
         client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         client.email.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -56,7 +55,9 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen(true);
-        searchRef.current?.focus();
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
       }
     };
 
@@ -95,31 +96,30 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
     }
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-  };
-
   return (
     <div className="relative w-full max-w-sm">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <div className="flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2 cursor-text" onClick={() => setOpen(true)}>
+          <div className="flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2">
             <Search className="h-4 w-4 mr-2 text-muted-foreground" />
-            {searchTerm ? (
-              <div className="flex items-center w-full">
-                <span className="flex-1 text-sm">{searchTerm}</span>
-                <button 
-                  className="flex items-center justify-center h-5 w-5 rounded-full hover:bg-muted"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSearchTerm("");
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ) : (
-              <span className="text-sm text-muted-foreground">{placeholder}</span>
+            <input
+              ref={inputRef}
+              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm"
+              placeholder={placeholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => setOpen(true)}
+            />
+            {searchTerm && (
+              <button 
+                className="flex items-center justify-center h-5 w-5 rounded-full hover:bg-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSearchTerm("");
+                }}
+              >
+                <X className="h-3 w-3" />
+              </button>
             )}
             <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
               <span className="text-xs">⌘</span>K
@@ -132,18 +132,12 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
           sideOffset={5}
         >
           <Command shouldFilter={false}>
-            <CommandInput 
-              placeholder="Que recherchez-vous?" 
-              value={searchTerm}
-              onValueChange={handleSearchChange}
-              className="border-none focus:ring-0"
-            />
             <CommandList>
               <CommandEmpty>Aucun résultat trouvé pour "{searchTerm}".</CommandEmpty>
               
               {searchTerm ? (
                 <>
-                  {Array.isArray(filteredInvoices) && filteredInvoices.length > 0 && (
+                  {filteredInvoices.length > 0 && (
                     <CommandGroup heading="Factures">
                       {filteredInvoices.map((invoice) => (
                         <CommandItem 
@@ -162,7 +156,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                     </CommandGroup>
                   )}
                   
-                  {Array.isArray(filteredClients) && filteredClients.length > 0 && (
+                  {filteredClients.length > 0 && (
                     <CommandGroup heading="Clients">
                       {filteredClients.map((client) => (
                         <CommandItem 
