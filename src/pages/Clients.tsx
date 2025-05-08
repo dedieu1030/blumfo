@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Client } from "@/components/ClientSelector";
 import { supabase } from "@/integrations/supabase/client";
 import InvoicePaymentAlert from "@/components/InvoicePaymentAlert";
+import { checkOverdueInvoices } from "@/services/reminderService";
 
 // Composant pour le formulaire d'ajout/modification de client
 interface ClientFormProps {
@@ -118,6 +118,7 @@ export default function Clients() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [overdueCount, setOverdueCount] = useState(0);
+  const [nearDueCount, setNearDueCount] = useState(0);
   const { toast } = useToast();
 
   // Charger les clients depuis Supabase
@@ -126,10 +127,22 @@ export default function Clients() {
       try {
         setIsLoading(true);
         
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          // Handle the case where there's no logged-in user
+          setClients([]);
+          setFilteredClients([]);
+          setIsLoading(false);
+          return;
+        }
+        
         // Récupérer la liste des clients
         const { data: clientsData, error } = await supabase
           .from('clients')
-          .select('*');
+          .select('*')
+          .eq('user_id', user.id);
 
         if (error) throw error;
 
@@ -160,25 +173,21 @@ export default function Clients() {
       }
     };
 
-    // Récupérer le nombre de factures en retard de paiement
-    const fetchOverdueInvoices = async () => {
+    // Check for overdue invoices
+    const fetchOverdueData = async () => {
       try {
-        const now = new Date().toISOString();
-        const { count, error } = await supabase
-          .from('stripe_invoices')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'unpaid')
-          .lt('due_date', now);
-
-        if (error) throw error;
-        setOverdueCount(count || 0);
+        const result = await checkOverdueInvoices();
+        if (result.success) {
+          setOverdueCount(result.overdueCount);
+          setNearDueCount(result.nearDueCount);
+        }
       } catch (error) {
-        console.error("Erreur lors du chargement des factures en retard:", error);
+        console.error("Error checking overdue invoices:", error);
       }
     };
 
     fetchClients();
-    fetchOverdueInvoices();
+    fetchOverdueData();
   }, [toast]);
 
   // Filtrer les clients selon le terme de recherche
@@ -216,6 +225,13 @@ export default function Clients() {
     setIsSubmitting(true);
     
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Utilisateur non authentifié");
+      }
+      
       if (clientData.id) {
         // Mise à jour d'un client existant
         const { error } = await supabase
@@ -250,7 +266,8 @@ export default function Clients() {
             name: clientData.name,
             email: clientData.email,
             phone: clientData.phone,
-            address: clientData.address
+            address: clientData.address,
+            user_id: user.id // Add the user_id field
           })
           .select();
           
@@ -307,6 +324,15 @@ export default function Clients() {
     });
   };
 
+  // Voir les factures proches de l'échéance
+  const viewNearDueInvoices = () => {
+    toast({
+      title: "Factures à échéance proche",
+      description: "Redirection vers les factures à échéance proche..."
+    });
+    // Dans une vraie application, vous redirigeriez vers /invoices avec un filtre approprié
+  };
+
   return (
     <>
       <Header 
@@ -316,10 +342,12 @@ export default function Clients() {
       />
       
       <div className="space-y-6">
-        {overdueCount > 0 && (
+        {(overdueCount > 0 || nearDueCount > 0) && (
           <InvoicePaymentAlert 
             overdueCount={overdueCount}
+            nearDueCount={nearDueCount}
             onViewOverdue={viewOverdueInvoices}
+            onViewNearDue={viewNearDueInvoices}
           />
         )}
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog,
@@ -21,6 +20,7 @@ export interface Client {
   phone: string | null;
   address: string | null;
   invoiceCount: number;
+  user_id: string; // Add this field to match the database schema
 }
 
 interface ClientSelectorProps {
