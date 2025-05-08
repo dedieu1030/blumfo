@@ -32,7 +32,7 @@ export function Sidebar({ className }: SidebarProps) {
     <div className={`fixed hidden md:flex flex-col bg-[#F0EBE7] text-gray-800 w-64 h-screen ${className}`}>
       <div className="p-8 flex justify-center items-center">
         <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-[#003427]">
-          BLUMFOO
+          blumfoo
         </h1>
       </div>
 

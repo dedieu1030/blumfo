@@ -37,11 +37,9 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
       <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-[#F0EBE7] border-t border-sidebar-border p-0">
         <div className="flex flex-col h-full">
           <div className="p-8 flex items-center justify-center">
-            <img 
-              src="/lovable-uploads/b22d5d72-f99a-44ba-b6fe-bf6bc3f2c47d.png" 
-              alt="Blumfoo Logo" 
-              className="h-14 max-w-[160px]"
-            />
+            <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-[#003427]">
+              blumfoo
+            </h1>
           </div>
           
           <div className="flex-1 overflow-auto py-4">
