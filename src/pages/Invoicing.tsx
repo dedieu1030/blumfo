@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -386,7 +385,7 @@ export default function Invoicing() {
             </Button>
           </div>
         </CardContent>
-      </div>
+      </Card>
 
       <div className="mt-6">
         <Card>
