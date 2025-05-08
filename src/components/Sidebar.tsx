@@ -31,8 +31,15 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div className={`fixed hidden md:flex flex-col bg-[#F0EBE7] text-gray-800 w-64 h-screen ${className}`}>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-800">LexFacture</h1>
-        <div className="mt-1 text-sm text-gray-600">Facturez sans friction</div>
+        <div className="flex items-center mb-2">
+          <img 
+            src="/lovable-uploads/6db1c939-3330-41a4-84da-a0d8cce560c1.png" 
+            alt="LexFacture Logo" 
+            className="h-8 mr-2"
+          />
+          <h1 className="text-2xl font-bold text-gray-800">LexFacture</h1>
+        </div>
+        <div className="text-sm text-gray-600">Facturez sans friction</div>
       </div>
 
       <div className="flex-1 px-4 py-6 space-y-1">

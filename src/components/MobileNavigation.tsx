@@ -37,8 +37,17 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
       <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-[#F0EBE7] border-t border-sidebar-border p-0">
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-taupe/30">
-            <h1 className="text-xl font-bold text-gray-800">LexFacture</h1>
-            <p className="text-sm text-gray-600">Facturez sans friction</p>
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/6db1c939-3330-41a4-84da-a0d8cce560c1.png" 
+                alt="LexFacture Logo" 
+                className="h-8 mr-2"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-gray-800">LexFacture</h1>
+                <p className="text-sm text-gray-600">Facturez sans friction</p>
+              </div>
+            </div>
           </div>
           
           <div className="flex-1 overflow-auto py-4">
