@@ -30,14 +30,12 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <div className={`fixed hidden md:flex flex-col bg-[#F0EBE7] text-gray-800 w-64 h-screen ${className}`}>
-      <div className="p-6">
-        <div className="flex items-center justify-center">
-          <img 
-            src="/lovable-uploads/6db1c939-3330-41a4-84da-a0d8cce560c1.png" 
-            alt="LexFacture Logo" 
-            className="h-12"
-          />
-        </div>
+      <div className="p-8 flex justify-center items-center">
+        <img 
+          src="/lovable-uploads/b22d5d72-f99a-44ba-b6fe-bf6bc3f2c47d.png" 
+          alt="Blumfoo Logo" 
+          className="h-16 max-w-[180px]"
+        />
       </div>
 
       <div className="flex-1 px-4 py-6 space-y-1">

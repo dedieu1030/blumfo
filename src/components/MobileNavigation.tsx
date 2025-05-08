@@ -36,14 +36,12 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-[#F0EBE7] border-t border-sidebar-border p-0">
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-taupe/30">
-            <div className="flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/6db1c939-3330-41a4-84da-a0d8cce560c1.png" 
-                alt="LexFacture Logo" 
-                className="h-12"
-              />
-            </div>
+          <div className="p-8 flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/b22d5d72-f99a-44ba-b6fe-bf6bc3f2c47d.png" 
+              alt="Blumfoo Logo" 
+              className="h-14 max-w-[160px]"
+            />
           </div>
           
           <div className="flex-1 overflow-auto py-4">
@@ -68,7 +66,7 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
           
           <div className="p-4 border-t border-taupe/30">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-violet rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#003427] rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">MD</span>
               </div>
               <div className="ml-3">
