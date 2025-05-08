@@ -95,34 +95,41 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
     }
   };
 
-  // Gérer le focus sur l'input lors de l'ouverture du popover
+  // Gérer l'ouverture du popover sans perdre le focus
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
-    
-    // Si on ouvre le popover, mettre le focus sur l'input
-    if (isOpen && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
+  };
+
+  // Capter le clic sur l'input et maintenir le popover ouvert
+  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (!open) {
+      setOpen(true);
     }
+    // Ne pas changer le focus, laisser l'input actif
   };
 
   return (
     <div className="relative w-full max-w-sm">
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <div className="flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2 cursor-pointer">
+          <div 
+            className="flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2 cursor-pointer"
+            onClick={() => {
+              if (inputRef.current) {
+                inputRef.current.focus();
+              }
+              setOpen(true);
+            }}
+          >
             <Search className="h-4 w-4 mr-2 text-muted-foreground" />
             <input
               ref={inputRef}
-              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm cursor-pointer"
+              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm"
               placeholder={placeholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpen(true);
-              }}
+              onClick={handleInputClick}
             />
             {searchTerm && (
               <button 
@@ -144,6 +151,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
           className="p-0 w-[330px] bg-popover border shadow-lg"
           align="start" 
           sideOffset={5}
+          onOpenAutoFocus={(e) => e.preventDefault()} // Empêcher l'autofocus automatique
         >
           <Command shouldFilter={false}>
             <CommandList>
