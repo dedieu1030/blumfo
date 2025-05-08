@@ -17,8 +17,6 @@ import StripeCallback from "./pages/StripeCallback";
 import NotFound from "./pages/NotFound";
 import Notifications from "./pages/Notifications";
 import { NotificationsProvider } from "./context/NotificationsContext";
-import { AuthProvider } from "./context/AuthContext";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -27,67 +25,30 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AuthProvider>
-        <NotificationsProvider>
-          <BrowserRouter>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <div className="flex-1 overflow-auto md:ml-64">
-                <div className="container mx-auto px-4 py-8">
-                  <Routes>
-                    <Route 
-                      path="/" 
-                      element={<ProtectedRoute><Dashboard /></ProtectedRoute>} 
-                    />
-                    <Route 
-                      path="/invoicing" 
-                      element={
-                        <ProtectedRoute requiredRoles={['admin', 'manager']}>
-                          <Invoicing />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/invoices" 
-                      element={<ProtectedRoute><Invoices /></ProtectedRoute>} 
-                    />
-                    <Route 
-                      path="/clients" 
-                      element={<ProtectedRoute><Clients /></ProtectedRoute>} 
-                    />
-                    <Route 
-                      path="/clients/:id" 
-                      element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} 
-                    />
-                    <Route 
-                      path="/products" 
-                      element={
-                        <ProtectedRoute requiredRoles={['admin', 'manager']}>
-                          <ProductsServices />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/templates" 
-                      element={<ProtectedRoute><Templates /></ProtectedRoute>} 
-                    />
-                    <Route 
-                      path="/settings" 
-                      element={<ProtectedRoute><Settings /></ProtectedRoute>} 
-                    />
-                    <Route 
-                      path="/notifications" 
-                      element={<ProtectedRoute><Notifications /></ProtectedRoute>} 
-                    />
-                    <Route path="/stripe/callback" element={<StripeCallback />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
+      <NotificationsProvider>
+        <BrowserRouter>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="flex-1 overflow-auto md:ml-64">
+              <div className="container mx-auto px-4 py-8">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/invoicing" element={<Invoicing />} />
+                  <Route path="/invoices" element={<Invoices />} />
+                  <Route path="/clients" element={<Clients />} />
+                  <Route path="/clients/:id" element={<ClientDetails />} />
+                  <Route path="/products" element={<ProductsServices />} />
+                  <Route path="/templates" element={<Templates />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/stripe/callback" element={<StripeCallback />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
               </div>
             </div>
-          </BrowserRouter>
-        </NotificationsProvider>
-      </AuthProvider>
+          </div>
+        </BrowserRouter>
+      </NotificationsProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

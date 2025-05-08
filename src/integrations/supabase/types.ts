@@ -362,33 +362,6 @@ export type Database = {
         }
         Relationships: []
       }
-      role_audit_logs: {
-        Row: {
-          action: string
-          actor_id: string
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          target_id: string
-        }
-        Insert: {
-          action: string
-          actor_id: string
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          target_id: string
-        }
-        Update: {
-          action?: string
-          actor_id?: string
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          target_id?: string
-        }
-        Relationships: []
-      }
       stripe_connect_accounts: {
         Row: {
           access_token: string | null
@@ -781,42 +754,11 @@ export type Database = {
           },
         ]
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      assign_role: {
-        Args: {
-          target_user_id: string
-          target_role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
       get_client_categories: {
         Args: { p_client_id: string }
         Returns: {
@@ -829,27 +771,8 @@ export type Database = {
         Args: { client_id: string }
         Returns: number
       }
-      get_user_roles: {
-        Args: { _user_id: string }
-        Returns: Database["public"]["Enums"]["app_role"][]
-      }
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
-      revoke_role: {
-        Args: {
-          target_user_id: string
-          target_role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
     }
     Enums: {
-      app_role: "admin" | "manager" | "user"
       tax_type: "vat" | "gst" | "pst" | "hst" | "qst" | "sales" | "other"
     }
     CompositeTypes: {
@@ -966,7 +889,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "manager", "user"],
       tax_type: ["vat", "gst", "pst", "hst", "qst", "sales", "other"],
     },
   },
