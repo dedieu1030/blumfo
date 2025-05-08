@@ -50,13 +50,19 @@ export async function fetchProducts(includeInactive: boolean = false) {
       .select('*');
     
     // Map products with their categories
-    return data.map(product => ({
-      ...product,
-      category_id: product.category_id || undefined,
-      category_name: categories?.find(c => c.id === product.category_id)?.name,
-      recurring_interval: validateRecurringInterval(product.recurring_interval),
-      product_type: validateProductType(product.product_type)
-    })) as Product[];
+    return data.map(product => {
+      // Category might be stored in metadata
+      const categoryId = product.metadata?.category_id;
+      const categoryObj = categories?.find(c => c.id === categoryId);
+      
+      return {
+        ...product,
+        category_id: categoryId || undefined,
+        category_name: categoryObj?.name,
+        recurring_interval: validateRecurringInterval(product.recurring_interval),
+        product_type: validateProductType(product.product_type)
+      };
+    }) as Product[];
   } catch (error) {
     console.error('Error fetching products:', error);
     toast.error('Erreur lors du chargement des produits');
@@ -74,19 +80,21 @@ export async function fetchProduct(id: string) {
     
     if (error) throw error;
     
-    // Fetch category if there's a category_id
+    // Fetch category if there's a category_id in metadata
     let categoryName;
-    if (data.category_id) {
+    if (data.metadata?.category_id) {
       const { data: category } = await supabase
         .from('product_categories')
         .select('name')
-        .eq('id', data.category_id)
-        .single();
+        .eq('id', data.metadata.category_id)
+        .maybeSingle();
+        
       categoryName = category?.name;
     }
     
     return {
       ...data,
+      category_id: data.metadata?.category_id,
       category_name: categoryName,
       recurring_interval: validateRecurringInterval(data.recurring_interval),
       product_type: validateProductType(data.product_type)
@@ -125,6 +133,12 @@ export async function createProduct(product: Partial<Product>) {
       throw new Error("No authenticated user");
     }
     
+    // Prepare metadata with category_id if present
+    const metadata: Record<string, any> = product.metadata || {};
+    if (product.category_id) {
+      metadata.category_id = product.category_id;
+    }
+    
     const { data, error } = await supabase
       .from('stripe_products')
       .insert({
@@ -138,8 +152,7 @@ export async function createProduct(product: Partial<Product>) {
         recurring_interval_count: product.recurring_interval_count,
         product_type: product.product_type,
         active: product.active !== undefined ? product.active : true,
-        metadata: product.metadata || {},
-        category_id: product.category_id
+        metadata: metadata
       })
       .select()
       .single();
@@ -157,6 +170,12 @@ export async function createProduct(product: Partial<Product>) {
 
 export async function updateProduct(id: string, product: Partial<Product>) {
   try {
+    // Prepare metadata with category_id if present
+    const metadata: Record<string, any> = product.metadata || {};
+    if (product.category_id) {
+      metadata.category_id = product.category_id;
+    }
+    
     const { data, error } = await supabase
       .from('stripe_products')
       .update({
@@ -170,8 +189,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
         recurring_interval_count: product.recurring_interval_count,
         product_type: product.product_type,
         active: product.active,
-        metadata: product.metadata,
-        category_id: product.category_id,
+        metadata: metadata,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
