@@ -8,6 +8,8 @@ import { InvoiceDialog } from "./InvoiceDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { checkStripeConnection } from "@/services/stripeConnectClient";
 import { SearchBar } from "./SearchBar";
+import { NotificationBell } from "./NotificationBell";
+import { Separator } from "@/components/ui/separator";
 
 interface HeaderProps {
   title: string;
@@ -51,8 +53,10 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
   return (
     <>
       <div className="flex flex-col gap-6 mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        {/* Top navigation bar with search and actions */}
+        <div className="flex items-center justify-between py-4">
+          {/* Left side - Mobile menu button */}
+          <div className="flex-shrink-0">
             {isMobile && (
               <Button 
                 variant="ghost" 
@@ -63,9 +67,14 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                 <Menu className="h-6 w-6" />
               </Button>
             )}
+          </div>
+          
+          {/* Center - Search bar */}
+          <div className="flex-1 flex justify-center max-w-3xl mx-auto px-4">
             <SearchBar />
           </div>
           
+          {/* Right side - Status indicators and actions */}
           <div className="flex items-center gap-3">
             {/* Stripe connection status indicators */}
             {stripeConnectionStatus.isChecking ? (
@@ -74,7 +83,7 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                   <TooltipTrigger asChild>
                     <div className="flex items-center text-sm text-zinc-600 bg-zinc-100 px-3 py-1 rounded-full">
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                      <span>Vérification Stripe...</span>
+                      <span className="hidden md:inline">Vérification Stripe...</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -88,7 +97,7 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                   <TooltipTrigger asChild>
                     <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
                       <CheckCircle2 className="mr-1 h-4 w-4" />
-                      <span>Stripe connecté</span>
+                      <span className="hidden md:inline">Stripe connecté</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -105,7 +114,7 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                       onClick={() => navigate('/settings?tab=stripe')}
                     >
                       <XCircle className="mr-1 h-4 w-4" />
-                      <span>Stripe non connecté</span>
+                      <span className="hidden md:inline">Stripe non connecté</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -115,15 +124,22 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
               </TooltipProvider>
             )}
             
+            {/* Notification Bell */}
+            <NotificationBell />
+            
+            {/* New Invoice Button */}
             <Button 
               className="bg-violet hover:bg-violet/90"
               onClick={() => setInvoiceDialogOpen(true)}
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Nouvelle facture
+              <span className="hidden md:inline">Nouvelle facture</span>
             </Button>
           </div>
         </div>
+        
+        {/* Separator */}
+        <Separator className="mt-1 mb-4" />
         
         {/* Page title and description */}
         <div>
