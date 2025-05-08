@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { fetchCategories, createProduct, updateProduct, Product } from "@/services/productService";
 import { availableCurrencies } from "@/services/invoiceSettingsService";
+import { TaxRateSelector } from "@/components/settings/TaxRateSelector";
 
 interface ProductFormProps {
   open: boolean;
@@ -124,7 +125,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
       }
       
       // Save category relationship in metadata
-      if (categoryId) {
+      if (categoryId && categoryId !== "none") {
         productData.metadata = { category_id: categoryId };
       }
       
@@ -241,18 +242,17 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
             </div>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="tax-rate" className="col-span-4 md:col-span-1">
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="tax-rate" className="col-span-4 md:col-span-1 pt-2">
               Taux TVA (%)
             </Label>
-            <Input
-              id="tax-rate"
-              type="number"
-              value={taxRate}
-              onChange={(e) => setTaxRate(e.target.value)}
-              className="col-span-4 md:col-span-3"
-              placeholder="20"
-            />
+            <div className="col-span-4 md:col-span-3">
+              <TaxRateSelector 
+                defaultValue={taxRate} 
+                onChange={setTaxRate} 
+                showLabel={false} 
+              />
+            </div>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
