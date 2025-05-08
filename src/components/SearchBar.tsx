@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/command";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SearchBarProps {
   placeholder?: string;
@@ -34,7 +35,8 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-
+  const isMobile = useIsMobile();
+  
   // Filtrer les données en fonction du terme de recherche
   const filteredInvoices = searchTerm 
     ? mockInvoices.filter(invoice => 
@@ -109,6 +111,9 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
     // Ne pas changer le focus, laisser l'input actif
   };
 
+  // Détermine le texte du placeholder en fonction de la taille de l'écran
+  const responsivePlaceholder = isMobile ? "Rechercher..." : placeholder;
+
   return (
     <div className="relative w-full">
       <Popover open={open} onOpenChange={handleOpenChange}>
@@ -125,8 +130,8 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
             <Search className="h-4 w-4 mr-2 text-muted-foreground" />
             <input
               ref={inputRef}
-              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm"
-              placeholder={placeholder}
+              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm overflow-hidden text-ellipsis"
+              placeholder={responsivePlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onClick={handleInputClick}
@@ -142,9 +147,11 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                 <X className="h-3 w-3" />
               </button>
             )}
-            <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              <span className="text-xs">⌘</span>K
-            </kbd>
+            {!isMobile && (
+              <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            )}
           </div>
         </PopoverTrigger>
         <PopoverContent 
