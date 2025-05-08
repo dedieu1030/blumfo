@@ -58,6 +58,26 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					foreground: 'hsl(var(--info-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				warm: {
+					DEFAULT: 'hsl(var(--warm))',
+					foreground: 'hsl(var(--warm-foreground))'
+				},
+				taupe: {
+					DEFAULT: 'hsl(var(--taupe))',
+					foreground: 'hsl(var(--taupe-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -70,12 +90,15 @@ export default {
 				},
 				// Custom LexFacture colors
 				credornoir: '#141414',
-				violet: '#003427', // Change violet to #003427
-				bleuclair: '#eef1f5',
+				violet: '#003427', // Vert foncé (anciennement violet)
+				beige: '#F0EBE7', // Beige clair (anciennement bleuclair)
 				vertlime: '#d6fd51',
 				alerte: '#ea384c',
 				success: '#38d26c',
 				info: '#0EA5E9',
+				warning: '#f9a826', // Orange
+				corail: '#f87358', // Corail/Orange chaud
+				taupe: '#bfae9f', // Taupe
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

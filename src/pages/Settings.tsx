@@ -87,43 +87,43 @@ export default function Settings() {
         <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
           <TabsTrigger 
             value="profile" 
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Profil
           </TabsTrigger>
           <TabsTrigger 
             value="billing"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Facturation
           </TabsTrigger>
           <TabsTrigger 
             value="tax"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             TVA
           </TabsTrigger>
           <TabsTrigger 
             value="payment-terms"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Conditions de paiement
           </TabsTrigger>
           <TabsTrigger 
             value="payment-methods"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Méthodes de paiement
           </TabsTrigger>
           <TabsTrigger 
             value="template"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Template
           </TabsTrigger>
           <TabsTrigger 
             value="payments"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Paiements
           </TabsTrigger>
@@ -137,7 +137,7 @@ export default function Settings() {
                 Créez votre profil professionnel pour qu'il apparaisse sur vos factures.
               </p>
               <Button 
-                className="bg-violet hover:bg-violet/90"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={() => setIsCreatingProfile(true)}
               >
                 <Plus className="mr-2 h-4 w-4" />
