@@ -22,6 +22,7 @@ import { PaymentMethodSelector } from "@/components/PaymentMethodSelector";
 import { PaymentTermsSelector } from "@/components/PaymentTermsSelector";
 import { ClientSelector, Client } from "@/components/ClientSelector";
 import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile, PaymentTermTemplate } from "@/types/invoice";
+import { fetchProducts, formatPrice, Product } from "@/services/productService";
 
 // Define invoice template types
 const invoiceTemplates = [
@@ -657,7 +658,15 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
               </div>
             ))}
             
-            <div className="flex justify-end">
+            <div className="flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsProductModalOpen(true)}
+                className="mr-2"
+              >
+                Sélectionner du catalogue
+              </Button>
+              
               <Button variant="outline" onClick={addServiceLine}>
                 <Plus className="mr-2 h-4 w-4" />
                 Ajouter une ligne
@@ -880,6 +889,39 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     });
   };
 
+  // Add new state for product catalog and selection
+  const [productCatalog, setProductCatalog] = useState<Product[]>([]);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+
+  // Load product catalog
+  useEffect(() => {
+    const loadProducts = async () => {
+      const products = await fetchProducts();
+      setProductCatalog(products);
+    };
+    
+    if (open) {
+      loadProducts();
+    }
+  }, [open]);
+
+  // Add a function to handle product selection from catalog
+  const handleAddProductFromCatalog = (product: Product) => {
+    if (!product) return;
+
+    const newServiceLine: ServiceLine = {
+      id: Date.now().toString(),
+      description: product.description || product.name,
+      quantity: "1",
+      unitPrice: (product.price_cents / 100).toString(),
+      tva: product.tax_rate?.toString() || "20",
+      total: (product.price_cents / 100).toString()
+    };
+
+    setServiceLines([...serviceLines, newServiceLine]);
+    setIsProductModalOpen(false);
+  };
+
   const stepTitles = [
     "Détails de la facture",
     "Informations client",
@@ -887,6 +929,59 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     "Conditions de paiement",
     "Notes et signature"
   ];
+
+  // Create product catalog modal
+  const renderProductCatalogModal = () => {
+    return (
+      <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Sélectionner un produit ou service</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {productCatalog.length === 0 ? (
+              <div className="text-center p-8">
+                <p>Aucun produit disponible dans votre catalogue.</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Vous pouvez en ajouter depuis l'onglet Produits/Services dans les paramètres.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {productCatalog.map(product => (
+                  <div 
+                    key={product.id}
+                    className="flex justify-between items-center p-4 border rounded-md hover:bg-muted/50 cursor-pointer"
+                    onClick={() => handleAddProductFromCatalog(product)}
+                  >
+                    <div>
+                      <h3 className="font-medium">{product.name}</h3>
+                      {product.description && (
+                        <p className="text-sm text-muted-foreground">{product.description}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{formatPrice(product.price_cents)}</p>
+                      {product.tax_rate && (
+                        <p className="text-xs text-muted-foreground">TVA: {product.tax_rate}%</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsProductModalOpen(false)}>
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   return (
     <>
@@ -1008,6 +1103,9 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Add the product catalog modal */}
+      {renderProductCatalogModal()}
     </>
   );
 }

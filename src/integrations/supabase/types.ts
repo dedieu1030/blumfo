@@ -45,6 +45,66 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          template_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          template_data: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          template_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      product_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stripe_connect_accounts: {
         Row: {
           access_token: string | null
@@ -280,9 +340,13 @@ export type Database = {
           currency: string | null
           description: string | null
           id: string
+          is_recurring: boolean | null
           metadata: Json | null
           name: string
           price_cents: number | null
+          product_type: string | null
+          recurring_interval: string | null
+          recurring_interval_count: number | null
           stripe_product_id: string | null
           tax_rate: number | null
           updated_at: string
@@ -293,9 +357,13 @@ export type Database = {
           currency?: string | null
           description?: string | null
           id?: string
+          is_recurring?: boolean | null
           metadata?: Json | null
           name: string
           price_cents?: number | null
+          product_type?: string | null
+          recurring_interval?: string | null
+          recurring_interval_count?: number | null
           stripe_product_id?: string | null
           tax_rate?: number | null
           updated_at?: string
@@ -306,14 +374,128 @@ export type Database = {
           currency?: string | null
           description?: string | null
           id?: string
+          is_recurring?: boolean | null
           metadata?: Json | null
           name?: string
           price_cents?: number | null
+          product_type?: string | null
+          recurring_interval?: string | null
+          recurring_interval_count?: number | null
           stripe_product_id?: string | null
           tax_rate?: number | null
           updated_at?: string
         }
         Relationships: []
+      }
+      subscription_items: {
+        Row: {
+          created_at: string
+          id: string
+          price_cents: number
+          product_id: string
+          quantity: number
+          subscription_id: string
+          tax_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price_cents: number
+          product_id: string
+          quantity?: number
+          subscription_id: string
+          tax_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price_cents?: number
+          product_id?: string
+          quantity?: number
+          subscription_id?: string
+          tax_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "stripe_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_items_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          client_id: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          last_invoice_date: string | null
+          metadata: Json | null
+          name: string
+          next_invoice_date: string
+          recurring_interval: string
+          recurring_interval_count: number
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          last_invoice_date?: string | null
+          metadata?: Json | null
+          name: string
+          next_invoice_date: string
+          recurring_interval: string
+          recurring_interval_count: number
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          last_invoice_date?: string | null
+          metadata?: Json | null
+          name?: string
+          next_invoice_date?: string
+          recurring_interval?: string
+          recurring_interval_count?: number
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -19,6 +19,7 @@ import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings
 import { InvoiceTemplateSettings } from "@/components/settings/InvoiceTemplateSettings";
 import { PaymentsSettings } from "@/components/settings/PaymentsSettings";
 import { TaxSettings } from "@/components/settings/TaxSettings";
+import { ProductSettings } from "@/components/settings/ProductSettings";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -84,7 +85,7 @@ export default function Settings() {
       />
       
       <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
-        <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
+        <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent overflow-x-auto">
           <TabsTrigger 
             value="profile" 
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
@@ -96,6 +97,12 @@ export default function Settings() {
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Facturation
+          </TabsTrigger>
+          <TabsTrigger 
+            value="products"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
+          >
+            Produits/Services
           </TabsTrigger>
           <TabsTrigger 
             value="tax"
@@ -170,6 +177,10 @@ export default function Settings() {
           {showReminderConfig && <ReminderSettings />}
         </TabsContent>
 
+        <TabsContent value="products">
+          <ProductSettings />
+        </TabsContent>
+        
         <TabsContent value="tax">
           <TaxSettings companyProfile={hasProfile ? companyProfile as CompanyProfile : undefined} />
         </TabsContent>
