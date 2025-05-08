@@ -1,7 +1,4 @@
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { 
@@ -15,6 +12,10 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
+import {
+  Drawer,
+  DrawerContent,
+} from "@/components/ui/drawer";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -41,14 +42,10 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
   ];
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-[#F0EBE7] border-t border-sidebar-border p-0">
-        <div className="flex flex-col h-full">
-          <div className="p-8 flex items-center justify-center">
-            <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-[#003427]">
-              blumfoo
-            </h1>
-          </div>
+    <Drawer open={isOpen} onOpenChange={onOpenChange}>
+      <DrawerContent className="h-[85vh] bg-[#F0EBE7] border-t border-sidebar-border">
+        <div className="flex flex-col h-full pt-2">
+          {/* La barre de défilement est automatiquement ajoutée par le composant Drawer */}
           
           <div className="flex-1 overflow-auto py-4">
             <div className="px-4 space-y-1">
@@ -88,8 +85,8 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
             </div>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
