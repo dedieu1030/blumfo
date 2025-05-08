@@ -19,7 +19,6 @@ import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings
 import { InvoiceTemplateSettings } from "@/components/settings/InvoiceTemplateSettings";
 import { PaymentsSettings } from "@/components/settings/PaymentsSettings";
 import { TaxSettings } from "@/components/settings/TaxSettings";
-import { ProductSettings } from "@/components/settings/ProductSettings";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -99,12 +98,6 @@ export default function Settings() {
             Facturation
           </TabsTrigger>
           <TabsTrigger 
-            value="products"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
-          >
-            Produits/Services
-          </TabsTrigger>
-          <TabsTrigger 
             value="tax"
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
@@ -175,10 +168,6 @@ export default function Settings() {
           />
           
           {showReminderConfig && <ReminderSettings />}
-        </TabsContent>
-
-        <TabsContent value="products">
-          <ProductSettings />
         </TabsContent>
         
         <TabsContent value="tax">

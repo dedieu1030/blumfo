@@ -6,7 +6,8 @@ import {
   FileText, 
   Users, 
   Settings, 
-  PlusCircle
+  PlusCircle,
+  Package
 } from "lucide-react";
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ export function Sidebar({ className }: SidebarProps) {
     { icon: PlusCircle, name: "Facturation", path: "/invoicing" },
     { icon: FileText, name: "Mes factures", path: "/invoices" },
     { icon: Users, name: "Clients", path: "/clients" },
+    { icon: Package, name: "Produits & Services", path: "/products" },
     { icon: Settings, name: "Paramètres", path: "/settings" }
   ];
 
