@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      clients: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stripe_connect_accounts: {
         Row: {
           access_token: string | null
@@ -157,6 +193,7 @@ export type Database = {
         Row: {
           amount_paid: number | null
           amount_total: number
+          client_id: string | null
           connected_stripe_account_id: string | null
           created_at: string
           currency: string
@@ -178,6 +215,7 @@ export type Database = {
         Insert: {
           amount_paid?: number | null
           amount_total: number
+          client_id?: string | null
           connected_stripe_account_id?: string | null
           created_at?: string
           currency?: string
@@ -199,6 +237,7 @@ export type Database = {
         Update: {
           amount_paid?: number | null
           amount_total?: number
+          client_id?: string | null
           connected_stripe_account_id?: string | null
           created_at?: string
           currency?: string
@@ -218,6 +257,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stripe_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stripe_invoices_stripe_customer_id_fkey"
             columns: ["stripe_customer_id"]
@@ -274,7 +320,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_client_invoice_count: {
+        Args: { client_id: string }
+        Returns: number
+      }
     }
     Enums: {
       tax_type: "vat" | "gst" | "pst" | "hst" | "qst" | "sales" | "other"

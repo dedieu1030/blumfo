@@ -25,7 +25,7 @@ export function InvoicePaymentAlert({
 
   return (
     <Alert 
-      variant="default"
+      variant={overdueCount > 0 ? "destructive" : "default"}
       className={`border-l-4 ${overdueCount > 0 ? 'border-l-amber-500' : 'border-l-blue-500'} ${className}`}
     >
       <CalendarCheck className="h-4 w-4" />
@@ -55,6 +55,7 @@ export function InvoicePaymentAlert({
               size="sm" 
               onClick={onViewOverdue}
               className="whitespace-nowrap"
+              variant={overdueCount > 0 ? "destructive" : "default"}
             >
               Voir les factures en retard
             </Button>

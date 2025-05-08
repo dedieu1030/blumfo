@@ -11,14 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-// Type pour un client
+// Type for a client
 export interface Client {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  address: string;
+  phone: string | null;
+  address: string | null;
   invoiceCount: number;
 }
 
@@ -31,52 +32,53 @@ export function ClientSelector({ onClientSelect }: ClientSelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Charger les clients depuis le localStorage (ou une API dans une application réelle)
+  // Fetch clients from Supabase
   useEffect(() => {
-    const loadClients = () => {
-      // Pour l'exemple, nous utilisons des données mockées
-      // Dans une vraie application, vous chargeriez les clients depuis votre API ou base de données
-      const mockClients = [
-        {
-          id: "1",
-          name: "SCI Legalis",
-          email: "contact@scilegalis.fr",
-          phone: "01 23 45 67 89",
-          address: "15 rue du Palais, 75001 Paris",
-          invoiceCount: 3,
-        },
-        {
-          id: "2",
-          name: "Cabinet Lefort",
-          email: "contact@cabinet-lefort.fr",
-          phone: "01 23 45 67 90",
-          address: "24 avenue des Avocats, 75008 Paris",
-          invoiceCount: 1,
-        },
-        {
-          id: "3",
-          name: "Me. Dubois",
-          email: "dubois@avocat.fr",
-          phone: "01 23 45 67 91",
-          address: "5 place de la Justice, 75016 Paris",
-          invoiceCount: 2,
-        }
-      ];
-      
-      // Dans une vraie application, vous pourriez récupérer les clients depuis localStorage
-      // const savedClients = localStorage.getItem('clients');
-      // const clientsList = savedClients ? JSON.parse(savedClients) : mockClients;
-      
-      setClients(mockClients);
-      setFilteredClients(mockClients);
+    const fetchClients = async () => {
+      try {
+        setIsLoading(true);
+        const { data: clientsData, error } = await supabase
+          .from('clients')
+          .select('*');
+
+        if (error) throw error;
+
+        // Format the data and add invoice count
+        const formattedClients = await Promise.all(clientsData.map(async (client) => {
+          const { data: countData } = await supabase.rpc(
+            'get_client_invoice_count', 
+            { client_id: client.id }
+          );
+          
+          return {
+            ...client,
+            invoiceCount: countData || 0
+          } as Client;
+        }));
+
+        setClients(formattedClients);
+        setFilteredClients(formattedClients);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les clients. Veuillez réessayer.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    loadClients();
-  }, []);
+    if (isOpen) {
+      fetchClients();
+    }
+  }, [isOpen, toast]);
 
-  // Filtrer les clients selon le terme de recherche
+  // Filter clients based on search term
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredClients(clients);
@@ -87,8 +89,8 @@ export function ClientSelector({ onClientSelect }: ClientSelectorProps) {
       (client) =>
         client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.address.toLowerCase().includes(searchTerm.toLowerCase())
+        (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (client.address && client.address.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     setFilteredClients(filtered);
@@ -124,7 +126,11 @@ export function ClientSelector({ onClientSelect }: ClientSelectorProps) {
         </div>
 
         <div className="space-y-4 max-h-[50vh] overflow-y-auto">
-          {filteredClients.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Chargement des clients...</p>
+            </div>
+          ) : filteredClients.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Aucun client trouvé</p>
             </div>
