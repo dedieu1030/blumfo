@@ -29,10 +29,10 @@ export function Sidebar({ className }: SidebarProps) {
   ];
 
   return (
-    <div className={`fixed hidden md:flex flex-col bg-credornoir text-white w-64 h-screen ${className}`}>
+    <div className={`fixed hidden md:flex flex-col bg-[#F0EBE7] text-gray-800 w-64 h-screen ${className}`}>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-white">LexFacture</h1>
-        <div className="mt-1 text-sm text-gray-400">Facturez sans friction</div>
+        <h1 className="text-2xl font-bold text-gray-800">LexFacture</h1>
+        <div className="mt-1 text-sm text-gray-600">Facturez sans friction</div>
       </div>
 
       <div className="flex-1 px-4 py-6 space-y-1">
@@ -42,24 +42,24 @@ export function Sidebar({ className }: SidebarProps) {
             to={item.path}
             className={`flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
               isActive(item.path)
-                ? "bg-white/10 text-vertlime"
-                : "text-white/80 hover:text-white hover:bg-white/5"
+                ? "bg-white/50 text-violet"
+                : "text-gray-700 hover:text-gray-900 hover:bg-white/20"
             }`}
           >
-            <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-vertlime" : ""}`} />
+            <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-violet" : ""}`} />
             {item.name}
           </Link>
         ))}
       </div>
       
-      <div className="p-4 border-t border-[#2a2a2a]">
+      <div className="p-4 border-t border-gray-200">
         <div className="flex items-center">
           <div className="w-8 h-8 bg-violet rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm">MD</span>
           </div>
           <div className="ml-3">
-            <div className="text-sm font-medium">Me Dupont</div>
-            <div className="text-xs text-white/60">Cabinet Dupont</div>
+            <div className="text-sm font-medium text-gray-800">Me Dupont</div>
+            <div className="text-xs text-gray-600">Cabinet Dupont</div>
           </div>
         </div>
       </div>
