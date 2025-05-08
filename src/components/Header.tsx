@@ -43,10 +43,10 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
               <SearchBar />
             </div>
             
-            {/* Bouton nouvelle facture au milieu */}
+            {/* Boutons d'action au milieu */}
             <div className="flex items-center gap-2">
               <Button 
-                variant="outline"
+                variant="default"
                 size="sm"
                 onClick={() => setInvoiceDialogOpen(true)}
                 className="gap-1"
