@@ -10,7 +10,8 @@ import {
   Users, 
   Settings, 
   PlusCircle,
-  Globe
+  Package,
+  LayoutTemplate
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
@@ -28,11 +29,14 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     return location.pathname === path;
   };
   
+  // Updated navigationItems to match the ones in Sidebar.tsx
   const navigationItems = [
     { icon: BarChart2, name: t('dashboard'), path: "/" },
     { icon: PlusCircle, name: t('invoicing'), path: "/invoicing" },
     { icon: FileText, name: t('invoices'), path: "/invoices" },
+    { icon: LayoutTemplate, name: t('templates'), path: "/templates" },
     { icon: Users, name: t('clients'), path: "/clients" },
+    { icon: Package, name: t('products'), path: "/products" },
     { icon: Settings, name: t('settings'), path: "/settings" }
   ];
 
