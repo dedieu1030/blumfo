@@ -16,6 +16,10 @@ import { PaymentMethodsSettings } from "@/components/settings/PaymentMethodsSett
 import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings";
 import { PaymentsSettings } from "@/components/settings/PaymentsSettings";
 import { TaxSettings } from "@/components/settings/TaxSettings";
+import { UserRoleManagement } from "@/components/settings/UserRoleManagement";
+import { RoleAuditLog } from "@/components/settings/RoleAuditLog";
+import { AdminOnly } from "@/components/auth/AdminOnly";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -23,6 +27,7 @@ export default function Settings() {
   const initialTab = searchParams.get('tab') || 'profile';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAdmin } = useAuth();
   
   // État du profil
   const [companyProfile, setCompanyProfile] = useState<Partial<CompanyProfile>>({});
@@ -98,6 +103,20 @@ export default function Settings() {
           >
             Paiements
           </TabsTrigger>
+          <AdminOnly>
+            <TabsTrigger 
+              value="users"
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
+            >
+              Utilisateurs
+            </TabsTrigger>
+            <TabsTrigger 
+              value="audit"
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
+            >
+              Journal d'audit
+            </TabsTrigger>
+          </AdminOnly>
         </TabsList>
         
         <TabsContent value="profile">
@@ -146,6 +165,18 @@ export default function Settings() {
         
         <TabsContent value="payments">
           <PaymentsSettings />
+        </TabsContent>
+        
+        <TabsContent value="users">
+          <AdminOnly>
+            <UserRoleManagement />
+          </AdminOnly>
+        </TabsContent>
+        
+        <TabsContent value="audit">
+          <AdminOnly>
+            <RoleAuditLog />
+          </AdminOnly>
         </TabsContent>
       </Tabs>
       
