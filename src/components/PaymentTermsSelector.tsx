@@ -6,6 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { PaymentTermTemplate } from '@/types/invoice';
 import { Plus, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -43,6 +48,9 @@ export function PaymentTermsSelector({
   const [templates, setTemplates] = useState<PaymentTermTemplate[]>([]);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    dueDate ? new Date(dueDate) : undefined
+  );
 
   // Load saved templates on component mount
   useEffect(() => {
@@ -55,6 +63,13 @@ export function PaymentTermsSelector({
       }
     }
   }, []);
+
+  // Update selected date when dueDate prop changes
+  useEffect(() => {
+    if (dueDate) {
+      setSelectedDate(new Date(dueDate));
+    }
+  }, [dueDate]);
 
   const handleTemplateSelection = (templateId: string) => {
     if (templateId === 'custom') {
@@ -113,6 +128,14 @@ export function PaymentTermsSelector({
     setTemplateName('');
   };
 
+  // Handle date selection from calendar
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      onDueDateChange(format(date, 'yyyy-MM-dd'));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Template selection */}
@@ -160,12 +183,30 @@ export function PaymentTermsSelector({
         {paymentDelay === "custom" && (
           <div className="space-y-2">
             <Label htmlFor="due-date">Date d'échéance</Label>
-            <Input
-              id="due-date"
-              type="date"
-              value={dueDate}
-              onChange={(e) => onDueDateChange(e.target.value)}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="due-date"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : <span>Sélectionner une date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         )}
       </div>

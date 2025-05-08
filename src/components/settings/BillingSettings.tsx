@@ -6,14 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { InvoiceNumberingConfig, Currency } from "@/types/invoice";
 import { 
   getInvoiceNumberingConfig, 
   saveInvoiceNumberingConfig,
   getDefaultCurrency,
   saveDefaultCurrency,
-  availableCurrencies
+  availableCurrencies,
+  getDefaultPaymentTerm,
+  saveDefaultPaymentTerm
 } from "@/services/invoiceSettingsService";
 import { toast } from "sonner";
 
@@ -26,6 +32,8 @@ export function BillingSettings({
 }) {
   const [numberingConfig, setNumberingConfig] = useState<InvoiceNumberingConfig>(getInvoiceNumberingConfig());
   const [defaultCurrency, setDefaultCurrency] = useState<string>(getDefaultCurrency());
+  const [defaultPaymentTerm, setDefaultPaymentTerm] = useState<string>(getDefaultPaymentTerm());
+  const [customDueDate, setCustomDueDate] = useState<Date | undefined>(undefined);
   const [previewNumber, setPreviewNumber] = useState<string>("");
   
   // Générer l'aperçu du numéro de facture
@@ -37,6 +45,14 @@ export function BillingSettings({
   const handleSaveConfig = () => {
     saveInvoiceNumberingConfig(numberingConfig);
     saveDefaultCurrency(defaultCurrency);
+    
+    // Save default payment term with custom date if applicable
+    if (defaultPaymentTerm === 'custom' && customDueDate) {
+      saveDefaultPaymentTerm(defaultPaymentTerm, format(customDueDate, 'yyyy-MM-dd'));
+    } else {
+      saveDefaultPaymentTerm(defaultPaymentTerm);
+    }
+    
     toast.success("Paramètres de facturation enregistrés");
   };
   
@@ -152,8 +168,11 @@ export function BillingSettings({
           {/* Délai de paiement par défaut */}
           <div className="space-y-2">
             <Label htmlFor="default-payment-term">Délai de paiement par défaut</Label>
-            <Select defaultValue="15">
-              <SelectTrigger>
+            <Select 
+              value={defaultPaymentTerm} 
+              onValueChange={setDefaultPaymentTerm}
+            >
+              <SelectTrigger id="default-payment-term">
                 <SelectValue placeholder="Choisir un délai" />
               </SelectTrigger>
               <SelectContent>
@@ -167,6 +186,36 @@ export function BillingSettings({
                 <SelectItem value="custom">Date personnalisée</SelectItem>
               </SelectContent>
             </Select>
+            {defaultPaymentTerm === 'custom' && (
+              <div className="mt-2">
+                <Label htmlFor="custom-due-date">Date d'échéance personnalisée</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="custom-due-date"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !customDueDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDueDate ? format(customDueDate, 'dd/MM/yyyy') : <span>Sélectionner une date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDueDate}
+                      onSelect={setCustomDueDate}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground mt-1">Date spécifique pour l'échéance</p>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">Ce délai sera proposé par défaut lors de la création d'une facture</p>
           </div>
           

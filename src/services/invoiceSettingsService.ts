@@ -1,4 +1,3 @@
-
 import { 
   PaymentTermTemplate, 
   PaymentMethodDetails, 
@@ -182,6 +181,28 @@ export function getInvoiceNumberingConfig(): InvoiceNumberingConfig {
 export function saveInvoiceNumberingConfig(config: InvoiceNumberingConfig): void {
   localStorage.setItem('invoiceNumberingConfig', JSON.stringify(config));
   toast.success("Configuration de numérotation mise à jour");
+}
+
+// Récupérer le délai de paiement par défaut
+export function getDefaultPaymentTerm(): string {
+  const savedTerm = localStorage.getItem('defaultPaymentTerm');
+  return savedTerm || "15";
+}
+
+// Récupérer la date d'échéance personnalisée si elle existe
+export function getDefaultCustomDueDate(): string | null {
+  return localStorage.getItem('defaultCustomDueDate');
+}
+
+// Sauvegarder le délai de paiement par défaut
+export function saveDefaultPaymentTerm(term: string, customDate?: string): void {
+  localStorage.setItem('defaultPaymentTerm', term);
+  
+  if (term === 'custom' && customDate) {
+    localStorage.setItem('defaultCustomDueDate', customDate);
+  } else {
+    localStorage.removeItem('defaultCustomDueDate');
+  }
 }
 
 // Récupérer la devise par défaut
