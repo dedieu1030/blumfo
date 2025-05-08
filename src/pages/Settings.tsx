@@ -12,9 +12,8 @@ import { ProfileViewer } from "@/components/profile/ProfileViewer";
 import { Plus } from "lucide-react";
 
 // Import des composants de paramètres
-import { PaymentMethodsSettings } from "@/components/settings/PaymentMethodsSettings";
+import { PaymentSettings } from "@/components/settings/PaymentSettings";
 import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings";
-import { PaymentsSettings } from "@/components/settings/PaymentsSettings";
 import { TaxSettings } from "@/components/settings/TaxSettings";
 
 export default function Settings() {
@@ -87,13 +86,7 @@ export default function Settings() {
             Conditions de paiement
           </TabsTrigger>
           <TabsTrigger 
-            value="payment-methods"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
-          >
-            Méthodes de paiement
-          </TabsTrigger>
-          <TabsTrigger 
-            value="payments"
+            value="payment"
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-10"
           >
             Paiements
@@ -140,12 +133,8 @@ export default function Settings() {
           <PaymentTermsSettings />
         </TabsContent>
         
-        <TabsContent value="payment-methods">
-          <PaymentMethodsSettings companyProfile={hasProfile ? companyProfile as CompanyProfile : undefined} />
-        </TabsContent>
-        
-        <TabsContent value="payments">
-          <PaymentsSettings />
+        <TabsContent value="payment">
+          <PaymentSettings companyProfile={hasProfile ? companyProfile as CompanyProfile : undefined} />
         </TabsContent>
       </Tabs>
       
