@@ -90,7 +90,7 @@ export default {
 				},
 				// Custom LexFacture colors
 				credornoir: '#141414',
-				violet: '#003427', // Vert foncé (anciennement violet)
+				violet: '#FA7043', // Nouvelle couleur corail (anciennement vert foncé)
 				beige: '#F0EBE7', // Beige clair (anciennement bleuclair)
 				vertlime: '#d6fd51',
 				alerte: '#ea384c',
