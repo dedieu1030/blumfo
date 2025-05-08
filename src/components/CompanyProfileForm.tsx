@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { CompanyProfile } from "@/types/invoice";
+import { TaxRateSelector } from "@/components/TaxRateSelector";
 
 interface CompanyProfileFormProps {
   initialData?: Partial<CompanyProfile>;
@@ -315,17 +315,10 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
           <div className="border-t pt-4">
             <h3 className="text-lg font-medium mb-4">Paramètres de facturation</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="tax-rate">Taux de TVA par défaut (%)</Label>
-                <Input 
-                  id="tax-rate" 
-                  type="number" 
-                  placeholder="20" 
-                  value={formData.taxRate}
-                  onChange={(e) => handleChange("taxRate", e.target.value)}
-                  required
-                />
-              </div>
+              <TaxRateSelector
+                value={formData.taxRate || "20"}
+                onChange={(value) => handleChange("taxRate", value)}
+              />
               <div className="space-y-2">
                 <Label htmlFor="default-currency">Devise par défaut</Label>
                 <Select 

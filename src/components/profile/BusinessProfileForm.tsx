@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { BusinessProfileSubtype } from "./ProfileSubtypeSelector";
 import { CompanyProfile } from "@/types/invoice";
+import { TaxRateSelector } from "@/components/TaxRateSelector";
 
 interface BusinessProfileFormProps {
   subtype: BusinessProfileSubtype;
@@ -247,17 +247,10 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
       <div className="pt-4 border-t">
         <h3 className="text-lg font-medium mb-4">Paramètres de facturation</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="tax-rate">Taux de TVA par défaut (%)</Label>
-            <Input 
-              id="tax-rate" 
-              type="number" 
-              placeholder="20" 
-              value={formData.taxRate || ""}
-              onChange={(e) => handleChange("taxRate", e.target.value)}
-              required
-            />
-          </div>
+          <TaxRateSelector
+            value={formData.taxRate || "20"}
+            onChange={(value) => handleChange("taxRate", value)}
+          />
           <div className="space-y-2">
             <Label htmlFor="default-currency">Devise par défaut</Label>
             <Select 
