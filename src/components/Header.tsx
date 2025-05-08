@@ -48,13 +48,6 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
     checkConnection();
   }, []);
 
-  const handleSearch = (term: string) => {
-    console.log("Searching for:", term);
-    // Implémenter la recherche universelle ici
-    // Par exemple, rediriger vers une page de résultats de recherche
-    // navigate(`/search?q=${encodeURIComponent(term)}`);
-  };
-
   return (
     <>
       <div className="mb-8">
@@ -71,7 +64,7 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                 <Menu className="h-6 w-6" />
               </Button>
             )}
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar />
           </div>
         </div>
         
