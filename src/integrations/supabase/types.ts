@@ -45,6 +45,54 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_reminders: {
+        Row: {
+          email_body: string | null
+          email_subject: string | null
+          error: string | null
+          id: string
+          invoice_id: string
+          reminder_template_id: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          email_body?: string | null
+          email_subject?: string | null
+          error?: string | null
+          id?: string
+          invoice_id: string
+          reminder_template_id?: string | null
+          sent_at?: string
+          status: string
+        }
+        Update: {
+          email_body?: string | null
+          email_subject?: string | null
+          error?: string | null
+          id?: string
+          invoice_id?: string
+          reminder_template_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_reminders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "stripe_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_reminders_reminder_template_id_fkey"
+            columns: ["reminder_template_id"]
+            isOneToOne: false
+            referencedRelation: "reminder_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_templates: {
         Row: {
           created_at: string
@@ -100,6 +148,36 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminder_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          name?: string
+          subject?: string
           updated_at?: string
           user_id?: string
         }
