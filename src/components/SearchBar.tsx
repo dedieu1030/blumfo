@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Search, FileText, Users, Settings, Plus, Calendar, X } from "lucide-react";
+import { Search, FileText, Users, Settings, Plus, X } from "lucide-react";
 import { 
   Command,
   CommandList, 
@@ -110,7 +110,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
   };
 
   return (
-    <div className="relative w-full max-w-sm">
+    <div className="relative w-full">
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <div 
@@ -151,7 +151,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
           className="p-0 w-[330px] bg-popover border shadow-lg"
           align="start" 
           sideOffset={5}
-          onOpenAutoFocus={(e) => e.preventDefault()} // Empêcher l'autofocus automatique
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Command shouldFilter={false}>
             <CommandList>

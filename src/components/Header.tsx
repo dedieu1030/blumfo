@@ -1,12 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Menu, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { InvoiceDialog } from "./InvoiceDialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { checkStripeConnection } from "@/services/stripeConnectClient";
 import { SearchBar } from "./SearchBar";
 import { NotificationBell } from "./NotificationBell";
 import { LanguageSelector } from "./LanguageSelector";
@@ -20,44 +18,15 @@ interface HeaderProps {
 
 export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const { t } = useTranslation();
-  const [stripeConnectionStatus, setStripeConnectionStatus] = useState<{
-    isChecking: boolean;
-    isConnected: boolean;
-  }>({
-    isChecking: true,
-    isConnected: false,
-  });
-
-  // Check Stripe connection status on component mount
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const status = await checkStripeConnection();
-        setStripeConnectionStatus({
-          isChecking: false,
-          isConnected: status.connected
-        });
-      } catch (error) {
-        console.error("Error checking Stripe connection:", error);
-        setStripeConnectionStatus({
-          isChecking: false,
-          isConnected: false
-        });
-      }
-    };
-
-    checkConnection();
-  }, []);
 
   return (
     <>
       <div className="mb-8">
-        {/* Barre de recherche universelle */}
+        {/* Barre supérieure avec recherche, boutons d'action et notifications */}
         <div className="mb-4">
-          <div className="flex items-center">
+          <div className="flex items-center justify-between">
             {isMobile && (
               <Button 
                 variant="ghost" 
@@ -68,77 +37,36 @@ export function Header({ title, description, onOpenMobileMenu }: HeaderProps) {
                 <Menu className="h-6 w-6" />
               </Button>
             )}
-            <SearchBar />
             
-            <div className="flex items-center gap-2 ml-2">
+            <div className="flex items-center gap-2">
               <LanguageSelector />
+              
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => setInvoiceDialogOpen(true)}
+                className="gap-1"
+              >
+                <PlusCircle className="h-4 w-4" />
+                {t('newInvoice')}
+              </Button>
+            </div>
+            
+            <div className="flex-1 mx-4">
+              <SearchBar />
+            </div>
+            
+            <div className="flex items-center">
               <NotificationBell />
             </div>
           </div>
         </div>
         
-        {/* Titre de la page et boutons d'action */}
+        {/* Titre de la page */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{title}</h1>
             {description && <p className="text-muted-foreground mt-1">{description}</p>}
-          </div>
-          
-          <div className="mt-4 sm:mt-0 flex items-center gap-3">
-            {stripeConnectionStatus.isChecking ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center text-sm text-zinc-600 bg-zinc-100 px-3 py-1 rounded-full">
-                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                      <span>{t('checkingStripe')}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('checkingStripe')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : stripeConnectionStatus.isConnected ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                      <CheckCircle2 className="mr-1 h-4 w-4" />
-                      <span>{t('stripeConnected')}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('stripeConnectedDesc')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div 
-                      className="flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full cursor-pointer"
-                      onClick={() => navigate('/settings?tab=stripe')}
-                    >
-                      <XCircle className="mr-1 h-4 w-4" />
-                      <span>{t('stripeNotConnected')}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('stripeNotConnectedDesc')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
-            <Button 
-              className="bg-violet hover:bg-violet/90"
-              onClick={() => setInvoiceDialogOpen(true)}
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              {t('newInvoice')}
-            </Button>
           </div>
         </div>
       </div>
