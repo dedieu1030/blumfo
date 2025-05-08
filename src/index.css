@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 255 71% 75%; /* Violet: #9b87f5 */
+    --primary: 164 100% 10%; /* Vert foncé: #003427 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 95%; /* Bleu Clair: #eef1f5 */
@@ -39,19 +39,19 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 255 71% 75%; /* Violet: #9b87f5 */
+    --ring: 164 100% 10%; /* Vert foncé: #003427 */
 
     --radius: 0.75rem;
 
     /* Sidebar specific colors */
     --sidebar-background: 24 18% 93%; /* #F0EBE7 */
     --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 255 71% 75%; /* Violet: #9b87f5 */
+    --sidebar-primary: 164 100% 10%; /* Vert foncé: #003427 */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 84 98% 66%; /* Vert Lime: #d6fd51 */
     --sidebar-accent-foreground: 0 0% 9%;
     --sidebar-border: 0 0% 80%; /* #cccccc */
-    --sidebar-ring: 255 71% 75%; /* Violet: #9b87f5 */
+    --sidebar-ring: 164 100% 10%; /* Vert foncé: #003427 */
   }
 
   .dark {
@@ -64,7 +64,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 255 71% 75%; /* Violet: #9b87f5 */
+    --primary: 164 100% 10%; /* Vert foncé: #003427 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -81,7 +81,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 255 71% 75%; /* Violet: #9b87f5 */
+    --ring: 164 100% 10%; /* Vert foncé: #003427 */
   }
 }
 

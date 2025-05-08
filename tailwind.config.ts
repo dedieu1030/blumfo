@@ -70,7 +70,7 @@ export default {
 				},
 				// Custom LexFacture colors
 				credornoir: '#141414',
-				violet: '#9b87f5',
+				violet: '#003427', // Change violet to #003427
 				bleuclair: '#eef1f5',
 				vertlime: '#d6fd51',
 				alerte: '#ea384c',
