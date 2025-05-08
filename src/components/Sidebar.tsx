@@ -31,11 +31,9 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div className={`fixed hidden md:flex flex-col bg-[#F0EBE7] text-gray-800 w-64 h-screen ${className}`}>
       <div className="p-8 flex justify-center items-center">
-        <img 
-          src="/lovable-uploads/b22d5d72-f99a-44ba-b6fe-bf6bc3f2c47d.png" 
-          alt="Blumfoo Logo" 
-          className="h-16 max-w-[180px]"
-        />
+        <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-[#003427]">
+          BLUMFOO
+        </h1>
       </div>
 
       <div className="flex-1 px-4 py-6 space-y-1">
