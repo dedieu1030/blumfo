@@ -221,7 +221,7 @@ export function ReminderSettings() {
             </DialogTitle>
           </DialogHeader>
           
-          <div className="overflow-y-auto max-h-[70vh]">
+          <div className="overflow-y-auto max-h-[70vh] px-1 pr-4">
             <ReminderScheduleEditor
               schedule={editingSchedule || undefined}
               onSave={handleSaveSchedule}
