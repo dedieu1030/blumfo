@@ -35,7 +35,7 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="p-8 flex justify-center items-center">
         <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-[#003427]">
           blumfo<span className="inline-flex items-center">
-            <span className="h-2 w-2 ml-0.5 rounded-full bg-[#FA7043]"></span>
+            <span className="h-1.5 w-1.5 ml-0.5 rounded-full bg-[#FA7043]"></span>
           </span>
         </h1>
       </div>
