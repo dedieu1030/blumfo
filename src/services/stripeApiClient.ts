@@ -1,63 +1,205 @@
 
-import { InvoiceData } from "@/types/invoice";
 import { supabase } from "@/integrations/supabase/client";
 
-// Envoyer une facture via email depuis Stripe
-export const sendInvoice = async (stripeInvoiceId: string) => {
+// Types for API responses
+export interface InvoiceResponse {
+  success: boolean;
+  invoice?: any;
+  error?: string;
+}
+
+export interface CreateInvoiceResponse {
+  success: boolean;
+  invoice?: any;
+  paymentLink?: string;
+  error?: string;
+}
+
+export interface PaymentLinkResponse {
+  success: boolean;
+  paymentUrl?: string;
+  invoice?: any;
+  error?: string;
+}
+
+export interface SendInvoiceResponse {
+  success: boolean;
+  invoice?: any;
+  error?: string;
+}
+
+/**
+ * Gets invoice details including status updates from Stripe
+ * @param invoiceId Stripe invoice ID
+ * @returns Invoice details
+ */
+export async function getInvoice(invoiceId: string): Promise<InvoiceResponse> {
   try {
-    // Appeler la fonction Edge pour envoyer la facture
+    // Call the Edge Function
+    const { data, error } = await supabase.functions.invoke('get-invoice', {
+      body: { invoiceId }
+    });
+
+    if (error) {
+      console.error('Error getting invoice:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+
+    return {
+      success: true,
+      invoice: data.invoice
+    };
+  } catch (error) {
+    console.error('Error getting invoice:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error getting invoice'
+    };
+  }
+}
+
+/**
+ * Creates a new invoice in Stripe
+ * @param invoiceData Data needed to create the invoice
+ * @returns Created invoice details
+ */
+export async function createInvoice(invoiceData: any): Promise<CreateInvoiceResponse> {
+  try {
+    // Call the Edge Function
+    const { data, error } = await supabase.functions.invoke('create-invoice', {
+      body: invoiceData
+    });
+
+    if (error) {
+      console.error('Error creating invoice:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+
+    return {
+      success: true,
+      invoice: data.invoice,
+      paymentLink: data.paymentLink
+    };
+  } catch (error) {
+    console.error('Error creating invoice:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error creating invoice'
+    };
+  }
+}
+
+/**
+ * Send an invoice to a customer via email
+ * @param invoiceId Stripe invoice ID
+ * @returns Response with send status
+ */
+export async function sendInvoice(invoiceId: string): Promise<SendInvoiceResponse> {
+  try {
+    // Call the Edge Function
     const { data, error } = await supabase.functions.invoke('send-invoice', {
-      body: { stripeInvoiceId }
+      body: { invoiceId }
     });
 
     if (error) {
-      console.error('Erreur lors de l\'appel à la fonction send-invoice:', error);
-      return { success: false, error: error.message };
+      console.error('Error sending invoice:', error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
 
-    return data;
+    return {
+      success: true,
+      invoice: data.invoice
+    };
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de la facture:', error);
-    return { success: false, error: "Une erreur est survenue lors de l'envoi de la facture" };
+    console.error('Error sending invoice:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error sending invoice'
+    };
   }
-};
+}
 
-// Créer un lien de paiement pour une facture
-export const createPaymentLink = async (stripeInvoiceId: string) => {
+/**
+ * Creates a payment link for an invoice
+ * @param invoiceId Stripe invoice ID
+ * @returns Response with payment URL
+ */
+export async function createPaymentLink(
+  invoiceId: string, 
+  successUrl?: string, 
+  cancelUrl?: string
+): Promise<PaymentLinkResponse> {
   try {
-    // Appeler la fonction Edge pour créer un lien de paiement
+    // Call the Edge Function
     const { data, error } = await supabase.functions.invoke('create-payment-link', {
-      body: { stripeInvoiceId }
+      body: { 
+        invoiceId,
+        successUrl,
+        cancelUrl
+      }
     });
 
     if (error) {
-      console.error('Erreur lors de l\'appel à la fonction create-payment-link:', error);
-      return { success: false, error: error.message };
+      console.error('Error creating payment link:', error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
 
-    return data;
+    return {
+      success: true,
+      paymentUrl: data.paymentUrl,
+      invoice: data.invoice
+    };
   } catch (error) {
-    console.error('Erreur lors de la création du lien de paiement:', error);
-    return { success: false, error: "Une erreur est survenue lors de la création du lien de paiement" };
+    console.error('Error creating payment link:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error creating payment link'
+    };
   }
-};
+}
 
-// Créer une nouvelle facture avec Stripe
-export const createStripeInvoice = async (invoiceData: InvoiceData) => {
+/**
+ * Lists all invoices for the current user
+ * @returns List of invoices
+ */
+export async function listInvoices(): Promise<{
+  success: boolean;
+  invoices?: any[];
+  error?: string;
+}> {
   try {
-    // Appeler la fonction Edge pour créer une facture
-    const { data, error } = await supabase.functions.invoke('create-stripe-invoice', {
-      body: { invoiceData }
-    });
+    // Call the Edge Function
+    const { data, error } = await supabase.functions.invoke('list-invoices');
 
     if (error) {
-      console.error('Erreur lors de l\'appel à la fonction create-stripe-invoice:', error);
-      return { success: false, error: error.message };
+      console.error('Error listing invoices:', error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
 
-    return data;
+    return {
+      success: true,
+      invoices: data.invoices
+    };
   } catch (error) {
-    console.error('Erreur lors de la création de la facture:', error);
-    return { success: false, error: "Une erreur est survenue lors de la création de la facture" };
+    console.error('Error listing invoices:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error listing invoices'
+    };
   }
-};
+}

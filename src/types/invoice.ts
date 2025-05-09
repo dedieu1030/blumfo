@@ -1,6 +1,4 @@
-
 export interface CompanyProfile {
-  id?: string;
   name: string;
   address: string;
   email: string;
@@ -44,7 +42,7 @@ export interface PaymentTermTemplate {
 
 export interface InvoiceData {
   invoiceNumber: string;
-  date?: string;
+  invoiceDate: string;
   dueDate?: string;
   clientName: string;
   clientEmail: string;
@@ -69,8 +67,7 @@ export interface ServiceLine {
   description: string;
   quantity: string;
   unitPrice: string;
-  taxRate: string;
-  discount?: string;
+  tva: string;
   total: string;
 }
 
@@ -85,7 +82,7 @@ export interface ReminderSchedule {
 
 export interface ReminderTrigger {
   id: string;
-  triggerType: "days_before_due" | "days_after_due" | "days_after_last_reminder" | "specific_date";
+  triggerType: "days_before_due" | "days_after_due" | "days_after_previous_reminder" | "specific_date";
   triggerValue: number; // Nombre de jours ou timestamp pour specific_date
   emailTemplateId?: string;
   emailSubject: string;
@@ -96,7 +93,7 @@ export interface ReminderTrigger {
 export interface InvoiceNumberingConfig {
   prefix: string;
   nextNumber: number;
-  suffix: string;
+  suffix?: string;
   padding: number; // Nombre de zéros pour le remplissage (ex: 001, 0001)
   resetAnnually: boolean;
 }

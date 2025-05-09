@@ -1,296 +1,302 @@
-
-import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, Plus, Edit, Trash } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandSeparator,
-  CommandList,
-} from "@/components/ui/command";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Loader2, Plus, Tags, Pencil, PlusCircle, Check, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
-export interface Category {
+interface Category {
   id: string;
   name: string;
-  color?: string; // Optional for compatibility
+  color: string | null;
 }
 
 interface ClientCategorySelectorProps {
-  onCategorySelect: (category: Category | null) => void;
-  selectedId?: string;
+  selectedCategoryIds: string[];
+  onCategoriesChange: (categoryIds: string[]) => void;
+  isLoading?: boolean;
 }
 
-export function ClientCategorySelector({ onCategorySelect, selectedId }: ClientCategorySelectorProps) {
-  const [open, setOpen] = useState(false);
+export function ClientCategorySelector({
+  selectedCategoryIds,
+  onCategoriesChange,
+  isLoading = false,
+}: ClientCategorySelectorProps) {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
-  const [categoryName, setCategoryName] = useState("");
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selected, setSelected] = useState<string[]>(selectedCategoryIds);
+  const [isNewCategoryModalOpen, setIsNewCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryColor, setNewCategoryColor] = useState("#6366F1"); // Default color (purple)
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  // Fetch client groups (using them as categories)
+  // Predefined colors for categories
+  const colorOptions = [
+    { name: "Violet", value: "#6366F1" },
+    { name: "Bleu", value: "#3B82F6" },
+    { name: "Cyan", value: "#06B6D4" },
+    { name: "Vert", value: "#10B981" },
+    { name: "Citron", value: "#84CC16" },
+    { name: "Jaune", value: "#EAB308" },
+    { name: "Orange", value: "#F59E0B" },
+    { name: "Rouge", value: "#EF4444" },
+    { name: "Rose", value: "#EC4899" },
+    { name: "Gris", value: "#6B7280" },
+  ];
+
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data, error } = await supabase.from('client_groups').select('*');
+        const { data, error } = await supabase
+          .from('client_categories')
+          .select('id, name, color')
+          .order('name');
         
-        if (error) {
-          console.error('Error fetching client groups:', error);
-          return;
-        }
+        if (error) throw error;
         
-        // Map client_groups to Category interface
-        const mappedCategories: Category[] = data.map(group => ({
-          id: group.id,
-          name: group.name,
-          color: 'gray' // Default color since client_groups doesn't have color
-        }));
-        
-        setCategories(mappedCategories);
+        setCategories(data || []);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", error);
+      } finally {
+        setIsLoaded(true);
       }
     };
     
     fetchCategories();
   }, []);
 
-  // Find the selected category name
-  const selectedCategory = categories.find(category => category.id === selectedId);
+  // Handle checkbox change
+  const handleCategoryChange = (categoryId: string, checked: boolean) => {
+    if (checked) {
+      setSelected(prev => [...prev, categoryId]);
+    } else {
+      setSelected(prev => prev.filter(id => id !== categoryId));
+    }
+  };
 
-  // Handle adding or editing a category
-  const handleSaveCategory = async () => {
-    if (!categoryName.trim()) {
+  // Apply selected categories
+  const handleApplyCategories = () => {
+    onCategoriesChange(selected);
+    setIsModalOpen(false);
+  };
+
+  // Create new category
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
       toast({
         title: "Nom requis",
-        description: "Veuillez entrer un nom pour ce groupe",
+        description: "Veuillez saisir un nom pour la catégorie",
         variant: "destructive"
       });
       return;
     }
 
+    setIsSaving(true);
+    
     try {
-      if (isEditing && currentCategory) {
-        // Update existing group
-        const { error } = await supabase
-          .from('client_groups')
-          .update({ name: categoryName })
-          .eq('id', currentCategory.id);
-          
-        if (error) throw error;
-        
-        // Update local state
-        setCategories(categories.map(cat => 
-          cat.id === currentCategory.id ? { ...cat, name: categoryName } : cat
-        ));
-        
-        toast({
-          title: "Groupe modifié",
-          description: `Le groupe ${categoryName} a été mis à jour`
-        });
-      } else {
-        // Create new group
-        const { data, error } = await supabase
-          .from('client_groups')
-          .insert({ name: categoryName })
-          .select();
-          
-        if (error) throw error;
-        
-        if (data && data[0]) {
-          // Add to local state
-          const newCategory: Category = {
-            id: data[0].id,
-            name: data[0].name,
-            color: 'gray'
-          };
-          
-          setCategories([...categories, newCategory]);
-          
-          toast({
-            title: "Groupe créé",
-            description: `Le groupe ${categoryName} a été créé`
-          });
-        }
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Utilisateur non authentifié");
       }
       
-      // Reset and close dialog
-      setIsDialogOpen(false);
-      setCategoryName("");
-      setIsEditing(false);
-      setCurrentCategory(null);
+      const { data, error } = await supabase
+        .from('client_categories')
+        .insert({
+          name: newCategoryName.trim(),
+          color: newCategoryColor,
+          user_id: user.id
+        })
+        .select()
+        .single();
       
-    } catch (error) {
-      console.error('Error saving category:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de la sauvegarde du groupe",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handle deleting a category
-  const handleDeleteCategory = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('client_groups')
-        .delete()
-        .eq('id', id);
-        
       if (error) throw error;
       
-      // Update local state
-      setCategories(categories.filter(cat => cat.id !== id));
-      
-      // If deleted category was selected, clear selection
-      if (selectedId === id) {
-        onCategorySelect(null);
+      if (data) {
+        toast({
+          title: "Catégorie créée",
+          description: `La catégorie "${data.name}" a été créée avec succès`
+        });
+        
+        setCategories(prev => [...prev, data as Category]);
+        setSelected(prev => [...prev, data.id]);
+        setNewCategoryName("");
+        setIsNewCategoryModalOpen(false);
       }
-      
-      toast({
-        title: "Groupe supprimé",
-        description: "Le groupe a été supprimé avec succès"
-      });
-      
     } catch (error) {
-      console.error('Error deleting category:', error);
+      console.error("Error creating category:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de la suppression du groupe",
+        description: "Impossible de créer la catégorie",
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="justify-between"
-          >
-            {selectedCategory?.name || "Sélectionner un groupe"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="p-0">
-          <Command>
-            <CommandInput placeholder="Rechercher un groupe..." />
-            <CommandList>
-              <CommandEmpty>Aucun groupe trouvé.</CommandEmpty>
-              <CommandGroup heading="Groupes">
-                {categories.map((category) => (
-                  <CommandItem
-                    key={category.id}
-                    value={category.name}
-                    onSelect={() => {
-                      onCategorySelect(category);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedId === category.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <span>{category.name}</span>
-                    <div className="ml-auto flex gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsEditing(true);
-                          setCurrentCategory(category);
-                          setCategoryName(category.name);
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteCategory(category.id);
-                        }}
-                      >
-                        <Trash className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-              <CommandSeparator />
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => {
-                    setIsEditing(false);
-                    setCategoryName("");
-                    setIsDialogOpen(true);
-                    setOpen(false);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Créer un nouveau groupe
-                </CommandItem>
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsModalOpen(true)}
+        disabled={isLoading || !isLoaded}
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        ) : (
+          <Tags className="h-4 w-4 mr-2" />
+        )}
+        Gérer les catégories
+      </Button>
+      
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>
-              {isEditing ? "Modifier le groupe" : "Créer un groupe"}
-            </DialogTitle>
+            <DialogTitle>Gérer les catégories</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Nom
-              </Label>
+          
+          {!isLoaded ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Aucune catégorie créée. Créez votre première catégorie.
+              </p>
+              <Button onClick={() => setIsNewCategoryModalOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Nouvelle catégorie
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                {categories.map((category) => (
+                  <div key={category.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${category.id}`}
+                      checked={selected.includes(category.id)}
+                      onCheckedChange={(checked) => 
+                        handleCategoryChange(category.id, checked === true)
+                      }
+                    />
+                    <Label
+                      htmlFor={`category-${category.id}`}
+                      className="flex items-center cursor-pointer flex-1"
+                    >
+                      {category.color && (
+                        <span
+                          className="h-3 w-3 rounded-full mr-2"
+                          style={{ backgroundColor: category.color }}
+                        ></span>
+                      )}
+                      {category.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex justify-between pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsNewCategoryModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouvelle catégorie
+                </Button>
+                
+                <Button onClick={handleApplyCategories}>
+                  <Check className="h-4 w-4 mr-2" />
+                  Appliquer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog for creating new category */}
+      <Dialog open={isNewCategoryModalOpen} onOpenChange={setIsNewCategoryModalOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Nouvelle catégorie</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="category-name">Nom de la catégorie</Label>
               <Input
-                id="name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                className="col-span-3"
+                id="category-name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Ex: VIP, PME, Particulier..."
               />
             </div>
+            
+            <div className="space-y-2">
+              <Label>Couleur</Label>
+              <div className="flex flex-wrap gap-2">
+                {colorOptions.map((color) => (
+                  <div
+                    key={color.value}
+                    className={`h-6 w-6 rounded-full cursor-pointer ${
+                      newCategoryColor === color.value 
+                        ? 'ring-2 ring-offset-2 ring-primary' 
+                        : ''
+                    }`}
+                    style={{ backgroundColor: color.value }}
+                    onClick={() => setNewCategoryColor(color.value)}
+                    title={color.name}
+                  ></div>
+                ))}
+              </div>
+            </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setIsDialogOpen(false)}>
+          
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsNewCategoryModalOpen(false)}
+              disabled={isSaving}
+            >
               Annuler
             </Button>
-            <Button type="button" onClick={handleSaveCategory}>
-              {isEditing ? "Mettre à jour" : "Créer"}
+            <Button onClick={handleCreateCategory} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-t-transparent border-white rounded-full" />
+                  Création...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Créer
+                </>
+              )}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>

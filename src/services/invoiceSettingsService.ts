@@ -1,282 +1,267 @@
+import { 
+  PaymentTermTemplate, 
+  PaymentMethodDetails, 
+  ReminderSchedule,
+  InvoiceNumberingConfig,
+  CurrencyInfo
+} from "@/types/invoice";
+import { toast } from "sonner";
 
-import { PaymentTermTemplate } from "@/types/invoice";
-import { PaymentMethodDetails } from "@/types/invoice";
-import { ReminderSchedule, ReminderTrigger } from "@/types/invoice";
-import { InvoiceNumberingConfig } from "@/types/invoice";
-import { CurrencyInfo } from "@/types/invoice";
-
+// Liste des devises disponibles
 export const availableCurrencies: CurrencyInfo[] = [
   { code: "EUR", symbol: "€", name: "Euro", position: "suffix" },
-  { code: "USD", symbol: "$", name: "Dollar US", position: "prefix" },
-  { code: "GBP", symbol: "£", name: "Livre Sterling", position: "prefix" },
-  { code: "CAD", symbol: "C$", name: "Dollar Canadien", position: "prefix" },
-  { code: "AUD", symbol: "A$", name: "Dollar Australien", position: "prefix" },
-  { code: "CHF", symbol: "Fr", name: "Franc Suisse", position: "suffix" },
-  { code: "JPY", symbol: "¥", name: "Yen Japonais", position: "prefix" },
-  { code: "CNY", symbol: "¥", name: "Yuan Chinois", position: "prefix" },
-  { code: "SEK", symbol: "kr", name: "Couronne Suédoise", position: "suffix" },
-  { code: "NOK", symbol: "kr", name: "Couronne Norvégienne", position: "suffix" },
-  { code: "DKK", symbol: "kr", name: "Couronne Danoise", position: "suffix" }
+  { code: "USD", symbol: "$", name: "Dollar américain", position: "prefix" },
+  { code: "GBP", symbol: "£", name: "Livre sterling", position: "prefix" },
+  { code: "CAD", symbol: "$", name: "Dollar canadien", position: "prefix" },
+  { code: "AUD", symbol: "$", name: "Dollar australien", position: "prefix" },
+  { code: "CHF", symbol: "CHF", name: "Franc suisse", position: "suffix" },
+  { code: "JPY", symbol: "¥", name: "Yen japonais", position: "prefix" },
+  { code: "CNY", symbol: "¥", name: "Yuan chinois", position: "prefix" },
+  { code: "SEK", symbol: "kr", name: "Couronne suédoise", position: "suffix" },
+  { code: "NOK", symbol: "kr", name: "Couronne norvégienne", position: "suffix" },
+  { code: "DKK", symbol: "kr", name: "Couronne danoise", position: "suffix" },
+  { code: "PLN", symbol: "zł", name: "Złoty polonais", position: "suffix" },
+  { code: "CZK", symbol: "Kč", name: "Couronne tchèque", position: "suffix" },
+  { code: "HUF", symbol: "Ft", name: "Forint hongrois", position: "suffix" },
+  { code: "RON", symbol: "lei", name: "Leu roumain", position: "suffix" },
+  { code: "BGN", symbol: "лв", name: "Lev bulgare", position: "suffix" },
+  { code: "TRY", symbol: "₺", name: "Livre turque", position: "suffix" },
+  { code: "RUB", symbol: "₽", name: "Rouble russe", position: "suffix" },
+  { code: "ZAR", symbol: "R", name: "Rand sud-africain", position: "prefix" },
+  { code: "INR", symbol: "₹", name: "Roupie indienne", position: "prefix" },
+  { code: "BRL", symbol: "R$", name: "Real brésilien", position: "prefix" },
+  { code: "MXN", symbol: "$", name: "Peso mexicain", position: "prefix" },
+  { code: "ARS", symbol: "$", name: "Peso argentin", position: "prefix" },
+  { code: "CLP", symbol: "$", name: "Peso chilien", position: "prefix" },
+  { code: "PEN", symbol: "S/", name: "Sol péruvien", position: "prefix" },
+  { code: "COP", symbol: "$", name: "Peso colombien", position: "prefix" }
 ];
 
-// Get the default payment term
-export const getDefaultPaymentTerm = (): string => {
-  const term = localStorage.getItem('defaultPaymentTerm');
-  return term || '15';
-};
-
-// Save default payment term
-export const saveDefaultPaymentTerm = (term: string, customDate?: string): void => {
-  localStorage.setItem('defaultPaymentTerm', term);
-  if (customDate) {
-    localStorage.setItem('defaultCustomPaymentDate', customDate);
-  } else {
-    localStorage.removeItem('defaultCustomPaymentDate');
-  }
-};
-
-// Get custom payment date if applicable
-export const getDefaultCustomPaymentDate = (): string | null => {
-  return localStorage.getItem('defaultCustomPaymentDate');
-};
-
-// Get the default currency
-export const getDefaultCurrency = (): string => {
-  const currency = localStorage.getItem('defaultCurrency');
-  return currency || 'EUR';
-};
-
-// Save default currency
-export const saveDefaultCurrency = (currency: string): void => {
-  localStorage.setItem('defaultCurrency', currency);
-};
-
-// Get currency info
-export const getCurrencyInfo = (code: string): CurrencyInfo => {
-  const currency = availableCurrencies.find(c => c.code === code);
-  return currency || availableCurrencies[0]; // Default to EUR if not found
-};
-
-// Get payment term templates
-export const getPaymentTermsTemplates = (): PaymentTermTemplate[] => {
-  const templatesString = localStorage.getItem('paymentTermsTemplates');
-  if (templatesString) {
-    try {
-      return JSON.parse(templatesString);
-    } catch (e) {
-      console.error("Erreur lors du parsing des modèles de conditions:", e);
-      return [];
-    }
-  }
-  
-  // Default templates if none exist
-  const defaultTemplates: PaymentTermTemplate[] = [
-    {
-      id: "immediate",
-      name: "Paiement immédiat",
-      delay: "immediate",
-      termsText: "Paiement à réception de facture",
-      isDefault: true
-    },
-    {
-      id: "net15",
-      name: "Net 15",
-      delay: "15",
-      termsText: "Paiement dans les 15 jours suivant la réception",
-      isDefault: false
-    },
-    {
-      id: "net30",
-      name: "Net 30",
-      delay: "30",
-      termsText: "Paiement dans les 30 jours suivant la réception",
-      isDefault: false
-    }
-  ];
-  
-  localStorage.setItem('paymentTermsTemplates', JSON.stringify(defaultTemplates));
-  return defaultTemplates;
-};
-
-// Save a payment term template
-export const savePaymentTermTemplate = (template: PaymentTermTemplate): void => {
-  const templates = getPaymentTermsTemplates();
-  
-  // Check if template with this ID already exists
-  const index = templates.findIndex(t => t.id === template.id);
-  
-  if (index >= 0) {
-    // Update existing template
-    templates[index] = template;
-  } else {
-    // Add new template
-    templates.push(template);
-  }
-  
-  // If this template is set as default, unset default flag on other templates
-  if (template.isDefault) {
-    templates.forEach(t => {
-      if (t.id !== template.id) {
-        t.isDefault = false;
+// Récupérer les modèles de conditions de paiement
+export function getPaymentTermTemplates(): PaymentTermTemplate[] {
+  const savedTerms = localStorage.getItem('paymentTermsTemplates');
+  if (!savedTerms) {
+    const defaultTerms: PaymentTermTemplate[] = [
+      {
+        id: "immediate",
+        name: "Paiement immédiat",
+        delay: "immediate",
+        termsText: "Paiement à réception de facture.",
+        isDefault: true
+      },
+      {
+        id: "15days",
+        name: "15 jours",
+        delay: "15",
+        termsText: "Paiement à 15 jours. Des pénalités de retard de 3 fois le taux d'intérêt légal seront appliquées en cas de paiement après la date d'échéance.",
+        isDefault: false
+      },
+      {
+        id: "30days",
+        name: "30 jours",
+        delay: "30",
+        termsText: "Paiement à 30 jours. Des pénalités de retard de 3 fois le taux d'intérêt légal seront appliquées en cas de paiement après la date d'échéance.",
+        isDefault: false
       }
-    });
+    ];
+    localStorage.setItem('paymentTermsTemplates', JSON.stringify(defaultTerms));
+    return defaultTerms;
   }
   
-  localStorage.setItem('paymentTermsTemplates', JSON.stringify(templates));
-};
+  try {
+    return JSON.parse(savedTerms);
+  } catch (e) {
+    console.error("Erreur lors du parsing des modèles de conditions", e);
+    return [];
+  }
+}
 
-// Get reminder schedules
-export const getReminderSchedules = async (): Promise<{success: boolean, schedules?: ReminderSchedule[], error?: string}> => {
-  // For now, get from localStorage, but this would typically be a DB call
-  const schedulesString = localStorage.getItem('reminderSchedules');
+// Sauvegarder les modèles de conditions de paiement
+export function savePaymentTermTemplates(templates: PaymentTermTemplate[]): void {
+  localStorage.setItem('paymentTermsTemplates', JSON.stringify(templates));
+}
+
+// Récupérer les méthodes de paiement par défaut
+export function getDefaultPaymentMethods(): PaymentMethodDetails[] {
+  const savedMethods = localStorage.getItem('defaultPaymentMethods');
+  if (!savedMethods) {
+    const defaultMethods: PaymentMethodDetails[] = [
+      { type: "card", enabled: true },
+      { type: "transfer", enabled: true }
+    ];
+    localStorage.setItem('defaultPaymentMethods', JSON.stringify(defaultMethods));
+    return defaultMethods;
+  }
   
-  if (!schedulesString) {
-    // Create a default reminder schedule if none exists
+  try {
+    return JSON.parse(savedMethods);
+  } catch (e) {
+    console.error("Erreur lors du parsing des méthodes de paiement", e);
+    return [];
+  }
+}
+
+// Sauvegarder les méthodes de paiement par défaut
+export function saveDefaultPaymentMethods(methods: PaymentMethodDetails[]): void {
+  localStorage.setItem('defaultPaymentMethods', JSON.stringify(methods));
+  toast.success("Méthodes de paiement mises à jour");
+}
+
+// Récupérer les planifications de relance
+export function getReminderSchedules(): ReminderSchedule[] {
+  const savedSchedules = localStorage.getItem('reminderSchedules');
+  if (!savedSchedules) {
     const defaultSchedule: ReminderSchedule = {
-      id: Date.now().toString(),
-      name: "Rappels standards",
-      enabled: true,
+      id: "default",
+      name: "Relances standard",
+      enabled: false,
       isDefault: true,
       triggers: [
         {
-          id: "before-1",
-          triggerType: "days_before_due",
-          triggerValue: 3,
-          emailSubject: "Rappel: Facture à échéance prochaine",
-          emailBody: "Bonjour,\n\nCe message est un rappel amical que votre facture arrivera à échéance dans 3 jours.\n\nCordialement,\nVotre entreprise"
-        },
-        {
-          id: "after-1",
+          id: "trigger1",
           triggerType: "days_after_due",
-          triggerValue: 1,
-          emailSubject: "Facture échue",
-          emailBody: "Bonjour,\n\nVotre facture est maintenant échue. Merci de procéder au règlement dès que possible.\n\nCordialement,\nVotre entreprise"
+          triggerValue: 3,
+          emailSubject: "Rappel de facture impayée",
+          emailBody: "Cher [NOM_CLIENT],\n\nNous vous rappelons que votre facture [NUM_FACTURE] d'un montant de [MONTANT] € est arrivée à échéance le [DATE_ECHEANCE] et n'a pas encore été réglée.\n\nNous vous invitons à procéder à son règlement dès que possible.\n\nCordialement,\n[VOTRE_NOM]"
         },
         {
-          id: "after-2",
-          triggerType: "days_after_last_reminder",
+          id: "trigger2",
+          triggerType: "days_after_previous_reminder",
           triggerValue: 7,
-          emailSubject: "Relance: Facture impayée",
-          emailBody: "Bonjour,\n\nVotre facture est toujours en attente de règlement. Merci de nous contacter si vous rencontrez des difficultés.\n\nCordialement,\nVotre entreprise"
+          emailSubject: "Relance importante - Facture impayée",
+          emailBody: "Cher [NOM_CLIENT],\n\nMalgré notre précédent rappel, nous n'avons toujours pas reçu le paiement de votre facture [NUM_FACTURE] d'un montant de [MONTANT] €.\n\nNous vous invitons à procéder à son règlement dans les plus brefs délais afin d'éviter des frais supplémentaires.\n\nCordialement,\n[VOTRE_NOM]"
         }
       ]
     };
-    
-    const schedules = [defaultSchedule];
-    localStorage.setItem('reminderSchedules', JSON.stringify(schedules));
-    
-    return { success: true, schedules };
+    localStorage.setItem('reminderSchedules', JSON.stringify([defaultSchedule]));
+    return [defaultSchedule];
   }
   
   try {
-    const schedules = JSON.parse(schedulesString);
-    return { success: true, schedules };
+    return JSON.parse(savedSchedules);
   } catch (e) {
-    console.error("Erreur lors du parsing des planifications de relance:", e);
-    return { success: false, error: "Erreur lors de la récupération des planifications" };
+    console.error("Erreur lors du parsing des planifications de relance", e);
+    return [];
   }
-};
+}
 
-// Save reminder schedule
-export const saveReminderSchedule = async (schedule: ReminderSchedule): Promise<{success: boolean, error?: string}> => {
-  const { success, schedules, error } = await getReminderSchedules();
-  
-  if (!success || !schedules) {
-    return { success: false, error: error || "Impossible de récupérer les planifications existantes" };
-  }
-  
-  let updatedSchedules;
-  const index = schedules.findIndex(s => s.id === schedule.id);
-  
-  if (index >= 0) {
-    // Update existing schedule
-    updatedSchedules = [...schedules];
-    updatedSchedules[index] = schedule;
-  } else {
-    // Add new schedule
-    updatedSchedules = [...schedules, schedule];
-  }
-  
-  // If this schedule is set as default, unset default flag on other schedules
-  if (schedule.isDefault) {
-    updatedSchedules.forEach(s => {
-      if (s.id !== schedule.id) {
-        s.isDefault = false;
-      }
-    });
+// Sauvegarder les planifications de relance
+export function saveReminderSchedules(schedules: ReminderSchedule[]): void {
+  localStorage.setItem('reminderSchedules', JSON.stringify(schedules));
+}
+
+// Récupérer la configuration de numérotation des factures
+export function getInvoiceNumberingConfig(): InvoiceNumberingConfig {
+  const savedConfig = localStorage.getItem('invoiceNumberingConfig');
+  if (!savedConfig) {
+    const defaultConfig: InvoiceNumberingConfig = {
+      prefix: "INV-",
+      nextNumber: 1, // Ce champ sera ignoré lors de la génération
+      padding: 3, // Pour obtenir 001, 002, etc.
+      resetAnnually: false
+    };
+    localStorage.setItem('invoiceNumberingConfig', JSON.stringify(defaultConfig));
+    return defaultConfig;
   }
   
   try {
-    localStorage.setItem('reminderSchedules', JSON.stringify(updatedSchedules));
-    return { success: true };
+    return JSON.parse(savedConfig);
   } catch (e) {
-    console.error("Erreur lors de la sauvegarde des planifications:", e);
-    return { success: false, error: "Erreur lors de la sauvegarde de la planification" };
+    console.error("Erreur lors du parsing de la configuration de numérotation", e);
+    return {
+      prefix: "INV-",
+      nextNumber: 1,
+      padding: 3,
+      resetAnnually: false
+    };
   }
-};
+}
 
-// Invoice Numbering Configuration
-
-export const getInvoiceNumberingConfig = (): InvoiceNumberingConfig => {
-  const configString = localStorage.getItem('invoiceNumberingConfig');
-  if (configString) {
-    try {
-      const parsedConfig = JSON.parse(configString);
-      // Ensure all required properties are present
-      return {
-        prefix: parsedConfig.prefix || 'INV-',
-        nextNumber: parsedConfig.nextNumber || 1,
-        suffix: parsedConfig.suffix || '',
-        padding: parsedConfig.padding || 3,
-        resetAnnually: parsedConfig.resetAnnually || false
-      };
-    } catch (e) {
-      console.error("Erreur lors du parsing de la configuration de numérotation:", e);
-    }
-  }
-  
-  // Default configuration
-  const defaultConfig: InvoiceNumberingConfig = {
-    prefix: 'INV-',
-    nextNumber: 1,
-    suffix: '',
-    padding: 3,
-    resetAnnually: false
-  };
-  
-  return defaultConfig;
-};
-
-export const saveInvoiceNumberingConfig = (config: InvoiceNumberingConfig): void => {
+// Sauvegarder la configuration de numérotation des factures
+export function saveInvoiceNumberingConfig(config: InvoiceNumberingConfig): void {
   localStorage.setItem('invoiceNumberingConfig', JSON.stringify(config));
-};
+  toast.success("Configuration de numérotation mise à jour");
+}
 
-// Get default payment methods
-export const getDefaultPaymentMethods = (): PaymentMethodDetails[] => {
-  const methodsString = localStorage.getItem('defaultPaymentMethods');
-  if (methodsString) {
-    try {
-      return JSON.parse(methodsString);
-    } catch (e) {
-      console.error("Erreur lors du parsing des méthodes de paiement:", e);
-      return [];
-    }
+// Récupérer le délai de paiement par défaut
+export function getDefaultPaymentTerm(): string {
+  const savedTerm = localStorage.getItem('defaultPaymentTerm');
+  return savedTerm || "15";
+}
+
+// Récupérer la date d'échéance personnalisée si elle existe
+export function getDefaultCustomDueDate(): string | null {
+  return localStorage.getItem('defaultCustomDueDate');
+}
+
+// Sauvegarder le délai de paiement par défaut
+export function saveDefaultPaymentTerm(term: string, customDate?: string): void {
+  localStorage.setItem('defaultPaymentTerm', term);
+  
+  if (term === 'custom' && customDate) {
+    localStorage.setItem('defaultCustomDueDate', customDate);
+  } else {
+    localStorage.removeItem('defaultCustomDueDate');
+  }
+}
+
+// Récupérer la devise par défaut
+export function getDefaultCurrency(): string {
+  return localStorage.getItem('defaultCurrency') || "EUR";
+}
+
+// Sauvegarder la devise par défaut
+export function saveDefaultCurrency(currency: string): void {
+  localStorage.setItem('defaultCurrency', currency);
+}
+
+// Récupérer le compteur actuel des factures
+function getCurrentInvoiceCounter(): number {
+  const counter = localStorage.getItem('invoiceCounter');
+  return counter ? parseInt(counter) : 0;
+}
+
+// Sauvegarder le compteur actuel des factures
+function saveCurrentInvoiceCounter(counter: number): void {
+  localStorage.setItem('invoiceCounter', counter.toString());
+}
+
+// Récupérer le compteur de l'année en cours
+function getCurrentYearCounter(): number {
+  const currentYear = new Date().getFullYear().toString();
+  const yearCounterKey = `invoiceCounter_${currentYear}`;
+  const counter = localStorage.getItem(yearCounterKey);
+  return counter ? parseInt(counter) : 0;
+}
+
+// Sauvegarder le compteur de l'année en cours
+function saveCurrentYearCounter(counter: number): void {
+  const currentYear = new Date().getFullYear().toString();
+  const yearCounterKey = `invoiceCounter_${currentYear}`;
+  localStorage.setItem(yearCounterKey, counter.toString());
+}
+
+// Générer un numéro de facture formaté selon la configuration
+export function generateInvoiceNumber(config: InvoiceNumberingConfig): string {
+  const { prefix, padding, suffix, resetAnnually } = config;
+  
+  let nextNumber: number;
+  
+  if (resetAnnually) {
+    // Si réinitialisation annuelle, utiliser le compteur de l'année en cours
+    nextNumber = getCurrentYearCounter() + 1;
+    saveCurrentYearCounter(nextNumber);
+  } else {
+    // Sinon, utiliser le compteur global
+    nextNumber = getCurrentInvoiceCounter() + 1;
+    saveCurrentInvoiceCounter(nextNumber);
   }
   
-  // Default methods if none exist
-  const defaultMethods: PaymentMethodDetails[] = [
-    { type: "card", enabled: true, details: "Visa, Mastercard, Amex" },
-    { type: "transfer", enabled: true, details: "" },
-    { type: "check", enabled: false, details: "" },
-    { type: "cash", enabled: false, details: "" },
-    { type: "paypal", enabled: false, details: "" },
-    { type: "payoneer", enabled: false, details: "" }
-  ];
-  
-  localStorage.setItem('defaultPaymentMethods', JSON.stringify(defaultMethods));
-  return defaultMethods;
-};
+  const paddedNumber = nextNumber.toString().padStart(padding, '0');
+  return `${prefix}${paddedNumber}${suffix || ''}`;
+}
 
-export const saveDefaultPaymentMethods = (methods: PaymentMethodDetails[]): void => {
-  localStorage.setItem('defaultPaymentMethods', JSON.stringify(methods));
-};
+// Cette fonction devient un alias pour compatibilité avec le code existant
+export function incrementInvoiceNumber(): void {
+  // Ne fait plus rien car incrementInvoiceNumber() est désormais géré directement dans generateInvoiceNumber()
+}
