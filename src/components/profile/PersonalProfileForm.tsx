@@ -62,10 +62,10 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
     setFormData(prev => ({ ...prev, ...updates }));
   }, [subtype]);
 
-  const handleChange = (field: keyof CompanyProfile, value: string) => {
-    if (field === 'taxRate') {
+  const handleChange = (field: keyof CompanyProfile, value: string | number) => {
+    if (field === 'taxRate' && typeof value === 'string') {
       // Convert taxRate string to number for internal state
-      setFormData(prev => ({ ...prev, [field]: parseFloat(value) }));
+      setFormData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
@@ -74,11 +74,17 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Convert taxRate to string for saving
+    // Ensure we have all required fields and proper types
     const profileToSave: CompanyProfile = {
-      ...formData as CompanyProfile,
-      taxRate: String(formData.taxRate)
-    };
+      name: formData.name || '',
+      address: formData.address || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
+      emailType: formData.emailType as 'personal' | 'professional' | 'company',
+      taxRate: formData.taxRate as number,
+      defaultCurrency: formData.defaultCurrency || 'EUR',
+      ...formData
+    } as CompanyProfile;
     
     onSave(profileToSave);
   };
@@ -268,7 +274,7 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 md:col-span-2">
             <TaxRateSelector
-              defaultValue={formData.taxRate || "20"}
+              defaultValue={formData.taxRate}
               onChange={(value) => handleChange("taxRate", value)}
             />
           </div>

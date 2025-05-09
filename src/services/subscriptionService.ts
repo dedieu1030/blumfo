@@ -68,13 +68,17 @@ export async function fetchSubscriptions() {
     
     if (error) throw error;
     
-    return data.map(subscription => ({
-      ...subscription,
-      client_name: subscription.clients?.name,
-      client_email: subscription.clients?.email,
-      recurring_interval: validateRecurringInterval(subscription.recurring_interval),
-      status: validateStatus(subscription.status)
-    })) as Subscription[];
+    return data.map(subscription => {
+      const clientData = subscription.clients || {};
+      return {
+        ...subscription,
+        // Safely access client data with fallbacks
+        client_name: clientData.name ?? 'Unknown Client',
+        client_email: clientData.email ?? '',
+        recurring_interval: validateRecurringInterval(subscription.recurring_interval),
+        status: validateStatus(subscription.status)
+      };
+    }) as Subscription[];
   } catch (error) {
     console.error('Error fetching subscriptions:', error);
     toast.error('Erreur lors du chargement des abonnements');
@@ -105,17 +109,25 @@ export async function fetchSubscription(id: string) {
     
     if (itemsError) throw itemsError;
     
+    // Safely handle client data and transform stripe products to our Product format
+    const clientData = subscription.clients || {};
+    const transformedItems = items.map(item => ({
+      ...item,
+      product: item.stripe_products ? {
+        ...item.stripe_products,
+        is_recurring: Boolean(item.stripe_products.recurring_interval) // Add the missing property
+      }
+    }));
+    
+    // Cast as unknown first then as Subscription to avoid TypeScript errors
     return {
       ...subscription,
-      client_name: subscription.clients?.name,
-      client_email: subscription.clients?.email,
+      client_name: clientData.name ?? 'Unknown Client',
+      client_email: clientData.email ?? '',
       recurring_interval: validateRecurringInterval(subscription.recurring_interval),
       status: validateStatus(subscription.status),
-      items: items.map(item => ({
-        ...item,
-        product: item.stripe_products
-      }))
-    } as Subscription;
+      items: transformedItems
+    } as unknown as Subscription;
   } catch (error) {
     console.error('Error fetching subscription:', error);
     toast.error('Erreur lors du chargement de l\'abonnement');

@@ -20,7 +20,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
 
   useEffect(() => {
     if (companyProfile) {
-      // Parse the taxRate to number if it's a string
+      // Ensure taxRate is a number
       const taxRate = typeof companyProfile.taxRate === 'string' 
         ? parseFloat(companyProfile.taxRate)
         : companyProfile.taxRate;
@@ -29,10 +29,11 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
     }
   }, [companyProfile]);
 
-  const handleUpdate = async (profile: CompanyProfile) => {
-    // Convert the numeric tax rate to string before saving
+  const handleUpdate = async () => {
+    if (!companyProfile) return;
+    
     onSave({
-      ...profile,
+      ...companyProfile,
       taxRate: formData.taxRate as number
     });
     
@@ -70,7 +71,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
         </div>
       </CardContent>
       <CardFooter>
-        <Button onClick={() => handleUpdate(companyProfile as CompanyProfile)}>
+        <Button onClick={handleUpdate}>
           Enregistrer
         </Button>
       </CardFooter>

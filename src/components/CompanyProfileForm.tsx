@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,15 +40,20 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
 
   useEffect(() => {
     if (initialData) {
-      setFormData(prev => ({ ...prev, ...initialData }));
+      // Ensure taxRate is a number
+      const updatedData = { ...initialData };
+      if (typeof initialData.taxRate === 'string') {
+        updatedData.taxRate = parseFloat(initialData.taxRate);
+      }
+      setFormData(updatedData);
       setShowCustomBusinessType(initialData.businessType === "other");
     }
   }, [initialData]);
 
-  const handleChange = (field: keyof CompanyProfile, value: string) => {
-    if (field === 'taxRate') {
+  const handleChange = (field: keyof CompanyProfile, value: string | number) => {
+    if (field === 'taxRate' && typeof value === 'string') {
       // Convert taxRate string to number when updating state
-      setFormData(prev => ({ ...prev, [field]: parseFloat(value) }));
+      setFormData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
@@ -60,11 +66,17 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Convert taxRate to string before saving
+    // Make sure all required properties are present
     const profileToSave: CompanyProfile = {
-      ...formData as CompanyProfile,
-      taxRate: String(formData.taxRate)
-    };
+      name: formData.name || '',
+      address: formData.address || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
+      emailType: formData.emailType as 'personal' | 'professional' | 'company',
+      taxRate: formData.taxRate as number,
+      defaultCurrency: formData.defaultCurrency || 'EUR',
+      ...formData
+    } as CompanyProfile;
     
     onSave(profileToSave);
     toast({

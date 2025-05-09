@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ export default function Settings() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // État du profil
-  const [companyProfile, setCompanyProfile] = useState<Partial<CompanyProfile>>({});
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -50,6 +51,20 @@ export default function Settings() {
     toast({
       title: "Profil mis à jour",
       description: "Vos modifications ont été enregistrées avec succès."
+    });
+  };
+
+  // Function to handle profile creation/save
+  const handleSaveProfile = (profile: CompanyProfile) => {
+    setCompanyProfile(profile);
+    setHasProfile(true);
+    setIsCreatingProfile(false);
+    setIsEditingProfile(false);
+    localStorage.setItem('companyProfile', JSON.stringify(profile));
+    
+    toast({
+      title: "Profil créé",
+      description: "Votre profil a été créé avec succès."
     });
   };
 
@@ -122,7 +137,17 @@ export default function Settings() {
         </TabsContent>
         
         <TabsContent value="tax">
-          {renderTaxSettings()}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Configuration de la TVA</h2>
+            <p className="text-gray-500">Définissez le taux de TVA par défaut pour vos factures.</p>
+            
+            <div className="mt-6">
+              <TaxSettings 
+                companyProfile={companyProfile} 
+                onSave={handleProfileUpdate}
+              />
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="payment-terms">
@@ -130,7 +155,7 @@ export default function Settings() {
         </TabsContent>
         
         <TabsContent value="payment">
-          <PaymentSettings companyProfile={hasProfile ? companyProfile as CompanyProfile : undefined} />
+          <PaymentSettings companyProfile={companyProfile} />
         </TabsContent>
       </Tabs>
       
@@ -141,19 +166,3 @@ export default function Settings() {
     </>
   );
 }
-
-const renderTaxSettings = () => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Configuration de la TVA</h2>
-      <p className="text-gray-500">Définissez le taux de TVA par défaut pour vos factures.</p>
-      
-      <div className="mt-6">
-        <TaxSettings 
-          companyProfile={companyProfile} 
-          onSave={handleProfileUpdate}
-        />
-      </div>
-    </div>
-  );
-};

@@ -188,6 +188,21 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     }
   }, []);
 
+  // Handle service line updates with tax properly
+  const updateServiceLine = (id: string, field: keyof ServiceLine | 'tva', value: string) => {
+    setServiceLines(serviceLines.map(line => {
+      if (line.id === id) {
+        if (field === 'tva') {
+          // Special handling for tva field which isn't in the ServiceLine type directly
+          return { ...line, tva: value };
+        } else {
+          return { ...line, [field]: value };
+        }
+      }
+      return line;
+    }));
+  };
+
   // Calculate totals when service lines change
   useEffect(() => {
     let calculatedSubtotal = 0;
@@ -196,7 +211,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     serviceLines.forEach(line => {
       const lineQuantity = parseFloat(line.quantity) || 0;
       const lineUnitPrice = parseFloat(line.unitPrice) || 0;
-      const lineTva = parseFloat(line.tva || "0") || 0;
+      const lineTva = parseFloat((line as any).tva || '0') || 0;
       
       const lineTotal = lineQuantity * lineUnitPrice;
       const lineTaxAmount = lineTotal * (lineTva / 100);
@@ -210,11 +225,16 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     setTotal(calculatedSubtotal + calculatedTaxTotal);
     
     // Update the total in service lines
-    const updatedServiceLines = serviceLines.map(line => ({
-      ...line,
-      total: ((parseFloat(line.quantity) || 0) * (parseFloat(line.unitPrice) || 0)).toFixed(2),
-      totalPrice: (parseFloat(line.quantity) || 0) * (parseFloat(line.unitPrice) || 0)
-    }));
+    const updatedServiceLines = serviceLines.map(line => {
+      const quantity = parseFloat(line.quantity) || 0;
+      const unitPrice = parseFloat(line.unitPrice) || 0;
+      const totalPrice = quantity * unitPrice;
+      return {
+        ...line,
+        total: totalPrice.toFixed(2),
+        totalPrice: totalPrice
+      };
+    });
     
     if (JSON.stringify(updatedServiceLines) !== JSON.stringify(serviceLines)) {
       setServiceLines(updatedServiceLines);
@@ -230,10 +250,10 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         description: "",
         quantity: "1",
         unitPrice: "0",
-        tva: "20",
+        tva: "20", // Added as custom property
         total: "0",
         totalPrice: 0
-      }
+      } as ServiceLine & { tva: string, total: string }
     ]);
   };
 
@@ -248,13 +268,6 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         variant: "destructive"
       });
     }
-  };
-
-  // Update a service line
-  const updateServiceLine = (id: string, field: keyof ServiceLine, value: string) => {
-    setServiceLines(serviceLines.map(line => 
-      line.id === id ? { ...line, [field]: value } : line
-    ));
   };
 
   // Handle navigation between steps
@@ -299,12 +312,12 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     });
   };
 
-  // Updated function to handle preview
+  // Updated function to handle preview with proper type handling
   const handlePreviewInvoice = async () => {
     setIsLoading(true);
     
     try {
-      // Check if company profile exists
+      // Check if company profile exists and load if needed
       if (!companyProfile) {
         // Attempt to load from localStorage
         const savedProfile = localStorage.getItem('companyProfile');
@@ -350,14 +363,15 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           bankAccount: "",
           bankName: "",
           accountHolder: "",
-          taxRate: 20,
+          taxRate: 20, // Ensure this is a number
           termsAndConditions: "",
           thankYouMessage: "",
           defaultCurrency: "EUR"
         },
         items: serviceLines,
         subtotal,
-        taxTotal,
+        taxRate: companyProfile?.taxRate,
+        taxAmount: taxTotal,
         totalAmount: total,
         paymentDelay,
         paymentMethods,
@@ -455,14 +469,15 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           bankAccount: "",
           bankName: "",
           accountHolder: "",
-          taxRate: 20,
+          taxRate: 20, // Ensure this is a number
           termsAndConditions: "",
           thankYouMessage: "",
           defaultCurrency: "EUR"
         },
         items: serviceLines,
         subtotal,
-        taxTotal,
+        taxRate: companyProfile?.taxRate,
+        taxAmount: taxTotal,
         totalAmount: total,
         paymentDelay,
         paymentMethods,
@@ -836,14 +851,15 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         bankAccount: "",
         bankName: "",
         accountHolder: "",
-        taxRate: 20,
+        taxRate: 20, // Ensure this is a number
         termsAndConditions: "",
         thankYouMessage: "",
         defaultCurrency: "EUR"
       },
       items: serviceLines,
       subtotal,
-      taxTotal,
+      taxRate: companyProfile?.taxRate,
+      taxAmount: taxTotal,
       totalAmount: total,
       paymentDelay,
       paymentMethods,

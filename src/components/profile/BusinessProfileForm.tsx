@@ -76,12 +76,19 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Convert profile to the correct types before saving
-    onSave({
-      ...formData as CompanyProfile,
-      // Make sure taxRate is a number
-      taxRate: typeof formData.taxRate === 'string' ? parseFloat(formData.taxRate) : (formData.taxRate || 0)
-    });
+    // Ensure we have all required fields and proper types
+    const profileToSave: CompanyProfile = {
+      name: formData.name || '',
+      address: formData.address || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
+      emailType: formData.emailType as 'personal' | 'professional' | 'company',
+      taxRate: formData.taxRate as number,
+      defaultCurrency: formData.defaultCurrency || 'EUR',
+      ...formData
+    } as CompanyProfile;
+    
+    onSave(profileToSave);
   };
 
   // Récupérer les labels adaptés en fonction du type d'activité
@@ -260,7 +267,7 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 md:col-span-2">
             <TaxRateSelector
-              defaultValue={formData.taxRate || "20"}
+              defaultValue={formData.taxRate}
               onChange={(value) => handleChange("taxRate", value)}
             />
           </div>

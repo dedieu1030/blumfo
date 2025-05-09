@@ -52,8 +52,8 @@ export interface ServiceLine {
   quantity: string;
   unitPrice: string;
   totalPrice: number;
-  tva?: string;
-  total?: string;
+  tva?: string; // Tax rate for this specific line
+  total?: string; // Total for this line including tax
 }
 
 // Company Profile types
@@ -74,7 +74,7 @@ export interface CompanyProfile {
   bankAccount?: string;
   iban?: string;
   swift?: string;
-  taxRate: number;
+  taxRate: number; // Changed to always be a number internally
   defaultCurrency: string;
   termsAndConditions?: string;
   thankYouMessage?: string;
