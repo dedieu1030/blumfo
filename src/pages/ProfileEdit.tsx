@@ -4,9 +4,22 @@ import { Header } from '@/components/Header';
 import { UserProfileForm } from '@/components/user/UserProfileForm';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { useState } from 'react';
+import { UserProfile } from '@/types/user';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfileEdit() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSave = (updatedProfile: UserProfile) => {
+    toast({
+      title: "Success",
+      description: "Profile updated successfully",
+    });
+    navigate('/profile');
+  };
 
   return (
     <>
@@ -17,7 +30,7 @@ export default function ProfileEdit() {
       />
 
       <div className="container mx-auto px-4 py-8">
-        <UserProfileForm />
+        <UserProfileForm onSave={handleSave} />
       </div>
 
       <MobileNavigation

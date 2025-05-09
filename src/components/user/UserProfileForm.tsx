@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { UserProfile, NotificationSettings } from "@/types/user";
-import { useUser } from "@/hooks/use-user";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import { useTranslation } from 'react-i18next';
 
 interface UserProfileFormProps {
@@ -18,7 +19,7 @@ interface UserProfileFormProps {
 export function UserProfileForm({ initialData, onSave, onCancel }: UserProfileFormProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { user, updateProfile } = useUser();
+  const { profile: user, updateProfile } = useUserProfile();
   const [userData, setUserData] = useState<Partial<UserProfile>>({
     full_name: '',
     email: '',
@@ -64,7 +65,7 @@ export function UserProfileForm({ initialData, onSave, onCancel }: UserProfileFo
         email: type === 'email' ? value : Boolean(prev.notification_settings?.email),
         push: type === 'push' ? value : Boolean(prev.notification_settings?.push),
         sms: type === 'sms' ? value : Boolean(prev.notification_settings?.sms)
-      }
+      } as NotificationSettings
     }));
   };
 
