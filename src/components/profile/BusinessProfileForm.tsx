@@ -64,10 +64,10 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
     setFormData(prev => ({ ...prev, ...updates }));
   }, [subtype]);
 
-  const handleChange = (field: keyof CompanyProfile, value: string) => {
-    if (field === 'taxRate') {
+  const handleChange = (field: keyof CompanyProfile, value: string | number) => {
+    if (field === 'taxRate' && typeof value === 'string') {
       // Convert taxRate string to number for internal state
-      setFormData(prev => ({ ...prev, [field]: parseFloat(value) }));
+      setFormData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
@@ -76,13 +76,12 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Convert taxRate to string for saving
-    const profileToSave: CompanyProfile = {
+    // Convert profile to the correct types before saving
+    onSave({
       ...formData as CompanyProfile,
-      taxRate: String(formData.taxRate)
-    };
-    
-    onSave(profileToSave);
+      // Make sure taxRate is a number
+      taxRate: typeof formData.taxRate === 'string' ? parseFloat(formData.taxRate) : (formData.taxRate || 0)
+    });
   };
 
   // Récupérer les labels adaptés en fonction du type d'activité

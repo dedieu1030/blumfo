@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,12 +15,17 @@ interface TaxSettingsProps {
 export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Partial<CompanyProfile>>({
-    taxRate: "20",
+    taxRate: 20,
   });
 
   useEffect(() => {
     if (companyProfile) {
-      setFormData({ taxRate: companyProfile.taxRate });
+      // Parse the taxRate to number if it's a string
+      const taxRate = typeof companyProfile.taxRate === 'string' 
+        ? parseFloat(companyProfile.taxRate)
+        : companyProfile.taxRate;
+      
+      setFormData({ taxRate });
     }
   }, [companyProfile]);
 
@@ -27,7 +33,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
     // Convert the numeric tax rate to string before saving
     onSave({
       ...profile,
-      taxRate: String(profile.taxRate)
+      taxRate: formData.taxRate as number
     });
     
     toast({
@@ -40,7 +46,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
     // Convert the string value to a number for the form state
     setFormData(prev => ({
       ...prev,
-      taxRate: parseFloat(value)
+      taxRate: parseFloat(value) || 0
     }));
   };
   
@@ -58,7 +64,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
           <Input
             id="tax-rate"
             placeholder="20"
-            value={formData.taxRate || ""}
+            value={formData.taxRate?.toString() || ""}
             onChange={(e) => updateTaxRate(e.target.value)}
           />
         </div>

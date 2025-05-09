@@ -80,7 +80,10 @@ export function BillingSettings() {
   };
 
   const handleResetPeriodChange = (value: string) => {
-    setNumberingConfig(prev => ({ ...prev, resetPeriod: value }));
+    setNumberingConfig(prev => ({ 
+      ...prev, 
+      resetPeriod: value as 'never' | 'yearly' | 'monthly' 
+    }));
   };
 
   const handlePaddingChange = (value: string) => {
@@ -95,7 +98,7 @@ export function BillingSettings() {
     setNumberingConfig(prev => ({
       ...prev,
       resetAnnually: checked,
-      resetPeriod: checked ? "yearly" : "never"
+      resetPeriod: checked ? 'yearly' : 'never'
     }));
   };
 

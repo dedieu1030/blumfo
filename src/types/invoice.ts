@@ -1,4 +1,5 @@
 
+
 export interface ReminderTrigger {
   id: string;
   triggerType: 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
@@ -122,7 +123,7 @@ export interface CurrencyInfo {
   code: string;
   name: string;
   symbol: string;
-  position: 'before' | 'after' | 'prefix' | 'suffix';
+  position: 'before' | 'after';
 }
 
 export type Currency = string; // ISO currency code

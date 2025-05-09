@@ -5,61 +5,62 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InvoiceList } from "@/components/InvoiceList";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { useTranslation } from "react-i18next";
+import { Invoice } from "@/types/invoice";
 
 // Mock data for demonstration
-const recentInvoices = [
+const recentInvoices: Invoice[] = [
   {
     id: "1",
     number: "INV-2023-001",
-    invoice_number: "INV-2023-001", // Added required field
+    invoice_number: "INV-2023-001",
     client: "Client A",
     amount: "€1,200.00",
     date: "2023-05-15",
     dueDate: "2023-06-15", 
-    status: "paid" as const
+    status: "paid"
   },
   {
     id: "2",
     number: "INV-2023-002",
-    invoice_number: "INV-2023-002", // Added required field
+    invoice_number: "INV-2023-002",
     client: "Client B",
     amount: "€850.00",
     date: "2023-05-20",
     dueDate: "2023-06-20",
-    status: "pending" as const
+    status: "pending"
   },
   {
     id: "3", 
     number: "INV-2023-003",
-    invoice_number: "INV-2023-003", // Added required field
+    invoice_number: "INV-2023-003",
     client: "Client C",
     amount: "€1,500.00", 
     date: "2023-05-22", 
     dueDate: "2023-06-22",
-    status: "overdue" as const
+    status: "overdue"
   }
 ];
 
-const draftInvoices = [
+const draftInvoices: Invoice[] = [
   {
     id: "4",
     number: "DRAFT-001",
-    invoice_number: "DRAFT-001", // Added required field
+    invoice_number: "DRAFT-001",
     client: "Client D",
     amount: "€750.00",
     date: "2023-05-25",
     dueDate: "2023-06-25",
-    status: "draft" as const
+    status: "draft"
   },
   {
     id: "5",
     number: "DRAFT-002",
-    invoice_number: "DRAFT-002", // Added required field
+    invoice_number: "DRAFT-002",
     client: "Client E",
     amount: "€1,200.00",
     date: "2023-05-27",
     dueDate: "2023-06-27",
-    status: "draft" as const
+    status: "draft"
   }
 ];
 

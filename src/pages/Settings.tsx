@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -43,17 +42,14 @@ export default function Settings() {
     }
   }, []);
 
-  const handleSaveProfile = (profile: CompanyProfile) => {
-    setCompanyProfile(profile);
-    setHasProfile(true);
-    setIsCreatingProfile(false);
-    setIsEditingProfile(false);
-    localStorage.setItem('companyProfile', JSON.stringify(profile));
+  // Function to handle profile updates
+  const handleProfileUpdate = (updatedProfile: CompanyProfile) => {
+    setCompanyProfile(updatedProfile);
+    localStorage.setItem('companyProfile', JSON.stringify(updatedProfile));
     
-    // Afficher une notification de succès
     toast({
-      title: "Succès",
-      description: "Profil enregistré avec succès"
+      title: "Profil mis à jour",
+      description: "Vos modifications ont été enregistrées avec succès."
     });
   };
 
@@ -126,7 +122,7 @@ export default function Settings() {
         </TabsContent>
         
         <TabsContent value="tax">
-          <TaxSettings companyProfile={hasProfile ? companyProfile as CompanyProfile : undefined} />
+          {renderTaxSettings()}
         </TabsContent>
         
         <TabsContent value="payment-terms">
@@ -145,3 +141,19 @@ export default function Settings() {
     </>
   );
 }
+
+const renderTaxSettings = () => {
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Configuration de la TVA</h2>
+      <p className="text-gray-500">Définissez le taux de TVA par défaut pour vos factures.</p>
+      
+      <div className="mt-6">
+        <TaxSettings 
+          companyProfile={companyProfile} 
+          onSave={handleProfileUpdate}
+        />
+      </div>
+    </div>
+  );
+};
