@@ -188,26 +188,29 @@ export default function Clients() {
         if (error) throw error;
 
         // Fetch categories for all clients
-        const clientsWithCategories = await Promise.all(clientsData.map(async (client) => {
+        const clientsWithCategories = await Promise.all((clientsData || []).map(async (dbClient: any) => {
           // Récupérer le nombre de factures pour chaque client
-          const { data: countData } = await supabase.rpc(
+          // Utilisons any pour contourner l'erreur de type
+          const { data: countData } = await (supabase.rpc as any)(
             'get_client_invoice_count', 
-            { client_id: client.id }
-          );
+            { client_id: dbClient.id }
+          ) as { data: number };
           
           // Récupérer les catégories pour chaque client
           const { data: categoryData, error: categoryError } = await supabase.rpc(
             'get_client_categories',
-            { p_client_id: client.id }
+            { p_client_id: dbClient.id }
           );
           
           if (categoryError) {
             console.error("Error fetching client categories:", categoryError);
           }
           
+          // Convertir en format Client
+          const client = mapDbClientToClient(dbClient as DbClient, countData || 0);
+          
           return {
             ...client,
-            invoiceCount: countData || 0,
             categories: categoryData || []
           } as ClientWithCategories;
         }));
@@ -306,17 +309,19 @@ export default function Clients() {
       }
       
       if (clientData.id) {
-        // Mise à jour d'un client existant
+        // Mise à jour d'un client existant - convertir en format compatible avec la DB
+        const dbClientData = {
+          client_name: clientData.name,
+          email: clientData.email,
+          phone: clientData.phone,
+          address: clientData.address,
+          notes: clientData.notes,
+          updated_at: new Date().toISOString()
+        };
+        
         const { error } = await supabase
           .from('clients')
-          .update({
-            name: clientData.name,
-            email: clientData.email,
-            phone: clientData.phone,
-            address: clientData.address,
-            notes: clientData.notes,
-            updated_at: new Date().toISOString()
-          })
+          .update(dbClientData)
           .eq('id', clientData.id);
           
         if (error) throw error;
@@ -334,24 +339,28 @@ export default function Clients() {
         );
       } else {
         // Ajout d'un nouveau client
+        const dbClientData = {
+          client_name: clientData.name,
+          email: clientData.email,
+          phone: clientData.phone,
+          address: clientData.address,
+          notes: clientData.notes,
+          user_id: user.id // Add the user_id field
+        };
+        
         const { data, error } = await supabase
           .from('clients')
-          .insert({
-            name: clientData.name,
-            email: clientData.email,
-            phone: clientData.phone,
-            address: clientData.address,
-            notes: clientData.notes,
-            user_id: user.id // Add the user_id field
-          })
+          .insert(dbClientData)
           .select();
           
         if (error) throw error;
         
         if (data && data.length > 0) {
-          const newClient = {
-            ...data[0],
-            invoiceCount: 0,
+          const newDbClient = data[0] as DbClient;
+          const newClient = mapDbClientToClient(newDbClient, 0);
+          
+          const newClientWithCategories = {
+            ...newClient,
             categories: []
           } as ClientWithCategories;
           
@@ -361,7 +370,7 @@ export default function Clients() {
           });
           
           // Ajouter le nouveau client à l'état local
-          setClients(prevClients => [...prevClients, newClient]);
+          setClients(prevClients => [...prevClients, newClientWithCategories]);
         }
       }
       

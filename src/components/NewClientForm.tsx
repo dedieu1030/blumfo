@@ -18,6 +18,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Client, mapDbClientToClient } from "./ClientSelector";
+import { DbClient } from "@/types/invoice";
 
 const clientSchema = z.object({
   client_name: z.string().min(1, "Le nom est requis"),
@@ -54,9 +55,18 @@ export const NewClientForm = ({ open, onOpenChange, onClientCreated }: NewClient
     setIsSubmitting(true);
     
     try {
+      // S'assurer que client_name est bien défini et non optionnel
+      const dataToInsert = {
+        client_name: data.client_name,
+        email: data.email,
+        phone: data.phone || null,
+        address: data.address || null,
+        notes: data.notes || null
+      };
+      
       const { data: newClientData, error } = await supabase
         .from('clients')
-        .insert(data)
+        .insert(dataToInsert)
         .select()
         .single();
       
@@ -68,7 +78,7 @@ export const NewClientForm = ({ open, onOpenChange, onClientCreated }: NewClient
       });
       
       // Convertir les données DB en format Client
-      const newClient = mapDbClientToClient(newClientData);
+      const newClient = mapDbClientToClient(newClientData as DbClient);
       
       onClientCreated(newClient);
       form.reset();
@@ -192,5 +202,3 @@ export const NewClientForm = ({ open, onOpenChange, onClientCreated }: NewClient
     </Dialog>
   );
 };
-
-// Supprimer la définition dupliquée de mapDbClientToClient car elle est déjà importée

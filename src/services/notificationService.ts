@@ -3,21 +3,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { Notification } from "@/types/notification";
 import { toast } from "sonner";
 
+// Nous devons contourner les limites du typage généré par Supabase
+// qui ne contient pas encore la table notifications
+type PostgrestResponse<T> = {
+  data: T | null;
+  error: Error | null;
+};
+
 /**
  * Fetches all notifications for the current user
  */
 export const fetchNotifications = async (): Promise<Notification[]> => {
   try {
-    const { data, error } = await supabase
+    // Utiliser any temporairement pour contourner le problème de typage
+    const response = await (supabase as any)
       .from('notifications')
       .select('*')
       .order('created_at', { ascending: false });
+    
+    const { data, error } = response as PostgrestResponse<Notification[]>;
     
     if (error) {
       throw error;
     }
     
-    return (data as unknown as Notification[]) || [];
+    return data || [];
   } catch (error) {
     console.error("Error fetching notifications:", error);
     return [];
@@ -29,10 +39,13 @@ export const fetchNotifications = async (): Promise<Notification[]> => {
  */
 export const markNotificationAsRead = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    // Utiliser any temporairement pour contourner le problème de typage
+    const response = await (supabase as any)
       .from('notifications')
       .update({ is_read: true })
       .eq('id', id);
+    
+    const { error } = response as PostgrestResponse<unknown>;
     
     if (error) {
       throw error;
@@ -50,10 +63,13 @@ export const markNotificationAsRead = async (id: string): Promise<boolean> => {
  */
 export const markAllNotificationsAsRead = async (): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    // Utiliser any temporairement pour contourner le problème de typage
+    const response = await (supabase as any)
       .from('notifications')
       .update({ is_read: true })
       .eq('is_read', false);
+    
+    const { error } = response as PostgrestResponse<unknown>;
     
     if (error) {
       throw error;
@@ -72,7 +88,8 @@ export const markAllNotificationsAsRead = async (): Promise<boolean> => {
 export const subscribeToNotifications = (
   onNotification: (notification: Notification) => void
 ) => {
-  const channel = supabase
+  // Utiliser une assertion de type ici également
+  const channel = (supabase as any)
     .channel('notification-changes')
     .on(
       'postgres_changes',
@@ -81,7 +98,7 @@ export const subscribeToNotifications = (
         schema: 'public',
         table: 'notifications'
       },
-      (payload) => {
+      (payload: any) => {
         const newNotification = payload.new as Notification;
         
         // Show toast notification

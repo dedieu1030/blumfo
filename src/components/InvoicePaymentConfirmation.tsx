@@ -58,19 +58,21 @@ export function InvoicePaymentConfirmation({
     
     try {
       // Mettre à jour le statut de la facture dans Supabase
+      const updateData = {
+        status: 'paid',
+        paid_date: paymentDate.toISOString(),
+        amount_paid: parseInt(invoice.amount.replace(/[^0-9]/g, '')), 
+        metadata: {
+          payment_method: paymentMethod,
+          reference: reference,
+          manually_confirmed: true,
+          confirmed_at: new Date().toISOString()
+        }
+      };
+      
       const { error } = await supabase
         .from('stripe_invoices')
-        .update({
-          status: 'paid',
-          paid_date: paymentDate.toISOString(),
-          amount_paid: parseInt(invoice.amount.replace(/[^0-9]/g, '')), 
-          metadata: {
-            payment_method: paymentMethod,
-            reference: reference,
-            manually_confirmed: true,
-            confirmed_at: new Date().toISOString()
-          }
-        })
+        .update(updateData)
         .eq('stripe_invoice_id', invoice.stripeInvoiceId)
         .eq('id', invoice.id);
 

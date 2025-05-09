@@ -15,7 +15,7 @@ export interface Client {
   address?: string;
   notes?: string | null;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
   user_id: string;
   invoiceCount?: number;
 }
