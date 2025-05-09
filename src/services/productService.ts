@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -15,6 +16,10 @@ export interface Product {
   metadata: Record<string, any> | null;
   created_at: string;
   updated_at: string;
+  // Propriétés additionnelles pour gérer la récurrence
+  recurring_interval?: 'day' | 'week' | 'month' | 'year' | null;
+  recurring_interval_count?: number | null;
+  product_type?: 'product' | 'service' | null;
 }
 
 export interface ProductCategory {
@@ -35,15 +40,21 @@ export function formatPrice(cents: number, currency = 'EUR') {
 }
 
 // Fetch all products
-export async function fetchProducts() {
+export async function fetchProducts(includeInactive = false) {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('stripe_products')
       .select(`
         *,
         product_categories (name, color)
       `)
       .order('name');
+    
+    if (!includeInactive) {
+      query = query.eq('active', true);
+    }
+    
+    const { data, error } = await query;
     
     if (error) throw error;
     
@@ -98,7 +109,11 @@ export async function createProduct(product: Partial<Product>) {
         active: product.active !== undefined ? product.active : true,
         category_id: product.category_id,
         currency: product.currency || 'EUR',
-        metadata: product.metadata || {}
+        metadata: product.metadata || {},
+        // Ajout des propriétés de récurrence
+        recurring_interval: product.recurring_interval,
+        recurring_interval_count: product.recurring_interval_count,
+        product_type: product.product_type
       })
       .select();
     
@@ -128,6 +143,10 @@ export async function updateProduct(id: string, product: Partial<Product>) {
         category_id: product.category_id,
         currency: product.currency,
         metadata: product.metadata,
+        // Mise à jour des propriétés de récurrence
+        recurring_interval: product.recurring_interval,
+        recurring_interval_count: product.recurring_interval_count,
+        product_type: product.product_type,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -163,6 +182,9 @@ export async function deleteProduct(id: string) {
   }
 }
 
+// Type pour Category (renommé pour éviter la confusion avec ProductCategory)
+export type Category = ProductCategory;
+
 // Fetch product categories
 export async function fetchProductCategories() {
   try {
@@ -180,6 +202,9 @@ export async function fetchProductCategories() {
     return [];
   }
 }
+
+// Alias pour la fonction fetchProductCategories
+export const fetchCategories = fetchProductCategories;
 
 // Create a product category
 export async function createProductCategory(category: Partial<ProductCategory>) {
@@ -202,6 +227,9 @@ export async function createProductCategory(category: Partial<ProductCategory>) 
     return null;
   }
 }
+
+// Alias pour la fonction createProductCategory
+export const createCategory = createProductCategory;
 
 // Update a product category
 export async function updateProductCategory(id: string, category: Partial<ProductCategory>) {
@@ -226,6 +254,9 @@ export async function updateProductCategory(id: string, category: Partial<Produc
     return null;
   }
 }
+
+// Alias pour la fonction updateProductCategory
+export const updateCategory = updateProductCategory;
 
 // Delete a product category
 export async function deleteProductCategory(id: string) {
@@ -252,3 +283,6 @@ export async function deleteProductCategory(id: string) {
     return false;
   }
 }
+
+// Alias pour la fonction deleteProductCategory
+export const deleteCategory = deleteProductCategory;

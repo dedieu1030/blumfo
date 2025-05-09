@@ -8,15 +8,20 @@ import { NewClientForm } from "./NewClientForm";
 
 export interface Client {
   id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
+  name?: string;
+  email: string | null;
+  phone?: string | null;
+  address?: string | null;
   notes?: string | null;
   created_at: string;
   updated_at: string;
-  user_id: string;
+  user_id?: string;
   invoiceCount?: number;
+  // Champs de la table clients dans Supabase
+  client_name?: string;
+  company_id?: string | null;
+  group_id?: string | null;
+  reference_number?: string | null;
 }
 
 export interface ClientSelectorProps {
@@ -38,12 +43,19 @@ export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau
         const { data, error } = await supabase
           .from('clients')
           .select('*')
-          .order('name');
+          .order('client_name');
         
         if (error) throw error;
         
-        setClients(data || []);
-        setFilteredClients(data || []);
+        // Adapter les données de Supabase au format Client attendu
+        const adaptedClients = (data || []).map(client => ({
+          ...client,
+          name: client.client_name, // Mapping client_name à name pour la compatibilité
+          user_id: client.company_id // Utilisation de company_id comme user_id
+        }));
+        
+        setClients(adaptedClients);
+        setFilteredClients(adaptedClients);
       } catch (error) {
         console.error('Error fetching clients:', error);
       } finally {
@@ -60,7 +72,7 @@ export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau
     } else {
       const lowercaseQuery = searchQuery.toLowerCase();
       const filtered = clients.filter(client => 
-        client.name.toLowerCase().includes(lowercaseQuery) || 
+        (client.name?.toLowerCase().includes(lowercaseQuery) || client.client_name?.toLowerCase().includes(lowercaseQuery)) || 
         (client.email && client.email.toLowerCase().includes(lowercaseQuery))
       );
       setFilteredClients(filtered);
@@ -104,7 +116,7 @@ export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau
                 onClick={() => onClientSelect(client)}
               >
                 <div>
-                  <div className="font-medium">{client.name}</div>
+                  <div className="font-medium">{client.name || client.client_name}</div>
                   {client.email && (
                     <div className="text-sm text-muted-foreground">{client.email}</div>
                   )}

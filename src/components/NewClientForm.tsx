@@ -13,22 +13,23 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Client } from "./ClientSelector";
 
 interface NewClientFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onClientCreated: (client: { id: string; name: string }) => void;
+  onClientCreated: (client: Client) => void;
 }
 
 export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClientFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [name, setName] = useState("");
+  const [clientName, setClientName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
 
   const handleSubmit = async () => {
-    if (!name) {
+    if (!clientName) {
       toast.error("Le nom du client est requis");
       return;
     }
@@ -38,18 +39,16 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     try {
       // Get the current user
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("No authenticated user");
-      }
+      const userId = session?.user?.id;
 
       const { data, error } = await supabase
         .from('clients')
         .insert({
-          name,
+          client_name: clientName,
           email: email || null,
           phone: phone || null,
           address: address || null,
-          user_id: session.user.id
+          company_id: userId || null
         })
         .select()
         .single();
@@ -58,10 +57,15 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
 
       toast.success("Client créé avec succès");
       
+      // Mapper les propriétés pour assurer la compatibilité
+      const clientData: Client = {
+        ...data,
+        name: data.client_name,
+        user_id: data.company_id
+      };
+      
       // Pass the new client back to parent component
-      if (data) {
-        onClientCreated({ id: data.id, name: data.name });
-      }
+      onClientCreated(clientData);
       
       onOpenChange(false);
     } catch (error) {
@@ -84,8 +88,8 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
             <Label htmlFor="client-name">Nom *</Label>
             <Input
               id="client-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
               placeholder="Nom du client ou entreprise"
             />
           </div>
