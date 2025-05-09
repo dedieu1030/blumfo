@@ -19,7 +19,7 @@ export interface Client {
   invoiceCount?: number;
 }
 
-interface ClientSelectorProps {
+export interface ClientSelectorProps {
   onClientSelect: (client: Client) => void;
   buttonText?: string;
 }

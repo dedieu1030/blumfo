@@ -1,7 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Product } from "./productService";
 import { addDays, addWeeks, addMonths, addYears, format } from "date-fns";
+import { Client } from "@/components/ClientSelector";
 
 export interface Subscription {
   id: string;
@@ -124,8 +126,10 @@ export async function fetchSubscription(id: string) {
 export async function createSubscription(subscription: Partial<Subscription>, items: Partial<SubscriptionItem>[]) {
   try {
     // Get the current user
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    
+    if (!sessionData.session) {
       throw new Error("No authenticated user");
     }
 
@@ -143,7 +147,7 @@ export async function createSubscription(subscription: Partial<Subscription>, it
         next_invoice_date: subscription.next_invoice_date,
         status: subscription.status || 'active',
         metadata: subscription.metadata || {},
-        user_id: session.user.id
+        user_id: sessionData.session.user.id
       })
       .select()
       .single();

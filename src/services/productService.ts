@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -7,63 +6,53 @@ export interface Product {
   name: string;
   description: string | null;
   price_cents: number;
-  currency: string;
   tax_rate: number | null;
   is_recurring: boolean;
-  recurring_interval: 'day' | 'week' | 'month' | 'year' | null;
-  recurring_interval_count: number | null;
-  product_type: 'product' | 'service' | null;
   active: boolean;
+  category_id: string | null;
+  category_name?: string;
+  currency: string;
   metadata: Record<string, any> | null;
   created_at: string;
   updated_at: string;
-  category_id?: string;
-  category_name?: string;
 }
 
-export interface Category {
+export interface ProductCategory {
   id: string;
   name: string;
-  description: string | null;
+  color: string | null;
   created_at: string;
   updated_at: string;
 }
 
-// Product CRUD operations
-export async function fetchProducts(includeInactive: boolean = false) {
+// Format price for display
+export function formatPrice(cents: number, currency = 'EUR') {
+  const price = cents / 100;
+  return price.toLocaleString('fr-CA', {
+    style: 'currency',
+    currency: currency,
+  });
+}
+
+// Fetch all products
+export async function fetchProducts() {
   try {
-    let query = supabase
+    const { data, error } = await supabase
       .from('stripe_products')
-      .select('*');
-    
-    if (!includeInactive) {
-      query = query.eq('active', true);
-    }
-    
-    const { data, error } = await query;
+      .select(`
+        *,
+        product_categories (name, color)
+      `)
+      .order('name');
     
     if (error) throw error;
     
-    // Also fetch categories to use for mapping
-    const { data: categories } = await supabase
-      .from('product_categories')
-      .select('*');
-    
-    // Map products with their categories
-    return data.map(product => {
-      // Get category_id from metadata if it exists
-      const metadata = product.metadata as Record<string, any> | null;
-      const categoryId = metadata?.category_id;
-      const categoryObj = categories?.find(c => c.id === categoryId);
-      
-      return {
-        ...product,
-        category_id: categoryId || undefined,
-        category_name: categoryObj?.name,
-        recurring_interval: validateRecurringInterval(product.recurring_interval),
-        product_type: validateProductType(product.product_type)
-      };
-    }) as Product[];
+    // Format products with their categories
+    return (data || []).map(product => ({
+      ...product,
+      category_name: product.product_categories?.name,
+      price: formatPrice(product.price_cents || 0)
+    })) as Product[];
   } catch (error) {
     console.error('Error fetching products:', error);
     toast.error('Erreur lors du chargement des produits');
@@ -71,101 +60,52 @@ export async function fetchProducts(includeInactive: boolean = false) {
   }
 }
 
+// Fetch a single product by ID
 export async function fetchProduct(id: string) {
   try {
     const { data, error } = await supabase
       .from('stripe_products')
-      .select('*')
+      .select(`
+        *,
+        product_categories (name, color)
+      `)
       .eq('id', id)
       .single();
     
     if (error) throw error;
     
-    // Get category_id from metadata if it exists
-    const metadata = data.metadata as Record<string, any> | null;
-    const categoryId = metadata?.category_id;
-    
-    // Fetch category if there's a category_id in metadata
-    let categoryName;
-    if (categoryId) {
-      const { data: category } = await supabase
-        .from('product_categories')
-        .select('name')
-        .eq('id', categoryId)
-        .maybeSingle();
-        
-      categoryName = category?.name;
-    }
-    
     return {
       ...data,
-      category_id: categoryId,
-      category_name: categoryName,
-      recurring_interval: validateRecurringInterval(data.recurring_interval),
-      product_type: validateProductType(data.product_type)
+      category_name: data.product_categories?.name
     } as Product;
   } catch (error) {
     console.error('Error fetching product:', error);
-    toast.error('Erreur lors du chargement du produit');
     return null;
   }
 }
 
-// Helper functions to validate and cast types
-function validateRecurringInterval(interval: string | null): 'day' | 'week' | 'month' | 'year' | null {
-  if (!interval) return null;
-  if (['day', 'week', 'month', 'year'].includes(interval)) {
-    return interval as 'day' | 'week' | 'month' | 'year';
-  }
-  console.warn(`Invalid recurring interval value: ${interval}, defaulting to null`);
-  return null;
-}
-
-function validateProductType(type: string | null): 'product' | 'service' | null {
-  if (!type) return null;
-  if (['product', 'service'].includes(type)) {
-    return type as 'product' | 'service';
-  }
-  console.warn(`Invalid product type value: ${type}, defaulting to null`);
-  return null;
-}
-
+// Create a new product
 export async function createProduct(product: Partial<Product>) {
   try {
-    // Get the current user
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      throw new Error("No authenticated user");
-    }
-    
-    // Prepare metadata with category_id if present
-    const metadata: Record<string, any> = product.metadata || {};
-    if (product.category_id) {
-      metadata.category_id = product.category_id;
-    }
-    
     const { data, error } = await supabase
       .from('stripe_products')
       .insert({
         name: product.name,
         description: product.description,
         price_cents: product.price_cents,
-        currency: product.currency || 'EUR',
         tax_rate: product.tax_rate,
         is_recurring: product.is_recurring || false,
-        recurring_interval: product.recurring_interval,
-        recurring_interval_count: product.recurring_interval_count,
-        product_type: product.product_type,
         active: product.active !== undefined ? product.active : true,
-        metadata: metadata
+        category_id: product.category_id,
+        currency: product.currency || 'EUR',
+        metadata: product.metadata || {}
       })
-      .select()
-      .single();
+      .select();
     
     if (error) throw error;
     
     toast.success('Produit créé avec succès');
-    return data as Product;
+    return data[0] as Product;
   } catch (error) {
     console.error('Error creating product:', error);
     toast.error('Erreur lors de la création du produit');
@@ -173,38 +113,30 @@ export async function createProduct(product: Partial<Product>) {
   }
 }
 
+// Update an existing product
 export async function updateProduct(id: string, product: Partial<Product>) {
   try {
-    // Prepare metadata with category_id if present
-    const metadata: Record<string, any> = product.metadata || {};
-    if (product.category_id) {
-      metadata.category_id = product.category_id;
-    }
-    
     const { data, error } = await supabase
       .from('stripe_products')
       .update({
         name: product.name,
         description: product.description,
         price_cents: product.price_cents,
-        currency: product.currency,
         tax_rate: product.tax_rate,
         is_recurring: product.is_recurring,
-        recurring_interval: product.recurring_interval,
-        recurring_interval_count: product.recurring_interval_count,
-        product_type: product.product_type,
         active: product.active,
-        metadata: metadata,
+        category_id: product.category_id,
+        currency: product.currency,
+        metadata: product.metadata,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select()
-      .single();
+      .select();
     
     if (error) throw error;
     
     toast.success('Produit mis à jour avec succès');
-    return data as Product;
+    return data[0] as Product;
   } catch (error) {
     console.error('Error updating product:', error);
     toast.error('Erreur lors de la mise à jour du produit');
@@ -212,6 +144,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
   }
 }
 
+// Delete a product
 export async function deleteProduct(id: string) {
   try {
     const { error } = await supabase
@@ -230,8 +163,8 @@ export async function deleteProduct(id: string) {
   }
 }
 
-// Category CRUD operations
-export async function fetchCategories() {
+// Fetch product categories
+export async function fetchProductCategories() {
   try {
     const { data, error } = await supabase
       .from('product_categories')
@@ -240,36 +173,29 @@ export async function fetchCategories() {
     
     if (error) throw error;
     
-    return data as Category[];
+    return data as ProductCategory[];
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error fetching product categories:', error);
     toast.error('Erreur lors du chargement des catégories');
     return [];
   }
 }
 
-export async function createCategory(category: Partial<Category>) {
+// Create a product category
+export async function createProductCategory(category: Partial<ProductCategory>) {
   try {
-    // Get the current user
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      throw new Error("No authenticated user");
-    }
-
     const { data, error } = await supabase
       .from('product_categories')
       .insert({
         name: category.name,
-        description: category.description,
-        user_id: session.user.id
+        color: category.color
       })
-      .select()
-      .single();
+      .select();
     
     if (error) throw error;
     
     toast.success('Catégorie créée avec succès');
-    return data as Category;
+    return data[0] as ProductCategory;
   } catch (error) {
     console.error('Error creating category:', error);
     toast.error('Erreur lors de la création de la catégorie');
@@ -277,23 +203,23 @@ export async function createCategory(category: Partial<Category>) {
   }
 }
 
-export async function updateCategory(id: string, category: Partial<Category>) {
+// Update a product category
+export async function updateProductCategory(id: string, category: Partial<ProductCategory>) {
   try {
     const { data, error } = await supabase
       .from('product_categories')
       .update({
         name: category.name,
-        description: category.description,
+        color: category.color,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select()
-      .single();
+      .select();
     
     if (error) throw error;
     
     toast.success('Catégorie mise à jour avec succès');
-    return data as Category;
+    return data[0] as ProductCategory;
   } catch (error) {
     console.error('Error updating category:', error);
     toast.error('Erreur lors de la mise à jour de la catégorie');
@@ -301,8 +227,16 @@ export async function updateCategory(id: string, category: Partial<Category>) {
   }
 }
 
-export async function deleteCategory(id: string) {
+// Delete a product category
+export async function deleteProductCategory(id: string) {
   try {
+    // First update products that use this category to have null category_id
+    await supabase
+      .from('stripe_products')
+      .update({ category_id: null })
+      .eq('category_id', id);
+    
+    // Then delete the category
     const { error } = await supabase
       .from('product_categories')
       .delete()
@@ -317,28 +251,4 @@ export async function deleteCategory(id: string) {
     toast.error('Erreur lors de la suppression de la catégorie');
     return false;
   }
-}
-
-// Helper to format price from cents to a display value
-export function formatPrice(cents: number | null, currency: string = 'EUR') {
-  if (cents === null) return '';
-  const formatter = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency,
-  });
-  return formatter.format(cents / 100);
-}
-
-// Helper to get recurring interval display text
-export function getRecurringIntervalText(interval: string | null, intervalCount: number | null) {
-  if (!interval || !intervalCount) return '';
-  
-  const intervalMap = {
-    day: intervalCount > 1 ? 'jours' : 'jour',
-    week: intervalCount > 1 ? 'semaines' : 'semaine',
-    month: intervalCount > 1 ? 'mois' : 'mois',
-    year: intervalCount > 1 ? 'ans' : 'an',
-  };
-  
-  return `Tous les ${intervalCount} ${intervalMap[interval as keyof typeof intervalMap]}`;
 }
