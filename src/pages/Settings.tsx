@@ -62,6 +62,7 @@ export default function Settings() {
         } else if (data) {
           // Convertir les données de la base en format CompanyProfile
           setCompanyProfile({
+            id: data.id,
             name: data.name || "",
             address: data.address || "",
             email: data.email || "",
@@ -89,8 +90,16 @@ export default function Settings() {
 
   const handleSaveProfile = async (profile: CompanyProfile) => {
     try {
+      // Obtenir l'ID utilisateur actuel
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Utilisateur non authentifié");
+      }
+
       // Convertir le profil au format de la base de données
       const dbProfile = {
+        id: user.id, // Ajouter l'ID utilisateur
         name: profile.name,
         address: profile.address,
         email: profile.email,
