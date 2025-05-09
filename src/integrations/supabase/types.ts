@@ -781,66 +781,6 @@ export type Database = {
           },
         ]
       }
-      user_profiles: {
-        Row: {
-          account_holder: string | null
-          address: string | null
-          bank_account: string | null
-          bank_name: string | null
-          business_type: Database["public"]["Enums"]["business_type"]
-          business_type_custom: string | null
-          created_at: string
-          default_currency: string | null
-          email: string
-          email_type: string | null
-          id: string
-          name: string | null
-          phone: string | null
-          tax_rate: string | null
-          terms_and_conditions: string | null
-          thank_you_message: string | null
-          updated_at: string
-        }
-        Insert: {
-          account_holder?: string | null
-          address?: string | null
-          bank_account?: string | null
-          bank_name?: string | null
-          business_type?: Database["public"]["Enums"]["business_type"]
-          business_type_custom?: string | null
-          created_at?: string
-          default_currency?: string | null
-          email: string
-          email_type?: string | null
-          id: string
-          name?: string | null
-          phone?: string | null
-          tax_rate?: string | null
-          terms_and_conditions?: string | null
-          thank_you_message?: string | null
-          updated_at?: string
-        }
-        Update: {
-          account_holder?: string | null
-          address?: string | null
-          bank_account?: string | null
-          bank_name?: string | null
-          business_type?: Database["public"]["Enums"]["business_type"]
-          business_type_custom?: string | null
-          created_at?: string
-          default_currency?: string | null
-          email?: string
-          email_type?: string | null
-          id?: string
-          name?: string | null
-          phone?: string | null
-          tax_rate?: string | null
-          terms_and_conditions?: string | null
-          thank_you_message?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -889,28 +829,6 @@ export type Database = {
         Args: { client_id: string }
         Returns: number
       }
-      get_current_user_profile: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          account_holder: string | null
-          address: string | null
-          bank_account: string | null
-          bank_name: string | null
-          business_type: Database["public"]["Enums"]["business_type"]
-          business_type_custom: string | null
-          created_at: string
-          default_currency: string | null
-          email: string
-          email_type: string | null
-          id: string
-          name: string | null
-          phone: string | null
-          tax_rate: string | null
-          terms_and_conditions: string | null
-          thank_you_message: string | null
-          updated_at: string
-        }[]
-      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -932,7 +850,6 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "user"
-      business_type: "company" | "individual" | "other"
       tax_type: "vat" | "gst" | "pst" | "hst" | "qst" | "sales" | "other"
     }
     CompositeTypes: {
@@ -1050,7 +967,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "manager", "user"],
-      business_type: ["company", "individual", "other"],
       tax_type: ["vat", "gst", "pst", "hst", "qst", "sales", "other"],
     },
   },

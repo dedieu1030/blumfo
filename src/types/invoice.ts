@@ -1,66 +1,29 @@
-
-export type BusinessType = 'company' | 'individual' | 'other' | 'lawyer' | 'freelancer';
-
 export interface CompanyProfile {
-  id?: string;
   name: string;
   address: string;
   email: string;
-  emailType: 'personal' | 'professional' | 'company';
+  emailType: "personal" | "professional" | "company";
   phone: string;
   bankAccount: string;
   bankName: string;
   accountHolder: string;
   taxRate: string;
+  logo?: string;
   termsAndConditions: string;
   thankYouMessage: string;
   defaultCurrency: string;
-  businessType: BusinessType;
-  businessTypeCustom?: string;
+  businessType?: "company" | "individual" | "lawyer" | "freelancer" | "other";
+  businessTypeCustom?: string; // Pour "other"
   paypal?: string;
   payoneer?: string;
-  profileType?: 'personal' | 'business';
+  profileType?: "personal" | "business";
   profileSubtype?: string;
+  // Nouveaux champs pour la configuration fiscale
+  taxCountry?: string;
+  taxRegion?: string;
 }
 
-export interface ReminderSchedule {
-  id: string;
-  name: string;
-  enabled: boolean;
-  isDefault: boolean;
-  triggers: ReminderTrigger[];
-}
-
-export interface ReminderTrigger {
-  id: string;
-  triggerType: 'days_before_due' | 'days_after_due' | 'days_after_last_reminder';
-  triggerValue: number;
-  emailSubject: string;
-  emailBody: string;
-}
-
-export interface Currency {
-  code: string;
-  name: string;
-  symbol: string;
-}
-
-export interface CurrencyInfo {
-  code: string;
-  name: string;
-  symbol: string;
-  position?: string; // Added position for compatibility
-}
-
-export interface InvoiceNumberingConfig {
-  prefix: string;
-  padding: number;
-  suffix: string;
-  resetAnnually: boolean;
-  nextNumber: number;
-}
-
-export type PaymentMethod = 'card' | 'transfer' | 'check' | 'cash' | 'paypal' | 'payoneer' | 'other';
+export type PaymentMethod = "card" | "transfer" | "paypal" | "check" | "cash" | "payoneer" | "other";
 
 export interface PaymentMethodDetails {
   type: PaymentMethod;
@@ -71,53 +34,81 @@ export interface PaymentMethodDetails {
 export interface PaymentTermTemplate {
   id: string;
   name: string;
-  days?: number;
-  delay?: string; // Added for compatibility
-  customDate?: string; // Added for compatibility
-  termsText?: string; // Added for compatibility
+  delay: string; // "immediate", "7", "15", "30", "45", "60", "90", "custom"
+  customDate?: string; // for custom date if delay is "custom"
+  termsText: string;
   isDefault: boolean;
+}
+
+export interface InvoiceData {
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate?: string;
+  clientName: string;
+  clientEmail: string;
+  clientAddress: string;
+  clientPhone?: string;
+  issuerInfo: CompanyProfile;
+  serviceLines: ServiceLine[];
+  subtotal: number;
+  taxTotal: number;
+  total: number;
+  paymentDelay: string;
+  paymentMethods: PaymentMethodDetails[];
+  notes: string;
+  signature?: string;
+  templateId: string;
+  paymentTermsId?: string;
+  customPaymentTerms?: string;
 }
 
 export interface ServiceLine {
   id: string;
   description: string;
-  quantity: number | string; // Allow both number and string
-  unitPrice: number | string; // Allow both number and string
-  taxRate: number | string; // Allow both number and string
-  tva?: string; // Added for compatibility
-  discount?: number | string; // Allow both number and string
-  total: number | string; // Allow both number and string
+  quantity: string;
+  unitPrice: string;
+  tva: string;
+  total: string;
 }
 
-export interface InvoiceData {
-  id?: string;
-  invoiceNumber: string;
-  issueDate?: string; // Added for compatibility
-  invoiceDate?: string; // Added for compatibility
-  dueDate: string;
-  clientName: string;
-  clientEmail: string;
-  clientAddress?: string;
-  clientPhone?: string;
-  companyName: string;
-  companyAddress: string;
-  companyEmail: string;
-  items: ServiceLine[];
-  notes?: string;
-  termsAndConditions?: string;
-  thankYouMessage?: string;
-  paymentMethods?: PaymentMethodDetails[];
-  subTotal: number;
-  taxTotal?: number; // Added for compatibility
-  taxAmount: number;
-  discountAmount?: number;
-  totalAmount: number;
-  total?: number; // Added for compatibility
-  paymentStatus?: 'paid' | 'pending' | 'overdue';
-  currency: string;
-  templateId?: string; // Added for compatibility
-  paymentTermsId?: string; // Added for compatibility
-  customPaymentTerms?: string; // Added for compatibility
-  paymentDelay?: string; // Added for compatibility
-  issuerInfo?: CompanyProfile; // Added for compatibility
+// Interfaces pour la configuration des relances automatiques
+export interface ReminderSchedule {
+  id: string;
+  name: string;
+  enabled: boolean;
+  triggers: ReminderTrigger[];
+  isDefault?: boolean;
+}
+
+export interface ReminderTrigger {
+  id: string;
+  triggerType: "days_before_due" | "days_after_due" | "days_after_previous_reminder" | "specific_date";
+  triggerValue: number; // Nombre de jours ou timestamp pour specific_date
+  emailTemplateId?: string;
+  emailSubject: string;
+  emailBody: string;
+}
+
+// Configuration de la numérotation des factures
+export interface InvoiceNumberingConfig {
+  prefix: string;
+  nextNumber: number;
+  suffix?: string;
+  padding: number; // Nombre de zéros pour le remplissage (ex: 001, 0001)
+  resetAnnually: boolean;
+}
+
+// Liste étendue des devises
+export type Currency = 
+  "EUR" | "USD" | "GBP" | "CAD" | "AUD" | "CHF" | "JPY" | 
+  "CNY" | "SEK" | "NOK" | "DKK" | "PLN" | "CZK" | "HUF" | 
+  "RON" | "BGN" | "TRY" | "RUB" | "ZAR" | "INR" | "BRL" | 
+  "MXN" | "ARS" | "CLP" | "PEN" | "COP";
+
+// Information sur les devises
+export interface CurrencyInfo {
+  code: Currency;
+  symbol: string;
+  name: string;
+  position: "prefix" | "suffix";
 }

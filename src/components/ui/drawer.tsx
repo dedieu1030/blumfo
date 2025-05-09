@@ -4,9 +4,8 @@ import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
 
-// Désactiver la mise à l'échelle du fond
 const Drawer = ({
-  shouldScaleBackground = false,
+  shouldScaleBackground = true,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root
@@ -22,7 +21,7 @@ const DrawerPortal = DrawerPrimitive.Portal
 
 const DrawerClose = DrawerPrimitive.Close
 
-// Remplacer l'overlay par un div vide pour ne pas avoir d'assombrissement
+// Complètement supprimé l'effet d'overlay en retirant le composant Overlay
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>

@@ -55,6 +55,10 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData as CompanyProfile);
+    toast({
+      title: "Profil enregistré",
+      description: "Vos informations ont été mises à jour avec succès."
+    });
   };
 
   // Récupérer les labels adaptés en fonction du type d'activité
