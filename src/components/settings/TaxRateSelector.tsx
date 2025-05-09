@@ -1,246 +1,136 @@
 
 import { useState, useEffect } from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TaxRegionData } from "@/types/tax";
-import { InfoIcon, EuroIcon, DollarSign } from "lucide-react";
-import { getTaxRegionById, getRegionData, taxRegions } from "@/data/taxData";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TaxRateSelectorProps {
-  defaultValue?: string;
-  onChange: (value: string) => void;
-  showLabel?: boolean;
-  className?: string;
+  defaultValue: number;
+  onChange: (value: number) => void;
 }
 
-export function TaxRateSelector({ 
-  defaultValue = "20", 
-  onChange, 
-  showLabel = true,
-  className = ""
-}: TaxRateSelectorProps) {
-  const [selectedMode, setSelectedMode] = useState<"manual" | "region">("manual");
-  const [manualRate, setManualRate] = useState(defaultValue);
-  const [selectedCountry, setSelectedCountry] = useState<string>("none");
-  const [selectedRegion, setSelectedRegion] = useState<string>("");
-  const [appliedRate, setAppliedRate] = useState(defaultValue);
+export function TaxRateSelector({ defaultValue = 20, onChange }: TaxRateSelectorProps) {
+  // Convert number to string for the radio group
+  const [selectedOption, setSelectedOption] = useState<string>(
+    defaultValue === 0 ? "none" : 
+    defaultValue === 5.5 ? "reduced" :
+    defaultValue === 10 ? "intermediate" :
+    defaultValue === 20 ? "standard" : "custom"
+  );
+  
+  const [customRate, setCustomRate] = useState<string>(
+    !["none", "reduced", "intermediate", "standard"].includes(selectedOption) 
+      ? String(defaultValue)
+      : ""
+  );
 
-  // Récupérer la configuration fiscale du localStorage au chargement
+  // Apply the default value on component mount
   useEffect(() => {
-    const savedTaxConfig = localStorage.getItem('taxConfiguration');
-    if (savedTaxConfig) {
-      try {
-        const config = JSON.parse(savedTaxConfig);
-        if (config.country && config.country !== "none") {
-          setSelectedCountry(config.country);
-          setSelectedMode("region");
-          
-          if (config.region) {
-            setSelectedRegion(config.region);
-            const regionData = getRegionData(config.country, config.region);
-            if (regionData) {
-              setAppliedRate(regionData.totalRate.toString());
-              onChange(regionData.totalRate.toString());
-            }
-          }
+    if (defaultValue !== undefined) {
+      setSelectedOption(
+        defaultValue === 0 ? "none" : 
+        defaultValue === 5.5 ? "reduced" :
+        defaultValue === 10 ? "intermediate" :
+        defaultValue === 20 ? "standard" : "custom"
+      );
+      
+      if (![0, 5.5, 10, 20].includes(defaultValue)) {
+        setCustomRate(String(defaultValue));
+      }
+    }
+  }, [defaultValue]);
+
+  // Handle radio option change
+  const handleOptionChange = (value: string) => {
+    setSelectedOption(value);
+    
+    switch(value) {
+      case "none":
+        onChange(0);
+        break;
+      case "reduced":
+        onChange(5.5);
+        break;
+      case "intermediate":
+        onChange(10);
+        break;
+      case "standard":
+        onChange(20);
+        break;
+      case "custom":
+        // When switching to custom, use the current customRate or default to empty
+        const customValue = parseFloat(customRate);
+        if (!isNaN(customValue)) {
+          onChange(customValue);
         }
-      } catch (e) {
-        console.error("Erreur lors du parsing de la configuration fiscale", e);
-      }
+        break;
     }
-  }, [onChange]);
+  };
 
-  useEffect(() => {
-    // Mise à jour du taux uniquement si on est en mode manuel
-    if (selectedMode === "manual") {
-      setAppliedRate(manualRate);
-      onChange(manualRate);
-    }
-  }, [manualRate, selectedMode, onChange]);
-
-  const handleCountryChange = (value: string) => {
-    setSelectedCountry(value);
-    setSelectedRegion(""); // Réinitialiser la région
+  // Handle custom rate change
+  const handleCustomRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCustomRate(value);
     
-    if (value === "none") {
-      setSelectedMode("manual");
-      setAppliedRate(manualRate);
-      onChange(manualRate);
-    }
-  };
-
-  const handleRegionChange = (value: string) => {
-    setSelectedRegion(value);
-    
-    if (selectedCountry && value) {
-      const regionData = getRegionData(selectedCountry, value);
-      if (regionData) {
-        setAppliedRate(regionData.totalRate.toString());
-        onChange(regionData.totalRate.toString());
+    if (selectedOption === "custom") {
+      const numericValue = parseFloat(value);
+      if (!isNaN(numericValue)) {
+        onChange(numericValue);
+      } else if (value === "") {
+        // Handle empty input case if needed
+        onChange(0);
       }
-    }
-  };
-
-  const handleModeChange = (mode: "manual" | "region") => {
-    setSelectedMode(mode);
-    
-    if (mode === "manual") {
-      setAppliedRate(manualRate);
-      onChange(manualRate);
-    } else if (selectedCountry !== "none" && selectedRegion) {
-      const regionData = getRegionData(selectedCountry, selectedRegion);
-      if (regionData) {
-        setAppliedRate(regionData.totalRate.toString());
-        onChange(regionData.totalRate.toString());
-      }
-    }
-  };
-
-  // Obtenir les données de région pour le pays sélectionné
-  const countryData = selectedCountry !== "none" ? getTaxRegionById(selectedCountry) : undefined;
-
-  // Déterminer le libellé de la région en fonction du pays sélectionné
-  const getRegionLabel = () => {
-    switch (selectedCountry) {
-      case 'canada': return 'Province';
-      case 'usa': return 'État';
-      case 'mexico': return 'Taux IVA';
-      case 'eu': return 'Pays membre';
-      default: return 'Région';
-    }
-  };
-
-  // Obtenir le texte du placeholder pour la sélection de région
-  const getRegionPlaceholder = () => {
-    switch (selectedCountry) {
-      case 'canada': return 'Sélectionnez une province';
-      case 'usa': return 'Sélectionnez un état';
-      case 'mexico': return 'Sélectionnez un taux d\'IVA';
-      case 'eu': return 'Sélectionnez un pays membre';
-      default: return 'Sélectionnez une région';
-    }
-  };
-
-  // Obtenir le symbole de devise approprié en fonction du pays sélectionné
-  const getCurrencyIcon = () => {
-    switch (selectedCountry) {
-      case 'usa':
-        return <DollarSign className="h-4 w-4 mr-1 text-gray-500" />;
-      case 'eu':
-      case 'none':
-      default:
-        return <EuroIcon className="h-4 w-4 mr-1 text-gray-500" />;
     }
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      {showLabel && (
+    <div className="space-y-4">
+      <Label htmlFor="tax-rate" className="text-base font-medium">Taux de TVA</Label>
+      <RadioGroup 
+        value={selectedOption} 
+        onValueChange={handleOptionChange}
+        className="flex flex-col space-y-2"
+      >
         <div className="flex items-center space-x-2">
-          <Label htmlFor="tax-rate-selector" className="flex items-center gap-2">
-            Taux de TVA par défaut (%)
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <InfoIcon className="h-4 w-4 text-slate-400" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-sm">
-                  Ce taux sera appliqué par défaut sur vos nouvelles factures
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </Label>
+          <RadioGroupItem value="none" id="tax-none" />
+          <Label htmlFor="tax-none">Pas de TVA (0%)</Label>
         </div>
-      )}
-
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Badge 
-          variant={selectedMode === "manual" ? "default" : "outline"} 
-          className="cursor-pointer"
-          onClick={() => handleModeChange("manual")}
-        >
-          Taux manuel
-        </Badge>
-        <Badge 
-          variant={selectedMode === "region" ? "default" : "outline"} 
-          className="cursor-pointer"
-          onClick={() => handleModeChange("region")}
-        >
-          Par région
-        </Badge>
-      </div>
-
-      {selectedMode === "manual" ? (
-        <div className="flex items-center">
-          <Input
-            id="tax-rate"
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            value={manualRate}
-            onChange={(e) => setManualRate(e.target.value)}
-            className="w-full"
-            placeholder="Exemple: 20"
-          />
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="reduced" id="tax-reduced" />
+          <Label htmlFor="tax-reduced">Taux réduit (5,5%)</Label>
         </div>
-      ) : (
-        <Card className="p-4 border border-gray-200 bg-slate-50">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="tax-country">Pays</Label>
-              <Select
-                value={selectedCountry}
-                onValueChange={handleCountryChange}
-              >
-                <SelectTrigger id="tax-country">
-                  <SelectValue placeholder="Sélectionnez un pays" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Personnalisé</SelectItem>
-                  <SelectItem value="canada">Canada 🇨🇦</SelectItem>
-                  <SelectItem value="usa">États-Unis 🇺🇸</SelectItem>
-                  <SelectItem value="mexico">Mexique 🇲🇽</SelectItem>
-                  <SelectItem value="eu">Union Européenne 🇪🇺</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedCountry !== "none" && countryData && (
-              <div>
-                <Label htmlFor="tax-region">{getRegionLabel()}</Label>
-                <Select
-                  value={selectedRegion}
-                  onValueChange={handleRegionChange}
-                >
-                  <SelectTrigger id="tax-region">
-                    <SelectValue placeholder={getRegionPlaceholder()} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countryData.regions.map((region: TaxRegionData) => (
-                      <SelectItem key={region.id} value={region.id}>
-                        {region.name} ({region.code}) - {region.totalRate}%
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-sm text-gray-600">Taux appliqué:</span>
-              <span className="font-medium flex items-center">
-                {getCurrencyIcon()}
-                {appliedRate}%
-              </span>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="intermediate" id="tax-intermediate" />
+          <Label htmlFor="tax-intermediate">Taux intermédiaire (10%)</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="standard" id="tax-standard" />
+          <Label htmlFor="tax-standard">Taux standard (20%)</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="custom" id="tax-custom" />
+          <Label htmlFor="tax-custom">Taux personnalisé</Label>
+        </div>
+        
+        {selectedOption === "custom" && (
+          <div className="ml-6 mt-2">
+            <div className="flex items-center">
+              <Input
+                id="custom-rate"
+                type="number"
+                value={customRate}
+                onChange={handleCustomRateChange}
+                placeholder="8.5"
+                className="max-w-[120px]"
+                step="0.1"
+                min="0"
+                max="100"
+              />
+              <span className="ml-2">%</span>
             </div>
           </div>
-        </Card>
-      )}
+        )}
+      </RadioGroup>
     </div>
   );
 }

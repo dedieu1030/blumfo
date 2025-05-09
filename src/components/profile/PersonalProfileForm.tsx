@@ -275,7 +275,7 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 md:col-span-2">
             <TaxRateSelector
-              defaultValue={formData.taxRate as number}
+              defaultValue={Number(formData.taxRate)}
               onChange={(value) => handleChange("taxRate", value)}
             />
           </div>
