@@ -1,5 +1,5 @@
 
-import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { 
@@ -9,12 +9,10 @@ import {
   Settings, 
   PlusCircle,
   Package,
-  LayoutTemplate,
-  X
+  LayoutTemplate
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
-import { Button } from "@/components/ui/button";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -43,15 +41,6 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
       <DrawerContent className="h-[85vh] bg-[#F0EBE7] p-0 border-t border-sidebar-border">
         <div className="flex flex-col h-full">
-          {/* Bouton de fermeture en haut à droite */}
-          <div className="absolute top-4 right-4">
-            <DrawerClose asChild>
-              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </DrawerClose>
-          </div>
-          
           <div className="flex-1 overflow-auto py-8">
             <div className="px-4 space-y-1">
               {navigationItems.map((item) => (

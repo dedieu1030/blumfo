@@ -21,16 +21,12 @@ const DrawerPortal = DrawerPrimitive.Portal
 
 const DrawerClose = DrawerPrimitive.Close
 
-// Modifié pour supprimer l'effet d'overlay (bg-transparent au lieu de bg-black/80)
+// Complètement supprimé l'effet d'overlay en retirant le composant Overlay
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <DrawerPrimitive.Overlay
-    ref={ref}
-    className={cn("fixed inset-0 z-50 bg-transparent", className)}
-    {...props}
-  />
+  <div /> // Un div vide au lieu de l'overlay
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
