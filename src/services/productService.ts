@@ -1,25 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-// Export the Product type so it can be imported elsewhere
-export interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price_cents: number;
-  currency: string;
-  tax_rate: number | null;
-  is_recurring: boolean;
-  recurring_interval: 'day' | 'week' | 'month' | 'year' | null;
-  recurring_interval_count: number | null;
-  product_type: 'product' | 'service' | null;
-  active: boolean;
-  metadata: Record<string, any> | null;
-  created_at: string;
-  updated_at: string;
-  category_id?: string;
-  category_name?: string;
-}
+import { Product } from "@/types/invoice";
 
 export interface Category {
   id: string;
@@ -167,7 +149,7 @@ export async function createProduct(product: Partial<Product>) {
     if (error) throw error;
     
     toast.success('Produit créé avec succès');
-    return data as Product;
+    return data as unknown as Product;
   } catch (error) {
     console.error('Error creating product:', error);
     toast.error('Erreur lors de la création du produit');
@@ -183,7 +165,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
       metadata.category_id = product.category_id;
     }
     
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('stripe_products')
       .update({
         name: product.name,
@@ -206,7 +188,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
     if (error) throw error;
     
     toast.success('Produit mis à jour avec succès');
-    return data as Product;
+    return data as unknown as Product;
   } catch (error) {
     console.error('Error updating product:', error);
     toast.error('Erreur lors de la mise à jour du produit');
@@ -216,7 +198,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
 
 export async function deleteProduct(id: string) {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('stripe_products')
       .delete()
       .eq('id', id);
@@ -258,7 +240,7 @@ export async function createCategory(category: Partial<Category>) {
       throw new Error("No authenticated user");
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('product_categories')
       .insert({
         name: category.name,
@@ -281,7 +263,7 @@ export async function createCategory(category: Partial<Category>) {
 
 export async function updateCategory(id: string, category: Partial<Category>) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('product_categories')
       .update({
         name: category.name,
@@ -305,7 +287,7 @@ export async function updateCategory(id: string, category: Partial<Category>) {
 
 export async function deleteCategory(id: string) {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('product_categories')
       .delete()
       .eq('id', id);

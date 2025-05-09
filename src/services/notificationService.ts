@@ -86,43 +86,53 @@ export const countUnreadNotifications = async () => {
 
 // Subscribe to real-time notifications
 export const subscribeToNotifications = (callback: (notification: Notification) => void) => {
-  // Use async IIFE to handle the promise from getSession
-  const session = supabase.auth.getSession().then(({ data: { session } }) => {
-    if (!session) return () => {}; // Return empty cleanup function if no session
-    
-    // Subscribe to notifications table changes for the current user
-    const subscription = supabase
-      .channel('public:notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${session.user.id}`
-        },
-        (payload) => {
-          const newNotification = payload.new as Notification;
-          
-          // Show toast notification
-          toast(`New notification: ${newNotification.title}`, {
-            description: newNotification.message,
-            duration: 5000,
-          });
-          
-          // Execute callback with the new notification
-          callback(newNotification);
-        }
-      )
-      .subscribe();
-    
-    // Return cleanup function
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  });
+  // Create a function to setup the subscription when we have a session
+  const setupSubscription = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return () => {};
+      
+      // Subscribe to notifications table changes for the current user
+      const channel = supabase
+        .channel('public:notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${session.user.id}`
+          },
+          (payload) => {
+            const newNotification = payload.new as Notification;
+            
+            // Show toast notification
+            toast(`New notification: ${newNotification.title}`, {
+              description: newNotification.message,
+              duration: 5000,
+            });
+            
+            // Execute callback with the new notification
+            callback(newNotification);
+          }
+        )
+        .subscribe();
+      
+      // Return cleanup function
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (error) {
+      console.error('Error setting up notification subscription:', error);
+      return () => {};
+    }
+  };
 
-  // Return a generic cleanup function that does nothing
-  // The actual cleanup will be handled by the Promise
-  return () => {};
+  // Execute the async setup function
+  const cleanupPromise = setupSubscription();
+  
+  // Return a cleanup function that will use the promise result when available
+  return () => {
+    cleanupPromise.then(cleanup => cleanup());
+  };
 };

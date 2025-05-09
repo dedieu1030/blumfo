@@ -141,5 +141,36 @@ export interface Notification {
   metadata?: Record<string, any>;
 }
 
-// Now import Product from productService.ts instead of defining it here
-// And import Client from ClientSelector.tsx instead of defining it here
+// Adding Client type to avoid import issues
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string | null;
+  user_id: string;
+  invoiceCount?: number;
+}
+
+// Adding Product type to avoid import issues
+export interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  currency: string;
+  tax_rate: number | null;
+  is_recurring: boolean;
+  recurring_interval: 'day' | 'week' | 'month' | 'year' | null;
+  recurring_interval_count: number | null;
+  product_type: 'product' | 'service' | null;
+  active: boolean;
+  metadata: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
+  category_id?: string;
+  category_name?: string;
+}
