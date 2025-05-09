@@ -5,11 +5,24 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, UserPlus, Trash, Edit, Mail, Phone, Tag } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Client, ClientSelectorProps } from "@/components/ClientSelector";
+import { Search, UserPlus, Trash2, Edit, Mail, Phone, Tag, Plus, MoreHorizontal } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ClientSelector } from "@/components/ClientSelector";
+import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import Header from "@/components/Header";
+import MobileNavigation from "@/components/MobileNavigation";
 
-export interface Client {
+// Define Client type
+interface Client {
   id: string;
   name?: string;
   email: string | null;

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import { useTranslation } from "react-i18next";
 interface Invoice {
   id: string;
   number: string;
+  invoice_number: string; // Added to match required property
   client: string;
   amount: string;
   date: string;
@@ -202,7 +202,12 @@ export function InvoiceList({
         <InvoicePaymentConfirmation
           isOpen={isPaymentDialogOpen}
           onOpenChange={setIsPaymentDialogOpen}
-          invoice={selectedInvoice}
+          invoice={{
+            id: selectedInvoice.id,
+            invoice_number: selectedInvoice.invoice_number,
+            amount: parseFloat(selectedInvoice.amount.replace(/[^\d.-]/g, ''))
+          }}
+          success={true}
           onConfirm={handlePaymentConfirmed}
         />
       )}

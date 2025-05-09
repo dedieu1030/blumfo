@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { Link } from 'react-router-dom';
+import { Dialog } from '@/components/ui/dialog';
 
 interface InvoicePaymentConfirmationProps {
   success: boolean;
@@ -13,15 +14,21 @@ interface InvoicePaymentConfirmationProps {
     invoice_number: string;
     amount?: number;
   };
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onConfirm?: () => void;
 }
 
 export function InvoicePaymentConfirmation({ 
   success, 
   error,
-  invoice
+  invoice,
+  isOpen,
+  onOpenChange,
+  onConfirm
 }: InvoicePaymentConfirmationProps) {
   
-  return (
+  const content = (
     <Card className="max-w-md mx-auto">
       <CardHeader className={`${success ? 'bg-green-50' : 'bg-red-50'}`}>
         <CardTitle className="flex items-center">
@@ -96,6 +103,16 @@ export function InvoicePaymentConfirmation({
       </CardContent>
     </Card>
   );
+  
+  if (isOpen !== undefined && onOpenChange) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        {content}
+      </Dialog>
+    );
+  }
+  
+  return content;
 }
 
 export default InvoicePaymentConfirmation;
