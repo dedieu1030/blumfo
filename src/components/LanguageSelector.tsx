@@ -28,11 +28,13 @@ export const LanguageSelector: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="border-0">
-          <span className="flex items-center gap-1">
-            <span className="w-6">{currentLang.flag}</span>
-            <span className="hidden md:inline">{currentLang.name}</span>
-          </span>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center gap-2 px-3 py-2 h-9 bg-transparent hover:bg-accent/50"
+        >
+          <span className="text-base">{currentLang.flag}</span>
+          <span className="hidden sm:inline font-medium">{currentLang.name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 bg-white">

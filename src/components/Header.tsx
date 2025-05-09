@@ -46,35 +46,29 @@ export const Header = ({
   };
 
   return (
-    <div className="flex flex-col mb-6">
-      <div className="flex items-center justify-between py-2 border-b">
-        {/* Section de gauche: Bouton menu (mobile) ou bouton retour + titre */}
-        <div className="flex items-center">
-          {isMobileScreen ? (
-            <Button variant="ghost" size="icon" onClick={onOpenMobileMenu}>
-              <Menu className="h-5 w-5" />
-            </Button>
-          ) : (
-            renderBackButton()
-          )}
-          
-          {/* Sur mobile, afficher le titre près du menu */}
-          {isMobileScreen && (
-            <h1 className="text-xl font-semibold ml-2">{title}</h1>
-          )}
-        </div>
+    <div className="flex flex-col">
+      {/* Barre principale avec recherche et actions */}
+      <div className="flex items-center justify-between h-16 px-4 border-b border-border">
+        {isMobileScreen && (
+          <Button variant="ghost" size="icon" onClick={onOpenMobileMenu} className="mr-2">
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
         
-        {/* Section centrale: barre de recherche */}
-        <div className="flex-1 mx-4 max-w-2xl hidden md:block">
+        {/* Section de recherche centrée */}
+        <div className="flex-1 max-w-2xl mx-4">
           <SearchBar />
         </div>
         
-        {/* Section de droite: Boutons d'action */}
+        {/* Section de droite avec les boutons d'action */}
         <div className="flex items-center gap-2">
           {showNewInvoiceButton && (
-            <Button onClick={() => navigate("/invoicing")} className="hidden sm:flex" variant="default">
-              <Plus className="h-4 w-4 mr-1" />
-              {t('newInvoice')}
+            <Button 
+              onClick={() => navigate("/invoicing")} 
+              className="bg-primary text-white hover:bg-primary/90 flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('newInvoice')}</span>
             </Button>
           )}
           
@@ -84,18 +78,19 @@ export const Header = ({
         </div>
       </div>
       
-      {/* Titre et description (desktop seulement) */}
+      {/* Titre et description sous le header (seulement en vue desktop) */}
       {!isMobileScreen && (
-        <div className="mt-6">
+        <div className="py-6 px-4">
           <h1 className="text-2xl font-semibold">{title}</h1>
           {description && <p className="text-muted-foreground mt-1">{description}</p>}
         </div>
       )}
       
-      {/* Barre de recherche sur mobile */}
+      {/* Titre sur mobile */}
       {isMobileScreen && (
-        <div className="mt-4">
-          <SearchBar />
+        <div className="p-4">
+          <h1 className="text-xl font-semibold">{title}</h1>
+          {description && <p className="text-muted-foreground mt-1 text-sm">{description}</p>}
         </div>
       )}
     </div>
