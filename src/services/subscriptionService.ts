@@ -111,12 +111,14 @@ export async function fetchSubscription(id: string) {
     
     // Safely handle client data and transform stripe products to our Product format
     const clientData = subscription.clients || {};
+    
+    // Fixed syntax error here: properly format the map operation
     const transformedItems = items.map(item => ({
       ...item,
       product: item.stripe_products ? {
         ...item.stripe_products,
         is_recurring: Boolean(item.stripe_products.recurring_interval) // Add the missing property
-      }
+      } : undefined
     }));
     
     // Cast as unknown first then as Subscription to avoid TypeScript errors
