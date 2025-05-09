@@ -525,6 +525,9 @@ export type Database = {
           metadata: Json | null
           name: string
           price_cents: number
+          product_type: string | null
+          recurring_interval: string | null
+          recurring_interval_count: number | null
           tax_rate: number | null
           updated_at: string | null
         }
@@ -537,6 +540,9 @@ export type Database = {
           metadata?: Json | null
           name: string
           price_cents?: number
+          product_type?: string | null
+          recurring_interval?: string | null
+          recurring_interval_count?: number | null
           tax_rate?: number | null
           updated_at?: string | null
         }
@@ -549,6 +555,9 @@ export type Database = {
           metadata?: Json | null
           name?: string
           price_cents?: number
+          product_type?: string | null
+          recurring_interval?: string | null
+          recurring_interval_count?: number | null
           tax_rate?: number | null
           updated_at?: string | null
         }

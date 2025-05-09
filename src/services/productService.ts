@@ -44,10 +44,7 @@ export async function fetchProducts(includeInactive = false) {
   try {
     let query = supabase
       .from('stripe_products')
-      .select(`
-        *,
-        product_categories (name, color)
-      `)
+      .select('*')
       .order('name');
     
     if (!includeInactive) {
@@ -61,7 +58,8 @@ export async function fetchProducts(includeInactive = false) {
     // Format products with their categories
     return (data || []).map(product => ({
       ...product,
-      category_name: product.product_categories?.name,
+      is_recurring: !!product.recurring_interval,
+      category_name: '',
       price: formatPrice(product.price_cents || 0)
     })) as Product[];
   } catch (error) {
@@ -76,10 +74,7 @@ export async function fetchProduct(id: string) {
   try {
     const { data, error } = await supabase
       .from('stripe_products')
-      .select(`
-        *,
-        product_categories (name, color)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
     
@@ -87,7 +82,8 @@ export async function fetchProduct(id: string) {
     
     return {
       ...data,
-      category_name: data.product_categories?.name
+      is_recurring: !!data.recurring_interval,
+      category_name: ''
     } as Product;
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -105,22 +101,23 @@ export async function createProduct(product: Partial<Product>) {
         description: product.description,
         price_cents: product.price_cents,
         tax_rate: product.tax_rate,
-        is_recurring: product.is_recurring || false,
+        recurring_interval: product.recurring_interval,
+        recurring_interval_count: product.recurring_interval_count,
+        product_type: product.product_type,
         active: product.active !== undefined ? product.active : true,
         category_id: product.category_id,
         currency: product.currency || 'EUR',
-        metadata: product.metadata || {},
-        // Ajout des propriétés de récurrence
-        recurring_interval: product.recurring_interval,
-        recurring_interval_count: product.recurring_interval_count,
-        product_type: product.product_type
+        metadata: product.metadata || {}
       })
       .select();
     
     if (error) throw error;
     
     toast.success('Produit créé avec succès');
-    return data[0] as Product;
+    return {
+      ...data[0],
+      is_recurring: !!data[0].recurring_interval
+    } as Product;
   } catch (error) {
     console.error('Error creating product:', error);
     toast.error('Erreur lors de la création du produit');
@@ -138,15 +135,13 @@ export async function updateProduct(id: string, product: Partial<Product>) {
         description: product.description,
         price_cents: product.price_cents,
         tax_rate: product.tax_rate,
-        is_recurring: product.is_recurring,
+        recurring_interval: product.recurring_interval,
+        recurring_interval_count: product.recurring_interval_count,
+        product_type: product.product_type,
         active: product.active,
         category_id: product.category_id,
         currency: product.currency,
         metadata: product.metadata,
-        // Mise à jour des propriétés de récurrence
-        recurring_interval: product.recurring_interval,
-        recurring_interval_count: product.recurring_interval_count,
-        product_type: product.product_type,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -155,7 +150,10 @@ export async function updateProduct(id: string, product: Partial<Product>) {
     if (error) throw error;
     
     toast.success('Produit mis à jour avec succès');
-    return data[0] as Product;
+    return {
+      ...data[0],
+      is_recurring: !!data[0].recurring_interval
+    } as Product;
   } catch (error) {
     console.error('Error updating product:', error);
     toast.error('Erreur lors de la mise à jour du produit');
@@ -182,7 +180,7 @@ export async function deleteProduct(id: string) {
   }
 }
 
-// Type pour Category (renommé pour éviter la confusion avec ProductCategory)
+// Type pour Category
 export type Category = ProductCategory;
 
 // Fetch product categories

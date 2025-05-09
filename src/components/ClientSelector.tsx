@@ -54,8 +54,8 @@ export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau
           user_id: client.company_id // Utilisation de company_id comme user_id
         }));
         
-        setClients(adaptedClients);
-        setFilteredClients(adaptedClients);
+        setClients(adaptedClients as Client[]);
+        setFilteredClients(adaptedClients as Client[]);
       } catch (error) {
         console.error('Error fetching clients:', error);
       } finally {

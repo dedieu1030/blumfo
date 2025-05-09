@@ -1,9 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -11,37 +7,26 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Category, fetchCategories, createCategory, updateCategory, deleteCategory } from "@/services/productService";
-import { PlusCircle, Edit, Trash2, Tag } from "lucide-react";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, Tag, MoreHorizontal, Edit, Trash, Circle } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { fetchCategories, createCategory, updateCategory, deleteCategory, ProductCategory } from "@/services/productService";
 
 export function CategoryManager() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-  // Load categories
+  // Form state
+  const [name, setName] = useState("");
+  const [color, setColor] = useState("#6366F1");
+
   useEffect(() => {
     const loadCategories = async () => {
       setIsLoading(true);
@@ -53,75 +38,65 @@ export function CategoryManager() {
     loadCategories();
   }, []);
 
-  const handleOpenDialog = (category?: Category) => {
-    if (category) {
-      setEditingCategory(category);
-      setName(category.name);
-      setDescription(category.description || "");
-    } else {
-      setEditingCategory(null);
+  useEffect(() => {
+    if (formDialogOpen && selectedCategory) {
+      setName(selectedCategory.name);
+      setColor(selectedCategory.color || "#6366F1");
+    } else if (formDialogOpen) {
       setName("");
-      setDescription("");
+      setColor("#6366F1");
     }
-    setDialogOpen(true);
-  };
+  }, [formDialogOpen, selectedCategory]);
 
-  const handleSaveCategory = async () => {
+  const handleSubmit = async () => {
     if (!name) return;
 
-    setIsLoading(true);
     try {
-      if (editingCategory) {
-        await updateCategory(editingCategory.id, { name, description });
+      if (selectedCategory) {
+        // Update existing category
+        await updateCategory(selectedCategory.id, { name, color });
       } else {
-        await createCategory({ name, description });
+        // Create new category
+        await createCategory({ name, color });
       }
-      
+
       // Refresh categories
-      const updatedCategories = await fetchCategories();
-      setCategories(updatedCategories);
-      setDialogOpen(false);
+      const data = await fetchCategories();
+      setCategories(data);
+      setFormDialogOpen(false);
     } catch (error) {
       console.error("Error saving category:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleDeleteCategory = async () => {
-    if (!categoryToDelete) return;
-    
-    setIsLoading(true);
+  const handleDelete = async () => {
+    if (!selectedCategory) return;
+
     try {
-      await deleteCategory(categoryToDelete.id);
-      
+      await deleteCategory(selectedCategory.id);
       // Refresh categories
-      const updatedCategories = await fetchCategories();
-      setCategories(updatedCategories);
+      const data = await fetchCategories();
+      setCategories(data);
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting category:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const openDeleteDialog = (category: Category) => {
-    setCategoryToDelete(category);
-    setDeleteDialogOpen(true);
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Catégories</h2>
-        <Button onClick={() => handleOpenDialog()}>
-          <PlusCircle className="h-4 w-4 mr-2" />
+        <h2 className="text-lg font-medium">Catégories</h2>
+        <Button onClick={() => {
+          setSelectedCategory(null);
+          setFormDialogOpen(true);
+        }}>
+          <Plus className="h-4 w-4 mr-2" />
           Nouvelle catégorie
         </Button>
       </div>
 
-      {isLoading && categories.length === 0 ? (
+      {isLoading ? (
         <div className="text-center py-8">
           <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full mx-auto"></div>
           <p className="mt-2 text-muted-foreground">Chargement des catégories...</p>
@@ -131,101 +106,137 @@ export function CategoryManager() {
           <Tag className="h-12 w-12 mx-auto text-muted-foreground" />
           <h3 className="mt-4 text-lg font-medium">Aucune catégorie</h3>
           <p className="mt-1 text-muted-foreground">
-            Créez votre première catégorie en cliquant sur "Nouvelle catégorie".
+            Créez votre première catégorie pour organiser vos produits et services.
           </p>
-          <Button className="mt-4" onClick={() => handleOpenDialog()}>
-            <PlusCircle className="h-4 w-4 mr-2" />
+          <Button className="mt-4" onClick={() => {
+            setSelectedCategory(null);
+            setFormDialogOpen(true);
+          }}>
+            <Plus className="mr-2 h-4 w-4" />
             Nouvelle catégorie
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((category) => (
-            <Card key={category.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{category.name}</CardTitle>
-                {category.description && (
-                  <CardDescription>{category.description}</CardDescription>
-                )}
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleOpenDialog(category)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" /> Modifier
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-red-600 border-red-200 hover:bg-red-50"
-                    onClick={() => openDeleteDialog(category)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" /> Supprimer
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12"></TableHead>
+                <TableHead>Nom</TableHead>
+                <TableHead className="w-24 text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {categories.map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Circle 
+                        className="h-4 w-4" 
+                        fill={category.color || "#6366F1"} 
+                        color={category.color || "#6366F1"}
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {category.name}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Actions</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedCategory(category);
+                          setFormDialogOpen(true);
+                        }}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Modifier
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setSelectedCategory(category);
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="text-red-600"
+                        >
+                          <Trash className="h-4 w-4 mr-2" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      {/* Form dialog */}
+      <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
-              {editingCategory ? "Modifier la catégorie" : "Nouvelle catégorie"}
+              {selectedCategory ? "Modifier la catégorie" : "Nouvelle catégorie"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="category-name">Nom</Label>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Nom
+              </Label>
               <Input
-                id="category-name"
+                id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Nom de la catégorie"
+                className="col-span-3"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="category-description">Description (optionnelle)</Label>
-              <Textarea
-                id="category-description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description de la catégorie"
-                rows={3}
-              />
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="color" className="text-right">
+                Couleur
+              </Label>
+              <div className="flex gap-2 items-center col-span-3">
+                <Input
+                  id="color"
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-20 h-10 p-1"
+                />
+                <span className="text-sm text-muted-foreground">{color}</span>
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setFormDialogOpen(false)}>
               Annuler
             </Button>
-            <Button onClick={handleSaveCategory}>
-              {editingCategory ? "Mettre à jour" : "Créer"}
+            <Button onClick={handleSubmit}>
+              {selectedCategory ? "Mettre à jour" : "Créer"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Vous êtes sur le point de supprimer la catégorie "{categoryToDelete?.name}".
-              Cette action est irréversible.
+              Cette action ne peut pas être annulée. Cette catégorie sera définitivement supprimée
+              de notre base de données.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleDeleteCategory}
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600">
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
