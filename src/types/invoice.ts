@@ -49,6 +49,7 @@ export interface CurrencyInfo {
   code: string;
   name: string;
   symbol: string;
+  position?: string; // Added position for compatibility
 }
 
 export interface InvoiceNumberingConfig {
@@ -70,28 +71,34 @@ export interface PaymentMethodDetails {
 export interface PaymentTermTemplate {
   id: string;
   name: string;
-  days: number;
+  days?: number;
+  delay?: string; // Added for compatibility
+  customDate?: string; // Added for compatibility
+  termsText?: string; // Added for compatibility
   isDefault: boolean;
 }
 
 export interface ServiceLine {
   id: string;
   description: string;
-  quantity: number;
-  unitPrice: number;
-  taxRate: number;
-  discount?: number;
-  total: number;
+  quantity: number | string; // Allow both number and string
+  unitPrice: number | string; // Allow both number and string
+  taxRate: number | string; // Allow both number and string
+  tva?: string; // Added for compatibility
+  discount?: number | string; // Allow both number and string
+  total: number | string; // Allow both number and string
 }
 
 export interface InvoiceData {
   id?: string;
   invoiceNumber: string;
-  issueDate: string;
+  issueDate?: string; // Added for compatibility
+  invoiceDate?: string; // Added for compatibility
   dueDate: string;
   clientName: string;
   clientEmail: string;
   clientAddress?: string;
+  clientPhone?: string;
   companyName: string;
   companyAddress: string;
   companyEmail: string;
@@ -101,9 +108,16 @@ export interface InvoiceData {
   thankYouMessage?: string;
   paymentMethods?: PaymentMethodDetails[];
   subTotal: number;
+  taxTotal?: number; // Added for compatibility
   taxAmount: number;
   discountAmount?: number;
   totalAmount: number;
+  total?: number; // Added for compatibility
   paymentStatus?: 'paid' | 'pending' | 'overdue';
   currency: string;
+  templateId?: string; // Added for compatibility
+  paymentTermsId?: string; // Added for compatibility
+  customPaymentTerms?: string; // Added for compatibility
+  paymentDelay?: string; // Added for compatibility
+  issuerInfo?: CompanyProfile; // Added for compatibility
 }

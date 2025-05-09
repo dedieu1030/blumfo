@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -112,7 +111,10 @@ export default function Settings() {
         terms_and_conditions: profile.termsAndConditions,
         thank_you_message: profile.thankYouMessage,
         default_currency: profile.defaultCurrency,
-        business_type: profile.businessType,
+        // Convert the businessType to a string that matches the database enum
+        business_type: profile.businessType === 'lawyer' || profile.businessType === 'freelancer' 
+          ? 'other' // Map 'lawyer' and 'freelancer' to 'other' in the database
+          : profile.businessType,
         business_type_custom: profile.businessTypeCustom,
       };
       
