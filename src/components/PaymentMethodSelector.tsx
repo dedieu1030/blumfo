@@ -70,7 +70,11 @@ export function PaymentMethodSelector({
 
   const getMethodStatus = (type: PaymentMethod): { enabled: boolean, details?: string } => {
     const method = methods.find(m => m.type === type);
-    return method ? { enabled: method.enabled, details: method.details } : { enabled: false };
+    if (method) {
+      let methodDetails = typeof method.details === 'string' ? method.details : undefined;
+      return { enabled: method.enabled, details: methodDetails };
+    }
+    return { enabled: false };
   };
 
   const handleSaveAsDefault = () => {

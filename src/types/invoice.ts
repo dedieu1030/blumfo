@@ -1,4 +1,5 @@
 
+
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
@@ -13,6 +14,7 @@ export interface InvoiceData {
   total: number;
   notes?: string;
   paymentDelay?: string;
+  paymentMethods?: PaymentMethodDetails[]; // Ajout de cette propriété
 }
 
 export interface ServiceLine {
@@ -21,6 +23,8 @@ export interface ServiceLine {
   quantity: string;
   unitPrice: string;
   totalPrice: number;
+  tva?: string; // Ajout de cette propriété
+  total?: string; // Ajout de cette propriété
 }
 
 export interface CompanyProfile {
@@ -35,6 +39,16 @@ export interface CompanyProfile {
   businessTypeCustom?: string;
   emailType?: string;
   logoUrl?: string;
+  // Nouvelles propriétés
+  bankAccount?: string;
+  bankName?: string;
+  accountHolder?: string;
+  taxRate?: number;
+  defaultCurrency?: string;
+  termsAndConditions?: string;
+  thankYouMessage?: string;
+  paypal?: string;
+  payoneer?: string;
 }
 
 export interface PaymentTermTemplate {
@@ -49,8 +63,11 @@ export interface PaymentTermTemplate {
 export interface PaymentMethodDetails {
   type: string;
   enabled: boolean;
-  details?: Record<string, any>;
+  details?: string | Record<string, any>; // Modification pour accepter string ou Record
 }
+
+// Ajout d'un type pour les méthodes de paiement
+export type PaymentMethod = 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
 
 // Nouvelles interfaces pour les relances
 export interface InvoiceReminder {
