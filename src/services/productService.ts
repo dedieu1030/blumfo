@@ -1,7 +1,25 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Product } from "@/types/invoice";
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  currency: string;
+  tax_rate: number | null;
+  is_recurring: boolean;
+  recurring_interval: 'day' | 'week' | 'month' | 'year' | null;
+  recurring_interval_count: number | null;
+  product_type: 'product' | 'service' | null;
+  active: boolean;
+  metadata: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
+  category_id?: string;
+  category_name?: string;
+}
 
 export interface Category {
   id: string;
@@ -14,7 +32,7 @@ export interface Category {
 // Product CRUD operations
 export async function fetchProducts(includeInactive: boolean = false) {
   try {
-    let query = (supabase as any)
+    let query = supabase
       .from('stripe_products')
       .select('*');
     
@@ -27,16 +45,16 @@ export async function fetchProducts(includeInactive: boolean = false) {
     if (error) throw error;
     
     // Also fetch categories to use for mapping
-    const { data: categories } = await (supabase as any)
+    const { data: categories } = await supabase
       .from('product_categories')
       .select('*');
     
     // Map products with their categories
-    const mappedProducts = data.map((product: any) => {
+    return data.map(product => {
       // Get category_id from metadata if it exists
       const metadata = product.metadata as Record<string, any> | null;
       const categoryId = metadata?.category_id;
-      const categoryObj = categories?.find((c: any) => c.id === categoryId);
+      const categoryObj = categories?.find(c => c.id === categoryId);
       
       return {
         ...product,
@@ -44,10 +62,8 @@ export async function fetchProducts(includeInactive: boolean = false) {
         category_name: categoryObj?.name,
         recurring_interval: validateRecurringInterval(product.recurring_interval),
         product_type: validateProductType(product.product_type)
-      } as Product;
-    });
-    
-    return mappedProducts;
+      };
+    }) as Product[];
   } catch (error) {
     console.error('Error fetching products:', error);
     toast.error('Erreur lors du chargement des produits');
@@ -57,7 +73,7 @@ export async function fetchProducts(includeInactive: boolean = false) {
 
 export async function fetchProduct(id: string) {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('stripe_products')
       .select('*')
       .eq('id', id)
@@ -72,7 +88,7 @@ export async function fetchProduct(id: string) {
     // Fetch category if there's a category_id in metadata
     let categoryName;
     if (categoryId) {
-      const { data: category } = await (supabase as any)
+      const { data: category } = await supabase
         .from('product_categories')
         .select('name')
         .eq('id', categoryId)
@@ -128,7 +144,7 @@ export async function createProduct(product: Partial<Product>) {
       metadata.category_id = product.category_id;
     }
     
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('stripe_products')
       .insert({
         name: product.name,
@@ -149,7 +165,7 @@ export async function createProduct(product: Partial<Product>) {
     if (error) throw error;
     
     toast.success('Produit créé avec succès');
-    return data as unknown as Product;
+    return data as Product;
   } catch (error) {
     console.error('Error creating product:', error);
     toast.error('Erreur lors de la création du produit');
@@ -165,7 +181,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
       metadata.category_id = product.category_id;
     }
     
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('stripe_products')
       .update({
         name: product.name,
@@ -188,7 +204,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
     if (error) throw error;
     
     toast.success('Produit mis à jour avec succès');
-    return data as unknown as Product;
+    return data as Product;
   } catch (error) {
     console.error('Error updating product:', error);
     toast.error('Erreur lors de la mise à jour du produit');
@@ -198,7 +214,7 @@ export async function updateProduct(id: string, product: Partial<Product>) {
 
 export async function deleteProduct(id: string) {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('stripe_products')
       .delete()
       .eq('id', id);
@@ -217,7 +233,7 @@ export async function deleteProduct(id: string) {
 // Category CRUD operations
 export async function fetchCategories() {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('product_categories')
       .select('*')
       .order('name');
@@ -240,7 +256,7 @@ export async function createCategory(category: Partial<Category>) {
       throw new Error("No authenticated user");
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('product_categories')
       .insert({
         name: category.name,
@@ -263,7 +279,7 @@ export async function createCategory(category: Partial<Category>) {
 
 export async function updateCategory(id: string, category: Partial<Category>) {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('product_categories')
       .update({
         name: category.name,
@@ -287,7 +303,7 @@ export async function updateCategory(id: string, category: Partial<Category>) {
 
 export async function deleteCategory(id: string) {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('product_categories')
       .delete()
       .eq('id', id);

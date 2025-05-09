@@ -1,4 +1,3 @@
-
 export interface CompanyProfile {
   name: string;
   address: string;
@@ -112,65 +111,4 @@ export interface CurrencyInfo {
   symbol: string;
   name: string;
   position: "prefix" | "suffix";
-}
-
-// Type DbClient pour correspondre exactement à la structure de la table clients dans Supabase
-export interface DbClient {
-  id: string;
-  client_name: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  notes?: string | null;
-  created_at: string;
-  updated_at: string | null;
-  company_id?: string | null;
-  group_id?: string | null;
-  reference_number?: string | null;
-}
-
-// Adding Notification type
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  is_read: boolean;
-  created_at: string;
-  user_id?: string;
-  metadata?: Record<string, any>;
-}
-
-// Adding Client type to avoid import issues
-export interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  notes?: string | null;
-  created_at: string;
-  updated_at: string | null;
-  user_id: string;
-  invoiceCount?: number;
-}
-
-// Adding Product type to avoid import issues
-export interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price_cents: number;
-  currency: string;
-  tax_rate: number | null;
-  is_recurring: boolean;
-  recurring_interval: 'day' | 'week' | 'month' | 'year' | null;
-  recurring_interval_count: number | null;
-  product_type: 'product' | 'service' | null;
-  active: boolean;
-  metadata: Record<string, any> | null;
-  created_at: string;
-  updated_at: string;
-  category_id?: string;
-  category_name?: string;
 }

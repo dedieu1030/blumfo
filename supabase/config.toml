@@ -80,13 +80,6 @@ gcp_project_id = ""
 gcp_project_number = ""
 gcp_jwt_path = "supabase/gcloud.json"
 
-# Configuration des fonctions Edge
-[functions]
+# Override the default expirations of 24 hours for process-automatic-reminders edge function to allow it to run without JWT verification
 [functions.process-automatic-reminders]
 verify_jwt = false
-
-[functions.create-invoice]
-verify_jwt = true
-
-[functions.list-invoices]
-verify_jwt = true

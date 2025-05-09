@@ -1,436 +1,82 @@
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Header } from "@/components/Header";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Search, Mail, Phone, Building, FileText, PlusCircle, Loader2, Tag } from "lucide-react";
+import { MobileNavigation } from "@/components/MobileNavigation";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Client, mapDbClientToClient } from "@/components/ClientSelector";
-import { DbClient } from "@/types/invoice";
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Client } from "@/components/ClientSelector";
+import { supabase } from "@/integrations/supabase/client";
+import InvoicePaymentAlert from "@/components/InvoicePaymentAlert";
+import { checkOverdueInvoices } from "@/services/reminderService";
+import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-interface ClientCategory {
+// Type definitions
+interface Category {
   id: string;
   name: string;
-  color: string;
+  color: string | null;
 }
 
-export default function Clients() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [categories, setCategories] = useState<ClientCategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
-  const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
-
-  // Define fetchCategories first to avoid "used before its declaration" error
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await (supabase as any)
-        .from('client_categories')
-        .select('*');
-
-      if (error) {
-        throw error;
-      }
-
-      setCategories(data || []);
-    } catch (error: any) {
-      console.error("Error fetching categories:", error);
-      toast({
-        title: "Erreur!",
-        description: "Erreur lors du chargement des catégories",
-        variant: "destructive"
-      })
-    }
-  };
-  
-  // Define fetchClients after using it in the useEffect dependency array
-  const fetchClients = async () => {
-    setLoading(true);
-    try {
-      let query = (supabase as any)
-        .from('clients')
-        .select('*');
-
-      if (selectedCategory) {
-        query = query.eq('category_id', selectedCategory);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      // Convert to Client format and add categories
-      const clientsWithCategories = await Promise.all(
-        data.map(async (dbClient: DbClient) => {
-          // Get categories associated with this client
-          const { data: clientCategories, error: categoryError } = await (supabase as any)
-            .from('client_category_mappings')
-            .select('category_id')
-            .eq('client_id', dbClient.id);
-
-          if (categoryError) {
-            console.error("Error fetching client categories:", categoryError);
-            return { ...mapDbClientToClient(dbClient), categories: [] };
-          }
-
-          const categoryIds = clientCategories?.map((mapping: any) => mapping.category_id) || [];
-          const clientCategories2 = categories.filter((cat: ClientCategory) => categoryIds.includes(cat.id));
-
-          // Convert to Client format
-          const client = mapDbClientToClient(dbClient);
-
-          // Add categories to client
-          return {
-            ...client,
-            categories: clientCategories2
-          };
-        })
-      );
-
-      setClients(clientsWithCategories);
-      setError(null);
-    } catch (error: any) {
-      setError(error.message);
-      toast({
-        title: "Erreur!",
-        description: "Erreur lors du chargement des clients",
-        variant: "destructive"
-      })
-      console.error("Error fetching clients:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user);
-    };
-
-    fetchSession();
-  }, []);
-
-  useEffect(() => {
-    fetchClients();
-    fetchCategories();
-  }, [selectedCategory]);
-
-  useEffect(() => {
-    if (searchQuery) {
-      const filtered = clients.filter(client =>
-        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (client.phone && client.phone.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      setFilteredClients(filtered);
-    } else {
-      setFilteredClients(clients);
-    }
-  }, [searchQuery, clients]);
-
-  const handleCreateClient = async (formData: any) => {
-    setIsCreateDialogOpen(false);
-    try {
-      // Ajuster le format des données
-      const clientData = {
-        client_name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        notes: formData.notes,
-        company_id: user?.id // Lier au compte utilisateur
-      };
-
-      const { data: newClientData, error } = await supabase
-        .from('clients')
-        .insert([clientData])
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      // Convertir en format Client
-      const newClient = mapDbClientToClient(newClientData as DbClient);
-      newClient.invoiceCount = 0;
-
-      setClients([...clients, newClient]);
-      toast({
-        title: "Succès!",
-        description: "Client créé avec succès",
-      })
-    } catch (error: any) {
-      console.error("Error creating client:", error);
-      toast({
-        title: "Erreur!",
-        description: "Erreur lors de la création du client",
-        variant: "destructive"
-      })
-    } finally {
-      setIsCreateDialogOpen(false);
-    }
-  };
-
-  const handleUpdateClient = async (formData: any) => {
-    setIsEditDialogOpen(false);
-    if (!selectedClient) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('clients')
-        .update({
-          client_name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          notes: formData.notes,
-        })
-        .eq('id', selectedClient.id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      // Mettre à jour le client dans l'état local
-      setClients(clients.map(client => client.id === selectedClient.id ? {
-        ...client,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        notes: formData.notes,
-      } : client));
-      toast({
-        title: "Succès!",
-        description: "Client mis à jour avec succès",
-      })
-    } catch (error: any) {
-      console.error("Error updating client:", error);
-      toast({
-        title: "Erreur!",
-        description: "Erreur lors de la mise à jour du client",
-        variant: "destructive"
-      })
-    } finally {
-      setIsEditDialogOpen(false);
-      setSelectedClient(null);
-    }
-  };
-
-  const handleDeleteClient = async (clientId: string) => {
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', clientId);
-
-      if (error) {
-        throw error;
-      }
-
-      // Supprimer le client de l'état local
-      setClients(clients.filter(client => client.id !== clientId));
-      toast({
-        title: "Succès!",
-        description: "Client supprimé avec succès",
-      })
-    } catch (error: any) {
-      console.error("Error deleting client:", error);
-      toast({
-        title: "Erreur!",
-        description: "Erreur lors de la suppression du client",
-        variant: "destructive"
-      })
-    }
-  };
-
-  if (loading) return <div>Chargement des clients...</div>;
-  if (error) return <div>Erreur: {error}</div>;
-
-  return (
-    <div className="container mx-auto py-10">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Clients</h1>
-        <div className="flex gap-2">
-          <Input
-            type="search"
-            placeholder="Rechercher un client..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Plus className="mr-2 h-4 w-4" />
-                Ajouter un client
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Créer un nouveau client</DialogTitle>
-                <DialogDescription>
-                  Ajoutez les informations du nouveau client ci-dessous.
-                </DialogDescription>
-              </DialogHeader>
-              <ClientForm onSubmit={handleCreateClient} />
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtrer par catégorie</CardTitle>
-          <CardDescription>Sélectionnez une catégorie pour filtrer les clients.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Toutes les catégories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={null}>Toutes les catégories</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Téléphone</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredClients.map((client) => (
-              <TableRow key={client.id}>
-                <TableCell>{client.name}</TableCell>
-                <TableCell>{client.email}</TableCell>
-                <TableCell>{client.phone || 'N/A'}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedClient(client);
-                        setIsEditDialogOpen(true);
-                      }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClient(client.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Modifier le client</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations du client ci-dessous.
-            </DialogDescription>
-          </DialogHeader>
-          <ClientForm
-            client={selectedClient}
-            onSubmit={handleUpdateClient}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+interface ClientWithCategories extends Client {
+  categories: {
+    category_id: string;
+    category_name: string;
+    category_color: string;
+  }[];
 }
 
+// Composant pour le formulaire d'ajout/modification de client
 interface ClientFormProps {
-  client?: Client;
-  onSubmit: (data: any) => void;
+  client: Partial<Client>;
+  onSubmit: (client: Partial<Client>) => void;
+  onCancel: () => void;
+  isSubmitting: boolean;
 }
 
-const ClientForm: React.FC<ClientFormProps> = ({ client, onSubmit }) => {
-  const [name, setName] = useState(client?.name || '');
-  const [email, setEmail] = useState(client?.email || '');
-  const [phone, setPhone] = useState(client?.phone || '');
-  const [address, setAddress] = useState(client?.address || '');
-  const [notes, setNotes] = useState(client?.notes || '');
+function ClientForm({ client, onSubmit, onCancel, isSubmitting }: ClientFormProps) {
+  const [name, setName] = useState(client.name || "");
+  const [email, setEmail] = useState(client.email || "");
+  const [phone, setPhone] = useState(client.phone || "");
+  const [address, setAddress] = useState(client.address || "");
+  const [notes, setNotes] = useState(client.notes || "");
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    onSubmit({ name, email, phone, address, notes });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      ...client,
+      name,
+      email,
+      phone,
+      address,
+      notes,
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4">
-      <div className="grid gap-2">
-        <Label htmlFor="name">Nom</Label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Nom / Raison sociale</Label>
         <Input
           id="name"
           value={name}
@@ -438,44 +84,529 @@ const ClientForm: React.FC<ClientFormProps> = ({ client, onSubmit }) => {
           required
         />
       </div>
-      <div className="grid gap-2">
+      
+      <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
-          type="email"
           id="email"
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
       </div>
-      <div className="grid gap-2">
+      
+      <div className="space-y-2">
         <Label htmlFor="phone">Téléphone</Label>
         <Input
           id="phone"
-          value={phone}
+          value={phone || ""}
           onChange={(e) => setPhone(e.target.value)}
         />
       </div>
-      <div className="grid gap-2">
+      
+      <div className="space-y-2">
         <Label htmlFor="address">Adresse</Label>
-        <Input
+        <Textarea
           id="address"
-          value={address}
+          value={address || ""}
           onChange={(e) => setAddress(e.target.value)}
+          className="min-h-[80px]"
         />
       </div>
-      <div className="grid gap-2">
+      
+      <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea
           id="notes"
-          value={notes}
+          value={notes || ""}
           onChange={(e) => setNotes(e.target.value)}
+          className="min-h-[80px]"
         />
       </div>
+      
       <DialogFooter>
-        <Button type="submit">
-          {client ? 'Mettre à jour' : 'Créer'}
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Annuler
+        </Button>
+        <Button 
+          type="submit"
+          disabled={isSubmitting || !name || !email}
+          className="bg-violet hover:bg-violet/90"
+        >
+          {isSubmitting ? "Enregistrement..." : client.id ? "Mettre à jour" : "Ajouter"}
         </Button>
       </DialogFooter>
     </form>
   );
-};
+}
+
+export default function Clients() {
+  const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [clients, setClients] = useState<ClientWithCategories[]>([]);
+  const [filteredClients, setFilteredClients] = useState<ClientWithCategories[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [currentClient, setCurrentClient] = useState<Partial<Client>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [overdueCount, setOverdueCount] = useState(0);
+  const [nearDueCount, setNearDueCount] = useState(0);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Charger les clients depuis Supabase
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          // Handle the case where there's no logged-in user
+          setClients([]);
+          setFilteredClients([]);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Récupérer la liste des clients
+        const { data: clientsData, error } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        // Fetch categories for all clients
+        const clientsWithCategories = await Promise.all(clientsData.map(async (client) => {
+          // Récupérer le nombre de factures pour chaque client
+          const { data: countData } = await supabase.rpc(
+            'get_client_invoice_count', 
+            { client_id: client.id }
+          );
+          
+          // Récupérer les catégories pour chaque client
+          const { data: categoryData, error: categoryError } = await supabase.rpc(
+            'get_client_categories',
+            { p_client_id: client.id }
+          );
+          
+          if (categoryError) {
+            console.error("Error fetching client categories:", categoryError);
+          }
+          
+          return {
+            ...client,
+            invoiceCount: countData || 0,
+            categories: categoryData || []
+          } as ClientWithCategories;
+        }));
+
+        setClients(clientsWithCategories);
+        setFilteredClients(clientsWithCategories);
+        
+        // Also fetch all categories for the filter dropdown
+        const { data: allCategories, error: categoriesError } = await supabase
+          .from('client_categories')
+          .select('id, name, color')
+          .order('name');
+          
+        if (categoriesError) {
+          console.error("Error fetching categories:", categoriesError);
+        } else {
+          setCategories(allCategories || []);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des clients:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les clients. Veuillez réessayer.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Check for overdue invoices
+    const fetchOverdueData = async () => {
+      try {
+        const result = await checkOverdueInvoices();
+        if (result.success) {
+          setOverdueCount(result.overdueCount);
+          setNearDueCount(result.nearDueCount);
+        }
+      } catch (error) {
+        console.error("Error checking overdue invoices:", error);
+      }
+    };
+
+    fetchClients();
+    fetchOverdueData();
+  }, [toast]);
+
+  // Apply filters (search and category)
+  useEffect(() => {
+    let result = [...clients];
+    
+    // Apply search term filter
+    if (searchTerm.trim()) {
+      result = result.filter(
+        (client) =>
+          client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (client.address && client.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (client.notes && client.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    // Apply category filter
+    if (selectedCategoryId) {
+      result = result.filter(client => 
+        client.categories.some(cat => cat.category_id === selectedCategoryId)
+      );
+    }
+
+    setFilteredClients(result);
+  }, [searchTerm, selectedCategoryId, clients]);
+
+  // Ouvrir la boîte de dialogue pour ajouter un nouveau client
+  const openAddClientDialog = () => {
+    setCurrentClient({});
+    setIsClientDialogOpen(true);
+  };
+
+  // Ouvrir la boîte de dialogue pour modifier un client existant
+  const openEditClientDialog = (client: Client) => {
+    setCurrentClient(client);
+    setIsClientDialogOpen(true);
+  };
+
+  // Gérer la soumission du formulaire client
+  const handleClientSubmit = async (clientData: Partial<Client>) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Utilisateur non authentifié");
+      }
+      
+      if (clientData.id) {
+        // Mise à jour d'un client existant
+        const { error } = await supabase
+          .from('clients')
+          .update({
+            name: clientData.name,
+            email: clientData.email,
+            phone: clientData.phone,
+            address: clientData.address,
+            notes: clientData.notes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', clientData.id);
+          
+        if (error) throw error;
+          
+        toast({
+          title: "Client mis à jour",
+          description: `Les informations de ${clientData.name} ont été mises à jour avec succès.`
+        });
+        
+        // Mettre à jour l'état local
+        setClients(prevClients => 
+          prevClients.map(c => 
+            c.id === clientData.id ? { ...c, ...clientData as Client } as ClientWithCategories : c
+          )
+        );
+      } else {
+        // Ajout d'un nouveau client
+        const { data, error } = await supabase
+          .from('clients')
+          .insert({
+            name: clientData.name,
+            email: clientData.email,
+            phone: clientData.phone,
+            address: clientData.address,
+            notes: clientData.notes,
+            user_id: user.id // Add the user_id field
+          })
+          .select();
+          
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const newClient = {
+            ...data[0],
+            invoiceCount: 0,
+            categories: []
+          } as ClientWithCategories;
+          
+          toast({
+            title: "Client ajouté",
+            description: `${newClient.name} a été ajouté à vos clients avec succès.`
+          });
+          
+          // Ajouter le nouveau client à l'état local
+          setClients(prevClients => [...prevClients, newClient]);
+        }
+      }
+      
+      setIsClientDialogOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement du client:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de l'enregistrement du client.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Fonction pour voir les détails d'un client
+  const viewClientDetails = (client: Client) => {
+    navigate(`/clients/${client.id}`);
+  };
+
+  // Fonction pour facturer un client
+  const invoiceClient = (client: Client) => {
+    navigate(`/invoicing?client=${client.id}`);
+  };
+
+  // Voir les factures en retard
+  const viewOverdueInvoices = () => {
+    // Rediriger vers la page des factures avec un filtre pour les factures en retard
+    // navigate('/invoices', { state: { filter: 'overdue' } });
+    toast({
+      title: "Factures en retard",
+      description: "Redirection vers les factures en retard..."
+    });
+  };
+
+  // Voir les factures proches de l'échéance
+  const viewNearDueInvoices = () => {
+    toast({
+      title: "Factures à échéance proche",
+      description: "Redirection vers les factures à échéance proche..."
+    });
+    // Dans une vraie application, vous redirigeriez vers /invoices avec un filtre approprié
+  };
+  
+  // Reset category filter
+  const clearCategoryFilter = () => {
+    setSelectedCategoryId(null);
+  };
+
+  return (
+    <>
+      <Header 
+        title="Clients" 
+        description="Gérez vos clients récurrents"
+        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+      />
+      
+      <div className="space-y-6">
+        {(overdueCount > 0 || nearDueCount > 0) && (
+          <InvoicePaymentAlert 
+            overdueCount={overdueCount}
+            nearDueCount={nearDueCount}
+            onViewOverdue={viewOverdueInvoices}
+            onViewNearDue={viewNearDueInvoices}
+          />
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Rechercher un client..." 
+                className="pl-10 bg-background" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            {categories.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant={selectedCategoryId ? "secondary" : "outline"}>
+                    <Tag className="mr-2 h-4 w-4" />
+                    {selectedCategoryId 
+                      ? categories.find(c => c.id === selectedCategoryId)?.name || "Catégorie"
+                      : "Catégories"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Filtrer par catégorie</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {categories.map(category => (
+                    <DropdownMenuItem 
+                      key={category.id}
+                      onClick={() => setSelectedCategoryId(category.id)}
+                      className="cursor-pointer flex items-center"
+                    >
+                      {category.color && (
+                        <span 
+                          className="h-3 w-3 rounded-full mr-2"
+                          style={{ backgroundColor: category.color }}
+                        ></span>
+                      )}
+                      {category.name}
+                    </DropdownMenuItem>
+                  ))}
+                  {selectedCategoryId && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={clearCategoryFilter}
+                        className="cursor-pointer text-primary"
+                      >
+                        Effacer le filtre
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+          
+          <Button 
+            className="bg-primary hover:bg-primary/90"
+            onClick={openAddClientDialog}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nouveau client
+          </Button>
+        </div>
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredClients.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-lg text-muted-foreground">Aucun client trouvé</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={openAddClientDialog}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Ajouter un client
+                </Button>
+              </div>
+            ) : (
+              filteredClients.map((client) => (
+                <Card key={client.id} className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="p-6">
+                      <h3 className="text-lg font-medium mb-1">{client.name}</h3>
+                      
+                      {client.categories && client.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {client.categories.map(category => (
+                            <Badge 
+                              key={category.category_id} 
+                              variant="outline"
+                              style={{ 
+                                backgroundColor: category.category_color || undefined,
+                                color: category.category_color ? '#ffffff' : undefined 
+                              }}
+                              className="text-xs"
+                            >
+                              {category.category_name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 mr-2" />
+                          <span>{client.email}</span>
+                        </div>
+                        {client.phone && (
+                          <div className="flex items-center">
+                            <Phone className="h-4 w-4 mr-2" />
+                            <span>{client.phone}</span>
+                          </div>
+                        )}
+                        {client.address && (
+                          <div className="flex items-start">
+                            <Building className="h-4 w-4 mr-2 mt-0.5" />
+                            <span>{client.address}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center">
+                          <FileText className="h-4 w-4 mr-2" />
+                          <span>{client.invoiceCount} facture{client.invoiceCount > 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="border-t flex">
+                      <Button 
+                        variant="ghost" 
+                        className="flex-1 rounded-none h-12"
+                        onClick={() => viewClientDetails(client)}
+                      >
+                        Détails
+                      </Button>
+                      <div className="border-l h-12" />
+                      <Button 
+                        variant="ghost" 
+                        className="flex-1 rounded-none h-12"
+                        onClick={() => invoiceClient(client)}
+                      >
+                        Facturer
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Boîte de dialogue pour ajouter/modifier un client */}
+      <Dialog open={isClientDialogOpen} onOpenChange={setIsClientDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {currentClient.id ? "Modifier le client" : "Ajouter un client"}
+            </DialogTitle>
+          </DialogHeader>
+          <ClientForm 
+            client={currentClient} 
+            onSubmit={handleClientSubmit}
+            onCancel={() => setIsClientDialogOpen(false)}
+            isSubmitting={isSubmitting}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      <MobileNavigation 
+        isOpen={isMobileMenuOpen}
+        onOpenChange={setIsMobileMenuOpen}
+      />
+    </>
+  );
+}

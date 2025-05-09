@@ -1,92 +1,134 @@
 
-// supabase/functions/list-invoices/index.ts
-import { serve } from 'https://deno.land/std@0.131.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.0.0';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
+import Stripe from 'https://esm.sh/stripe@12.3.0'
 
-// Configuration pour les réponses CORS
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Gestionnaire pour les requêtes OPTIONS (CORS preflight)
-function handleCors(request: Request) {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 204 
-    });
-  }
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 }
 
-serve(async (request: Request) => {
-  // Gérer les requêtes CORS préliminaires
-  const corsResponse = handleCors(request);
-  if (corsResponse) return corsResponse;
+serve(async (req) => {
+  // Handle CORS preflight request
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: corsHeaders,
+      status: 204,
+    })
+  }
 
   try {
-    // Configuration du client Supabase
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Récupération des factures depuis la base de données
-    const { data: invoicesData, error: invoicesError } = await supabase
-      .from('stripe_invoices')
-      .select(`
-        id, 
-        invoice_number,
-        issued_date,
-        due_date,
-        paid_date,
-        amount_total,
-        status,
-        currency,
-        clients (
-          id,
-          client_name,
-          email
-        )
-      `)
-      .order('issued_date', { ascending: false });
-
-    if (invoicesError) {
-      console.error("Error fetching invoices:", invoicesError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch invoices', details: invoicesError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+    // Get authorization from request headers
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header provided')
     }
 
-    // Transformer les données pour le format attendu par le frontend
-    const invoices = invoicesData.map(invoice => {
-      return {
-        id: invoice.id,
-        number: invoice.invoice_number,
-        client: invoice.clients?.client_name || 'Unknown client',
-        clientId: invoice.clients?.id,
-        amount: (invoice.amount_total / 100).toFixed(2) + ' ' + (invoice.currency || 'EUR'),
-        amountValue: invoice.amount_total / 100,
-        currency: invoice.currency || 'EUR',
-        date: new Date(invoice.issued_date).toLocaleDateString(),
-        dueDate: invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : null,
-        status: invoice.status || 'pending'
-      };
-    });
+    // Create Supabase client with auth context
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    )
 
+    // Get authenticated user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser()
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
+    }
+
+    // Get invoices from database
+    const { data: invoices, error: invoicesError } = await supabaseClient
+      .from('stripe_invoices')
+      .select(`
+        *,
+        stripe_customers(name, email)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (invoicesError) {
+      console.error('Error fetching invoices:', invoicesError)
+      throw new Error(`Error fetching invoices: ${invoicesError.message}`)
+    }
+
+    // Initialize Stripe
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    })
+
+    // Check for status updates of the invoices from Stripe
+    const pendingInvoices = invoices.filter(
+      invoice => invoice.status === 'open' || invoice.status === 'draft'
+    )
+
+    // Update pending invoices status in database if needed
+    const statusUpdates = []
+    for (const invoice of pendingInvoices) {
+      if (invoice.stripe_invoice_id) {
+        try {
+          const stripeInvoice = await stripe.invoices.retrieve(invoice.stripe_invoice_id)
+          
+          if (stripeInvoice.status !== invoice.status) {
+            const { data, error } = await supabaseClient
+              .from('stripe_invoices')
+              .update({
+                status: stripeInvoice.status,
+                amount_paid: stripeInvoice.amount_paid,
+                paid_date: stripeInvoice.status === 'paid' ? new Date().toISOString() : null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', invoice.id)
+              .select()
+              .single()
+            
+            if (!error && data) {
+              statusUpdates.push(data)
+            }
+          }
+        } catch (error) {
+          console.error(`Error retrieving invoice ${invoice.stripe_invoice_id}:`, error)
+        }
+      }
+    }
+
+    // Return success response with possibly updated invoices
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        invoices: invoices,
+      JSON.stringify({
+        success: true,
+        invoices: statusUpdates.length > 0 ? 
+          invoices.map(invoice => {
+            const updated = statusUpdates.find(update => update.id === invoice.id)
+            return updated || invoice
+          }) : 
+          invoices,
+        statusUpdates: statusUpdates.length,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-    );
-
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    )
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error('Error listing invoices:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal Server Error', details: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      }
+    )
   }
-});
+})

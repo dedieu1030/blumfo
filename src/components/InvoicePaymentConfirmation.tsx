@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -57,30 +58,27 @@ export function InvoicePaymentConfirmation({
     
     try {
       // Mettre à jour le statut de la facture dans Supabase
-      const updateData = {
-        status: 'paid',
-        paid_date: paymentDate.toISOString(),
-        amount_paid: parseInt(invoice.amount.replace(/[^0-9]/g, '')), 
-        metadata: {
-          payment_method: paymentMethod,
-          reference: reference,
-          manually_confirmed: true,
-          confirmed_at: new Date().toISOString()
-        }
-      };
-      
-      // Using "as any" to bypass type checking issues with Supabase client
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('stripe_invoices')
-        .update(updateData)
+        .update({
+          status: 'paid',
+          paid_date: paymentDate.toISOString(),
+          amount_paid: parseInt(invoice.amount.replace(/[^0-9]/g, '')), 
+          metadata: {
+            payment_method: paymentMethod,
+            reference: reference,
+            manually_confirmed: true,
+            confirmed_at: new Date().toISOString()
+          }
+        })
         .eq('stripe_invoice_id', invoice.stripeInvoiceId)
         .eq('id', invoice.id);
 
       if (error) throw error;
       
       toast({
-        title: t("paymentConfirmed", "Paiement confirmé"),
-        description: t("invoiceMarkedAsPaid", "La facture {{number}} a été marquée comme payée", { number: invoice.number }),
+        title: t("paymentConfirmed"),
+        description: t("invoiceMarkedAsPaid", { number: invoice.number }),
       });
       
       onConfirm();
@@ -89,7 +87,7 @@ export function InvoicePaymentConfirmation({
       console.error("Erreur lors de la confirmation du paiement:", error);
       toast({
         title: t("error", "Erreur"),
-        description: t("paymentConfirmError", "Erreur lors de la confirmation du paiement"),
+        description: t("paymentConfirmError"),
         variant: "destructive"
       });
     } finally {

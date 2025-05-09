@@ -85,7 +85,7 @@ export async function getReminderSchedules(): Promise<{
   error?: string;
 }> {
   try {
-    const { data: schedules, error } = await (supabase as any)
+    const { data: schedules, error } = await supabase
       .from('reminder_schedules')
       .select('*, reminder_rules(*)');
     
@@ -98,12 +98,12 @@ export async function getReminderSchedules(): Promise<{
     }
 
     // Transform database model to application model
-    const formattedSchedules: ReminderSchedule[] = (schedules || []).map((schedule: any) => ({
+    const formattedSchedules: ReminderSchedule[] = schedules.map(schedule => ({
       id: schedule.id,
       name: schedule.name,
       enabled: schedule.enabled,
       isDefault: schedule.is_default,
-      triggers: (schedule.reminder_rules || []).map((rule: any) => ({
+      triggers: (schedule.reminder_rules || []).map(rule => ({
         id: rule.id,
         triggerType: rule.trigger_type as ReminderTrigger['triggerType'],
         triggerValue: rule.trigger_value,
@@ -145,7 +145,7 @@ export async function saveReminderSchedule(schedule: ReminderSchedule): Promise<
     }
 
     // Now include the user_id when upserting the schedule
-    const { data: savedSchedule, error: scheduleError } = await (supabase as any)
+    const { data: savedSchedule, error: scheduleError } = await supabase
       .from('reminder_schedules')
       .upsert({
         id: schedule.id,
@@ -167,7 +167,7 @@ export async function saveReminderSchedule(schedule: ReminderSchedule): Promise<
 
     // Delete existing rules for this schedule to replace them with new ones
     if (schedule.triggers.length > 0) {
-      const { error: deleteError } = await (supabase as any)
+      const { error: deleteError } = await supabase
         .from('reminder_rules')
         .delete()
         .eq('schedule_id', savedSchedule.id);
@@ -185,7 +185,7 @@ export async function saveReminderSchedule(schedule: ReminderSchedule): Promise<
         email_body: trigger.emailBody
       }));
 
-      const { error: insertError } = await (supabase as any)
+      const { error: insertError } = await supabase
         .from('reminder_rules')
         .insert(rulesData);
       
@@ -225,7 +225,7 @@ export async function deleteReminderSchedule(scheduleId: string): Promise<{
   error?: string;
 }> {
   try {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('reminder_schedules')
       .delete()
       .eq('id', scheduleId);
@@ -259,7 +259,7 @@ export async function getInvoiceReminderHistory(invoiceId: string): Promise<{
   error?: string;
 }> {
   try {
-    const { data: history, error } = await (supabase as any)
+    const { data: history, error } = await supabase
       .from('invoice_reminders')
       .select('*')
       .eq('invoice_id', invoiceId)

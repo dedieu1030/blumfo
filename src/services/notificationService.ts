@@ -1,138 +1,103 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Notification } from "@/types/notification";
 import { toast } from "sonner";
-import { Notification } from "@/types/invoice";
 
-// Fetch notifications for the current user
-export const fetchNotifications = async (limit: number = 10, offset: number = 0) => {
+/**
+ * Fetches all notifications for the current user
+ */
+export const fetchNotifications = async (): Promise<Notification[]> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return [];
-
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', session?.user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('created_at', { ascending: false });
     
-    if (error) throw error;
-    return data as Notification[];
+    if (error) {
+      throw error;
+    }
+    
+    return (data as unknown as Notification[]) || [];
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    console.error("Error fetching notifications:", error);
     return [];
   }
 };
 
-// Mark notification as read
-export const markNotificationAsRead = async (notificationId: string) => {
+/**
+ * Marks a notification as read
+ */
+export const markNotificationAsRead = async (id: string): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return false;
-
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
-      .eq('id', notificationId)
-      .eq('user_id', session.user.id);
+      .eq('id', id);
     
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error('Error marking notification as read:', error);
-    return false;
-  }
-};
-
-// Mark all notifications as read
-export const markAllNotificationsAsRead = async () => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return false;
-
-    const { error } = await (supabase as any)
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('user_id', session.user.id)
-      .eq('is_read', false);
-    
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error('Error marking all notifications as read:', error);
-    return false;
-  }
-};
-
-// Count unread notifications
-export const countUnreadNotifications = async () => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return 0;
-
-    const { count, error } = await (supabase as any)
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', session.user.id)
-      .eq('is_read', false);
-    
-    if (error) throw error;
-    return count;
-  } catch (error) {
-    console.error('Error counting unread notifications:', error);
-    return 0;
-  }
-};
-
-// Subscribe to real-time notifications
-export const subscribeToNotifications = (callback: (notification: Notification) => void) => {
-  // Create a function to setup the subscription when we have a session
-  const setupSubscription = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return () => {};
-      
-      // Subscribe to notifications table changes for the current user
-      const channel = supabase
-        .channel('public:notifications')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${session.user.id}`
-          },
-          (payload) => {
-            const newNotification = payload.new as Notification;
-            
-            // Show toast notification
-            toast(`New notification: ${newNotification.title}`, {
-              description: newNotification.message,
-              duration: 5000,
-            });
-            
-            // Execute callback with the new notification
-            callback(newNotification);
-          }
-        )
-        .subscribe();
-      
-      // Return cleanup function
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } catch (error) {
-      console.error('Error setting up notification subscription:', error);
-      return () => {};
+    if (error) {
+      throw error;
     }
-  };
+    
+    return true;
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    return false;
+  }
+};
 
-  // Execute the async setup function
-  const cleanupPromise = setupSubscription();
-  
-  // Return a cleanup function that will use the promise result when available
+/**
+ * Marks all notifications as read
+ */
+export const markAllNotificationsAsRead = async (): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('is_read', false);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error marking all notifications as read:", error);
+    return false;
+  }
+};
+
+/**
+ * Subscribes to real-time notifications
+ */
+export const subscribeToNotifications = (
+  onNotification: (notification: Notification) => void
+) => {
+  const channel = supabase
+    .channel('notification-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications'
+      },
+      (payload) => {
+        const newNotification = payload.new as Notification;
+        
+        // Show toast notification
+        toast(newNotification.title, {
+          description: newNotification.message,
+          duration: 5000
+        });
+        
+        // Call the callback with the new notification
+        onNotification(newNotification);
+      }
+    )
+    .subscribe();
+    
+  // Return a cleanup function
   return () => {
-    cleanupPromise.then(cleanup => cleanup());
+    supabase.removeChannel(channel);
   };
 };
