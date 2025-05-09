@@ -5,37 +5,47 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 interface TaxRateSelectorProps {
-  defaultValue: number;
+  defaultValue: number | string;
   onChange: (value: number) => void;
+  showLabel?: boolean;
 }
 
-export function TaxRateSelector({ defaultValue = 20, onChange }: TaxRateSelectorProps) {
+export function TaxRateSelector({ 
+  defaultValue = 20, 
+  onChange,
+  showLabel = true 
+}: TaxRateSelectorProps) {
+  // Convert defaultValue to number for internal use
+  const defaultValueNum = typeof defaultValue === 'string' ? parseFloat(defaultValue) || 0 : defaultValue;
+
   // Convert number to string for the radio group
   const [selectedOption, setSelectedOption] = useState<string>(
-    defaultValue === 0 ? "none" : 
-    defaultValue === 5.5 ? "reduced" :
-    defaultValue === 10 ? "intermediate" :
-    defaultValue === 20 ? "standard" : "custom"
+    defaultValueNum === 0 ? "none" : 
+    defaultValueNum === 5.5 ? "reduced" :
+    defaultValueNum === 10 ? "intermediate" :
+    defaultValueNum === 20 ? "standard" : "custom"
   );
   
   const [customRate, setCustomRate] = useState<string>(
     !["none", "reduced", "intermediate", "standard"].includes(selectedOption) 
-      ? String(defaultValue)
+      ? String(defaultValueNum)
       : ""
   );
 
-  // Apply the default value on component mount
+  // Apply the default value on component mount or when defaultValue changes
   useEffect(() => {
     if (defaultValue !== undefined) {
+      const numValue = typeof defaultValue === 'string' ? parseFloat(defaultValue) || 0 : defaultValue;
+      
       setSelectedOption(
-        defaultValue === 0 ? "none" : 
-        defaultValue === 5.5 ? "reduced" :
-        defaultValue === 10 ? "intermediate" :
-        defaultValue === 20 ? "standard" : "custom"
+        numValue === 0 ? "none" : 
+        numValue === 5.5 ? "reduced" :
+        numValue === 10 ? "intermediate" :
+        numValue === 20 ? "standard" : "custom"
       );
       
-      if (![0, 5.5, 10, 20].includes(defaultValue)) {
-        setCustomRate(String(defaultValue));
+      if (![0, 5.5, 10, 20].includes(numValue)) {
+        setCustomRate(String(numValue));
       }
     }
   }, [defaultValue]);
@@ -85,7 +95,9 @@ export function TaxRateSelector({ defaultValue = 20, onChange }: TaxRateSelector
 
   return (
     <div className="space-y-4">
-      <Label htmlFor="tax-rate" className="text-base font-medium">Taux de TVA</Label>
+      {showLabel && (
+        <Label htmlFor="tax-rate" className="text-base font-medium">Taux de TVA</Label>
+      )}
       <RadioGroup 
         value={selectedOption} 
         onValueChange={handleOptionChange}

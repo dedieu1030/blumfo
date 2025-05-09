@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -39,7 +38,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
   const [description, setDescription] = useState("");
   const [priceCents, setPriceCents] = useState("");
   const [currency, setCurrency] = useState("EUR");
-  const [taxRate, setTaxRate] = useState("");
+  const [taxRate, setTaxRate] = useState<number>(20); // Changed to number type
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState<string | null>("month");
   const [recurringIntervalCount, setRecurringIntervalCount] = useState("1");
@@ -65,7 +64,8 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
         setDescription(product.description || "");
         setPriceCents(product.price_cents?.toString() || "");
         setCurrency(product.currency || "EUR");
-        setTaxRate(product.tax_rate?.toString() || "");
+        // Handle tax_rate properly, converting to number if it's a string
+        setTaxRate(typeof product.tax_rate === 'string' ? parseFloat(product.tax_rate) || 0 : (product.tax_rate || 0));
         setIsRecurring(product.is_recurring || false);
         setRecurringInterval(product.recurring_interval);
         setRecurringIntervalCount(product.recurring_interval_count?.toString() || "1");
@@ -78,7 +78,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
         setDescription("");
         setPriceCents("");
         setCurrency("EUR");
-        setTaxRate("20");
+        setTaxRate(20);
         setIsRecurring(false);
         setRecurringInterval("month");
         setRecurringIntervalCount("1");
@@ -88,6 +88,11 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
       }
     }
   }, [open, product]);
+  
+  // Handle tax rate change as a number
+  const handleTaxRateChange = (value: number) => {
+    setTaxRate(value);
+  };
   
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -109,7 +114,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
         description: description || null,
         price_cents: price,
         currency,
-        tax_rate: taxRate ? parseFloat(taxRate) : null,
+        tax_rate: taxRate,
         is_recurring: isRecurring,
         product_type: productType as 'product' | 'service' | null,
         active,
@@ -249,7 +254,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
             <div className="col-span-4 md:col-span-3">
               <TaxRateSelector 
                 defaultValue={taxRate} 
-                onChange={setTaxRate} 
+                onChange={handleTaxRateChange} 
                 showLabel={false} 
               />
             </div>
