@@ -1,151 +1,158 @@
-
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { NewClientForm } from "./NewClientForm";
-import { Client, DbClient } from "@/types/invoice";
+import { DbClient } from "@/types/invoice";
 
-// Fonction d'adaptation depuis les données de la base Supabase vers notre modèle Client
-export const mapDbClientToClient = (dbClient: DbClient, invoiceCount: number = 0): Client => {
+// Export the Client type so it can be imported elsewhere
+export interface Client {
+  id: string;
+  name: string;  // Corresponds to client_name in the database
+  email: string;
+  phone?: string;
+  address?: string;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string | null;
+  user_id: string;  // Corresponds to company_id in the database
+  invoiceCount?: number;
+}
+
+// Function to map DbClient to Client
+export const mapDbClientToClient = (dbClient: DbClient): Client => {
   return {
     id: dbClient.id,
     name: dbClient.client_name,
     email: dbClient.email || "",
     phone: dbClient.phone || undefined,
     address: dbClient.address || undefined,
-    notes: dbClient.notes,
+    notes: dbClient.notes || null,
     created_at: dbClient.created_at,
     updated_at: dbClient.updated_at,
-    user_id: dbClient.company_id || "", // Utilisation de company_id comme une sorte de user_id
-    invoiceCount
+    user_id: dbClient.company_id || "",
+    invoiceCount: 0
   };
 };
 
 interface ClientSelectorProps {
   onClientSelect: (client: Client) => void;
-  buttonText?: string;
 }
 
-export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau client" }: ClientSelectorProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+export function ClientSelector({ onClientSelect }: ClientSelectorProps) {
+  const [open, setOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
-  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showNewClientForm, setShowNewClientForm] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [isNewClientFormOpen, setIsNewClientFormOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchClients = async () => {
-      setIsLoading(true);
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('clients')
-          .select('*')
-          .order('client_name');
+          .select('*');
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching clients:", error);
+          return;
+        }
         
-        // Adapter les données de la base de données pour correspondre à notre modèle Client
-        const mappedClients = (data || []).map((dbClient: DbClient) => 
-          mapDbClientToClient(dbClient)
-        );
-        
+        const mappedClients = data.map((dbClient: DbClient) => mapDbClientToClient(dbClient));
         setClients(mappedClients);
-        setFilteredClients(mappedClients);
       } catch (error) {
-        console.error('Error fetching clients:', error);
+        console.error("Error fetching clients:", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
     
     fetchClients();
   }, []);
   
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredClients(clients);
-    } else {
-      const lowercaseQuery = searchQuery.toLowerCase();
-      const filtered = clients.filter(client => 
-        client.name.toLowerCase().includes(lowercaseQuery) || 
-        (client.email && client.email.toLowerCase().includes(lowercaseQuery))
-      );
-      setFilteredClients(filtered);
-    }
-  }, [searchQuery, clients]);
+  const filteredClients = clients.filter((client) =>
+    client.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchValue.toLowerCase())
+  );
+  
+  const handleClientSelect = (client: Client) => {
+    onClientSelect(client);
+    setOpen(false);
+  };
   
   const handleClientCreated = (newClient: Client) => {
-    // Add the new client to the clients list
-    setClients(prevClients => [...prevClients, newClient]);
-    
-    // Select the newly created client
+    setClients([...clients, newClient]);
     onClientSelect(newClient);
-    
-    // Close the form
-    setShowNewClientForm(false);
+    setOpen(false);
   };
 
   return (
     <>
-      <div className="space-y-4">
-        <div className="relative">
-          <Input
-            type="search"
-            placeholder="Rechercher un client..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-        </div>
-
-        {isLoading ? (
-          <div className="text-center p-4">
-            <span className="animate-spin inline-block h-6 w-6 border-t-2 border-primary rounded-full" />
-          </div>
-        ) : filteredClients.length > 0 ? (
-          <div className="border rounded-md overflow-hidden max-h-[300px] overflow-y-auto">
-            {filteredClients.map((client) => (
-              <div
-                key={client.id}
-                className="p-3 border-b last:border-0 flex items-center justify-between hover:bg-muted/50 cursor-pointer"
-                onClick={() => onClientSelect(client)}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-[200px] justify-between"
+            disabled={loading}
+          >
+            {onClientSelect ? (
+              clients.find((client) => client.id === onClientSelect)?.name || "Sélectionner un client..."
+            ) : (
+              "Sélectionner un client..."
+            )}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[300px] p-0">
+          <Command>
+            <CommandInput placeholder="Rechercher un client..." value={searchValue} onValueChange={setSearchValue} />
+            {filteredClients.length > 0 ? (
+              <CommandList>
+                {filteredClients.map((client) => (
+                  <CommandItem
+                    key={client.id}
+                    value={client.name}
+                    onSelect={() => handleClientSelect(client)}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        onClientSelect === client ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {client.name}
+                  </CommandItem>
+                ))}
+              </CommandList>
+            ) : (
+              <CommandEmpty>Aucun client trouvé.</CommandEmpty>
+            )}
+            <CommandGroup>
+              <CommandItem
+                onSelect={() => {
+                  setOpen(false);
+                  setIsNewClientFormOpen(true);
+                }}
               >
-                <div>
-                  <div className="font-medium">{client.name}</div>
-                  {client.email && (
-                    <div className="text-sm text-muted-foreground">{client.email}</div>
-                  )}
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => onClientSelect(client)}>
-                  Sélectionner
-                </Button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center p-4 border rounded-md">
-            <p className="text-muted-foreground">Aucun client trouvé</p>
-          </div>
-        )}
-
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full flex items-center gap-2"
-          onClick={() => setShowNewClientForm(true)}
-        >
-          <User className="h-4 w-4" />
-          {buttonText}
-        </Button>
-      </div>
-
-      <NewClientForm 
-        open={showNewClientForm} 
-        onOpenChange={setShowNewClientForm} 
-        onClientCreated={handleClientCreated} 
+                <Plus className="mr-2 h-4 w-4" />
+                Créer un nouveau client
+              </CommandItem>
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      
+      <NewClientForm
+        open={isNewClientFormOpen}
+        onOpenChange={setIsNewClientFormOpen}
+        onClientCreated={handleClientCreated}
       />
     </>
   );
-};
+}

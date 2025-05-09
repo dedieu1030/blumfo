@@ -25,8 +25,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { Client, DbClient } from "@/types/invoice";
-import { mapDbClientToClient } from "@/components/ClientSelector";
+import { Client, mapDbClientToClient } from "@/components/ClientSelector";
+import { DbClient } from "@/types/invoice";
 import {
   Select,
   SelectContent,
@@ -67,7 +67,7 @@ export default function Clients() {
   // Define fetchCategories first to avoid "used before its declaration" error
   const fetchCategories = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('client_categories')
         .select('*');
 
@@ -90,7 +90,7 @@ export default function Clients() {
   const fetchClients = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('clients')
         .select('*');
 
@@ -104,27 +104,27 @@ export default function Clients() {
         throw error;
       }
 
-      // Convertir les données en format Client et ajouter les catégories
+      // Convert to Client format and add categories
       const clientsWithCategories = await Promise.all(
         data.map(async (dbClient: DbClient) => {
-          // Récupérer les catégories associées à ce client
-          const { data: clientCategories, error: categoryError } = await supabase
+          // Get categories associated with this client
+          const { data: clientCategories, error: categoryError } = await (supabase as any)
             .from('client_category_mappings')
             .select('category_id')
             .eq('client_id', dbClient.id);
 
           if (categoryError) {
-            console.error("Erreur lors de la récupération des catégories du client:", categoryError);
+            console.error("Error fetching client categories:", categoryError);
             return { ...mapDbClientToClient(dbClient), categories: [] };
           }
 
-          const categoryIds = clientCategories?.map(mapping => mapping.category_id) || [];
-          const clientCategories2 = categories.filter(cat => categoryIds.includes(cat.id));
+          const categoryIds = clientCategories?.map((mapping: any) => mapping.category_id) || [];
+          const clientCategories2 = categories.filter((cat: ClientCategory) => categoryIds.includes(cat.id));
 
-          // Convertir en format Client
+          // Convert to Client format
           const client = mapDbClientToClient(dbClient);
 
-          // Ajouter les catégories au client
+          // Add categories to client
           return {
             ...client,
             categories: clientCategories2
