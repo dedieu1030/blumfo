@@ -1,144 +1,203 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Client, mapDbClientToClient } from "./ClientSelector";
+
+const clientSchema = z.object({
+  client_name: z.string().min(1, "Le nom est requis"),
+  email: z.string().email("Email invalide").min(1, "L'email est requis"),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type ClientFormData = z.infer<typeof clientSchema>;
 
 interface NewClientFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onClientCreated: (client: { id: string; name: string }) => void;
+  onClientCreated: (client: Client) => void;
 }
 
-export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClientFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+export const NewClientForm = ({ open, onOpenChange, onClientCreated }: NewClientFormProps) => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<ClientFormData>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: {
+      client_name: "",
+      email: "",
+      phone: "",
+      address: "",
+      notes: "",
+    },
+  });
 
-  const handleSubmit = async () => {
-    if (!name) {
-      toast.error("Le nom du client est requis");
-      return;
-    }
-
-    setIsLoading(true);
-
+  const onSubmit = async (data: ClientFormData) => {
+    setIsSubmitting(true);
+    
     try {
-      // Get the current user
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("No authenticated user");
-      }
-
-      const { data, error } = await supabase
+      const { data: newClientData, error } = await supabase
         .from('clients')
-        .insert({
-          name,
-          email: email || null,
-          phone: phone || null,
-          address: address || null,
-          user_id: session.user.id
-        })
+        .insert(data)
         .select()
         .single();
-
+      
       if (error) throw error;
-
-      toast.success("Client créé avec succès");
       
-      // Pass the new client back to parent component
-      if (data) {
-        onClientCreated({ id: data.id, name: data.name });
-      }
+      toast({
+        title: "Client créé",
+        description: "Le client a été créé avec succès",
+      });
       
-      onOpenChange(false);
+      // Convertir les données DB en format Client
+      const newClient = mapDbClientToClient(newClientData);
+      
+      onClientCreated(newClient);
+      form.reset();
     } catch (error) {
-      console.error("Error creating client:", error);
-      toast.error("Erreur lors de la création du client");
+      console.error('Error creating client:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création du client",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
+  };
+  
+  const handleClose = () => {
+    form.reset();
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Nouveau client</DialogTitle>
+          <DialogTitle>Ajouter un nouveau client</DialogTitle>
+          <DialogDescription>
+            Remplissez les informations du client. Seuls le nom et l'email sont obligatoires.
+          </DialogDescription>
         </DialogHeader>
-
-        <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="client-name">Nom *</Label>
-            <Input
-              id="client-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Nom du client ou entreprise"
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="client_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom / Raison sociale *</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="client-email">Email</Label>
-            <Input
-              id="client-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@example.com"
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email *</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="client-phone">Téléphone</Label>
-            <Input
-              id="client-phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+33 1 23 45 67 89"
+            
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Téléphone</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="client-address">Adresse</Label>
-            <Textarea
-              id="client-address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Adresse postale"
-              rows={3}
+            
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adresse</FormLabel>
+                  <FormControl>
+                    <Textarea className="min-h-[80px]" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <span className="animate-spin h-4 w-4 mr-2 border-t-2 border-current rounded-full" />
-                Traitement...
-              </>
-            ) : (
-              "Créer"
-            )}
-          </Button>
-        </DialogFooter>
+            
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea className="min-h-[80px]" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Création..." : "Créer un client"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+// Exporter la fonction d'adaptation pour la réutiliser
+export const mapDbClientToClient = (dbClient: any): Client => {
+  return {
+    id: dbClient.id,
+    name: dbClient.client_name,
+    email: dbClient.email || "",
+    phone: dbClient.phone || undefined,
+    address: dbClient.address || undefined,
+    notes: dbClient.notes || undefined,
+    created_at: dbClient.created_at,
+    updated_at: dbClient.updated_at,
+    user_id: dbClient.company_id || "", // Utilisation de company_id comme user_id
+    invoiceCount: 0
+  };
+};

@@ -1,188 +1,127 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
-import Stripe from 'https://esm.sh/stripe@12.3.0'
+// supabase/functions/create-invoice/index.ts
+import { serve } from 'https://deno.land/std@0.131.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.0.0';
 
+// Configuration pour les réponses CORS
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
-}
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
-interface InvoiceCreateParams {
-  customer: string | null
-  customerEmail?: string
-  customerName?: string
-  items: Array<{
-    description: string
-    quantity: number
-    unit_amount: number
-    tax_rates?: string[]
-  }>
-  metadata?: Record<string, string>
-  dueDate?: number // Unix timestamp
-  footer?: string
-  memo?: string
-  currency?: string
-  taxRates?: string[]
-}
-
-serve(async (req) => {
-  // Handle CORS preflight request
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
+// Gestionnaire pour les requêtes OPTIONS (CORS preflight)
+function handleCors(request: Request) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { 
       headers: corsHeaders,
-      status: 204,
-    })
+      status: 204 
+    });
   }
+}
+
+serve(async (request: Request) => {
+  // Gérer les requêtes CORS préliminaires
+  const corsResponse = handleCors(request);
+  if (corsResponse) return corsResponse;
 
   try {
-    // Get authorization from request headers
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header provided')
-    }
+    // Configuration du client Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Create Supabase client with auth context
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    )
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser()
-
-    if (userError || !user) {
+    // Vérification de la méthode de la requête
+    if (request.method !== 'POST') {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        }
-      )
+        JSON.stringify({ error: 'Method not allowed' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 405 }
+      );
     }
 
-    // Parse request body
-    const requestData: InvoiceCreateParams = await req.json()
+    // Récupération et validation des données de la requête
+    const requestData = await request.json();
+    const { invoiceData, clientInfo } = requestData;
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-    })
+    if (!invoiceData || !clientInfo) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request data' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    console.log("Creating invoice with data:", { invoiceData, clientInfo });
 
-    // Create customer if not provided
-    let customerId = requestData.customer
-    if (!customerId && requestData.customerEmail) {
-      // Check if customer already exists with this email
-      const customerSearch = await stripe.customers.list({
-        email: requestData.customerEmail,
-        limit: 1,
-      })
+    // Création ou mise à jour du client si nécessaire
+    let clientId = clientInfo.id;
 
-      if (customerSearch.data.length > 0) {
-        customerId = customerSearch.data[0].id
-      } else {
-        // Create new customer
-        const newCustomer = await stripe.customers.create({
-          email: requestData.customerEmail,
-          name: requestData.customerName,
-        })
-        customerId = newCustomer.id
-
-        // Save customer to database
-        await supabaseClient.from('stripe_customers').insert({
-          user_id: user.id,
-          stripe_customer_id: customerId,
-          email: requestData.customerEmail,
-          name: requestData.customerName,
-        })
+    if (!clientId) {
+      // Format de client pour la DB
+      const clientDbData = {
+        client_name: clientInfo.name, // Utilise client_name au lieu de name
+        email: clientInfo.email,
+        phone: clientInfo.phone,
+        address: clientInfo.address,
+      };
+      
+      const { data: newClient, error: clientError } = await supabase
+        .from('clients')
+        .insert(clientDbData)
+        .select()
+        .single();
+        
+      if (clientError) {
+        console.error("Error creating client:", clientError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create client', details: clientError }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
       }
+      
+      clientId = newClient.id;
+      console.log("New client created:", newClient);
     }
 
-    if (!customerId) {
-      throw new Error('No customer ID provided or could not create customer')
-    }
-
-    // Create invoice items
-    const invoiceItems = []
-    for (const item of requestData.items) {
-      const invoiceItem = await stripe.invoiceItems.create({
-        customer: customerId,
-        description: item.description,
-        quantity: item.quantity,
-        unit_amount: item.unit_amount,
-        currency: requestData.currency || 'eur',
-        tax_rates: item.tax_rates || requestData.taxRates,
-      })
-      invoiceItems.push(invoiceItem)
-    }
-
-    // Create invoice
-    const invoiceOptions: Stripe.InvoiceCreateParams = {
-      customer: customerId,
-      auto_advance: true,
-      collection_method: 'send_invoice',
-      due_date: requestData.dueDate,
-      footer: requestData.footer,
-      metadata: requestData.metadata,
-    }
-
-    const invoice = await stripe.invoices.create(invoiceOptions)
-
-    // Finalize invoice
-    const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoice.id)
-
-    // Create payment link for the invoice
-    const paymentLink = `https://invoice.stripe.com/i/${finalizedInvoice.id}`
-
-    // Save invoice to database
-    const { data: savedInvoice, error: saveError } = await supabaseClient
+    // Création d'une facture dans stripe_invoices
+    const invoiceDbData = {
+      client_id: clientId,
+      invoice_number: invoiceData.invoiceNumber,
+      issued_date: invoiceData.invoiceDate,
+      due_date: invoiceData.dueDate || null,
+      amount_total: invoiceData.total * 100, // Conversion en centimes pour Stripe
+      currency: invoiceData.issuerInfo?.defaultCurrency || 'EUR',
+      status: 'pending'
+    };
+    
+    const { data: newInvoice, error: invoiceError } = await supabase
       .from('stripe_invoices')
-      .insert({
-        user_id: user.id,
-        invoice_number: finalizedInvoice.number,
-        stripe_invoice_id: finalizedInvoice.id,
-        stripe_customer_id: customerId,
-        amount_total: finalizedInvoice.total,
-        currency: finalizedInvoice.currency,
-        status: finalizedInvoice.status,
-        payment_link: paymentLink,
-        due_date: finalizedInvoice.due_date ? new Date(finalizedInvoice.due_date * 1000).toISOString() : null,
-        metadata: requestData.metadata,
-      })
+      .insert(invoiceDbData)
       .select()
-      .single()
-
-    if (saveError) {
-      console.error('Error saving invoice to database:', saveError)
+      .single();
+      
+    if (invoiceError) {
+      console.error("Error creating invoice:", invoiceError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create invoice', details: invoiceError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
+    
+    console.log("New invoice created:", newInvoice);
 
-    // Return success response
     return new Response(
-      JSON.stringify({
-        success: true,
-        invoice: finalizedInvoice,
-        paymentLink,
-        saved: savedInvoice,
+      JSON.stringify({ 
+        success: true, 
+        invoice: newInvoice,
+        message: 'Invoice created successfully'
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    )
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
+
   } catch (error) {
-    console.error('Error creating invoice:', error)
+    console.error("Unexpected error:", error);
     return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    )
+      JSON.stringify({ error: 'Internal Server Error', details: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
   }
-})
+});

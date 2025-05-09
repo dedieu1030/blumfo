@@ -1,3 +1,4 @@
+
 export interface CompanyProfile {
   name: string;
   address: string;
@@ -111,4 +112,19 @@ export interface CurrencyInfo {
   symbol: string;
   name: string;
   position: "prefix" | "suffix";
+}
+
+// Interface mise à jour pour client pour refléter la structure de la base de données
+export interface DbClient {
+  id: string;
+  client_name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  company_id: string | null;
+  group_id: string | null;
+  reference_number: string | null;
 }

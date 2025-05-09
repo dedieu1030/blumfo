@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import { NewClientForm } from "./NewClientForm";
+import { DbClient } from "@/types/invoice";
 
 export interface Client {
   id: string;
@@ -24,6 +25,22 @@ interface ClientSelectorProps {
   buttonText?: string;
 }
 
+// Fonction d'adaptation depuis les données de la base Supabase vers notre modèle Client
+const mapDbClientToClient = (dbClient: DbClient, invoiceCount: number = 0): Client => {
+  return {
+    id: dbClient.id,
+    name: dbClient.client_name,
+    email: dbClient.email || "",
+    phone: dbClient.phone || undefined,
+    address: dbClient.address || undefined,
+    notes: dbClient.notes,
+    created_at: dbClient.created_at,
+    updated_at: dbClient.updated_at,
+    user_id: dbClient.company_id || "", // Utilisation de company_id comme une sorte de user_id
+    invoiceCount
+  };
+};
+
 export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau client" }: ClientSelectorProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
@@ -38,12 +55,17 @@ export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau
         const { data, error } = await supabase
           .from('clients')
           .select('*')
-          .order('name');
+          .order('client_name');
         
         if (error) throw error;
         
-        setClients(data || []);
-        setFilteredClients(data || []);
+        // Adapter les données de la base de données pour correspondre à notre modèle Client
+        const mappedClients = (data || []).map((dbClient: DbClient) => 
+          mapDbClientToClient(dbClient)
+        );
+        
+        setClients(mappedClients);
+        setFilteredClients(mappedClients);
       } catch (error) {
         console.error('Error fetching clients:', error);
       } finally {
