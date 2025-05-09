@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Edit, Trash } from "lucide-react";
 import { PaymentTermTemplate } from "@/types/invoice";
-import { getPaymentTermTemplates, savePaymentTermTemplates } from "@/services/invoiceSettingsService";
+import { getPaymentTermsTemplates, savePaymentTermTemplate } from "@/services/invoiceSettingsService";
 import { useToast } from "@/hooks/use-toast";
 
 export function PaymentTermsSettings() {
@@ -24,7 +24,7 @@ export function PaymentTermsSettings() {
   const [newTemplateDefault, setNewTemplateDefault] = useState(false);
 
   useEffect(() => {
-    setPaymentTermTemplates(getPaymentTermTemplates());
+    setPaymentTermTemplates(getPaymentTermsTemplates());
   }, []);
   
   const openTermTemplateEditor = (template?: PaymentTermTemplate) => {
@@ -95,7 +95,11 @@ export function PaymentTermsSettings() {
     }
     
     setPaymentTermTemplates(updatedTemplates);
-    savePaymentTermTemplates(updatedTemplates);
+    
+    // Utiliser savePaymentTermTemplate pour chaque modèle
+    updatedTemplates.forEach(template => {
+      savePaymentTermTemplate(template);
+    });
     
     toast({
       title: editingTemplate ? "Modèle mis à jour" : "Modèle créé",
@@ -108,7 +112,11 @@ export function PaymentTermsSettings() {
   const deleteTermTemplate = (id: string) => {
     const updatedTemplates = paymentTermTemplates.filter(t => t.id !== id);
     setPaymentTermTemplates(updatedTemplates);
-    savePaymentTermTemplates(updatedTemplates);
+    
+    // Mettre à jour le stockage avec les templates restants
+    updatedTemplates.forEach(template => {
+      savePaymentTermTemplate(template);
+    });
     
     toast({
       title: "Modèle supprimé",

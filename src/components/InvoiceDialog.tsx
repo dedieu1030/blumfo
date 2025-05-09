@@ -101,7 +101,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       description: "",
       quantity: "1",
       unitPrice: "0",
-      tva: "20",
+      taxRate: "20",
       total: "0"
     }
   ]);
@@ -195,10 +195,10 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     serviceLines.forEach(line => {
       const lineQuantity = parseFloat(line.quantity) || 0;
       const lineUnitPrice = parseFloat(line.unitPrice) || 0;
-      const lineTva = parseFloat(line.tva) || 0;
+      const lineTaxRate = parseFloat(line.taxRate) || 0;
       
       const lineTotal = lineQuantity * lineUnitPrice;
-      const lineTaxAmount = lineTotal * (lineTva / 100);
+      const lineTaxAmount = lineTotal * (lineTaxRate / 100);
       
       calculatedSubtotal += lineTotal;
       calculatedTaxTotal += lineTaxAmount;
@@ -228,7 +228,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         description: "",
         quantity: "1",
         unitPrice: "0",
-        tva: "20",
+        taxRate: "20",
         total: "0"
       }
     ]);
@@ -629,11 +629,11 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                   />
                 </div>
                 <div className="md:col-span-1 space-y-2">
-                  <Label htmlFor={`tva-${index}`} className="md:hidden">TVA (%)</Label>
+                  <Label htmlFor={`taxRate-${index}`} className="md:hidden">TVA (%)</Label>
                   <Input 
-                    id={`tva-${index}`}
-                    value={line.tva}
-                    onChange={(e) => updateServiceLine(line.id, "tva", e.target.value)}
+                    id={`taxRate-${index}`}
+                    value={line.taxRate}
+                    onChange={(e) => updateServiceLine(line.id, "taxRate", e.target.value)}
                     placeholder="20" 
                   />
                 </div>
@@ -914,7 +914,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       description: product.description || product.name,
       quantity: "1",
       unitPrice: (product.price_cents / 100).toString(),
-      tva: product.tax_rate?.toString() || "20",
+      taxRate: product.tax_rate?.toString() || "20",
       total: (product.price_cents / 100).toString()
     };
 
