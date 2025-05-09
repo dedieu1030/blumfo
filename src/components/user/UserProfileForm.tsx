@@ -1,275 +1,301 @@
 
 import React, { useState } from 'react';
-import { useUserProfile } from '@/hooks/use-user-profile';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserProfile } from '@/types/user';
-import { Loader2, Save, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from '@/hooks/use-user-profile';
+import { Loader2, User } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserProfile, NotificationSettings } from '@/types/user';
 
-const LANGUAGES = [
+// Liste des langues disponibles
+const languages = [
   { value: 'fr', label: 'Français' },
   { value: 'en', label: 'English' },
   { value: 'es', label: 'Español' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'it', label: 'Italiano' },
 ];
 
-const TIMEZONES = [
+// Liste des fuseaux horaires
+const timezones = [
   { value: 'Europe/Paris', label: 'Europe/Paris' },
+  { value: 'Europe/London', label: 'Europe/London' },
   { value: 'America/New_York', label: 'America/New_York' },
+  { value: 'America/Los_Angeles', label: 'America/Los_Angeles' },
   { value: 'Asia/Tokyo', label: 'Asia/Tokyo' },
   { value: 'Australia/Sydney', label: 'Australia/Sydney' },
 ];
 
 export function UserProfileForm() {
-  const { profile, loading: profileLoading, updateProfile } = useUserProfile();
-  const [formData, setFormData] = useState<Partial<UserProfile>>(profile || {});
-  const [submitting, setSubmitting] = useState(false);
+  const { profile, loading, error, updateProfile } = useUserProfile();
+  const [formData, setFormData] = useState<Partial<UserProfile>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
   const navigate = useNavigate();
   
-  if (profileLoading) {
+  // Initialiser les données du formulaire lorsque le profil est chargé
+  React.useEffect(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name,
+        username: profile.username,
+        phone: profile.phone,
+        language: profile.language,
+        timezone: profile.timezone,
+        notification_settings: profile.notification_settings,
+      });
+    }
+  }, [profile]);
+  
+  // Gérer les changements dans les champs du formulaire
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Gérer les changements de langue
+  const handleLanguageChange = (value: string) => {
+    setFormData(prev => ({ ...prev, language: value }));
+  };
+  
+  // Gérer les changements de fuseau horaire
+  const handleTimezoneChange = (value: string) => {
+    setFormData(prev => ({ ...prev, timezone: value }));
+  };
+  
+  // Gérer les changements de paramètres de notification
+  const handleNotificationChange = (type: keyof NotificationSettings, value: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      notification_settings: {
+        ...(prev.notification_settings || {}),
+        [type]: value
+      }
+    }));
+  };
+  
+  // Gérer la soumission du formulaire
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    
+    try {
+      const result = await updateProfile(formData);
+      
+      if (result.success) {
+        toast({
+          title: "Profil mis à jour",
+          description: "Vos informations ont été enregistrées avec succès",
+        });
+        
+        // Rediriger vers la page de profil
+        navigate('/profile');
+      } else {
+        toast({
+          title: "Erreur",
+          description: result.error || "Une erreur s'est produite lors de la mise à jour du profil",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite",
+        variant: "destructive",
+      });
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  if (loading) {
     return (
-      <Card className="w-full">
+      <Card>
         <CardHeader>
-          <CardTitle>Chargement...</CardTitle>
+          <CardTitle>Modifier mon profil</CardTitle>
+          <CardDescription>Chargement de vos informations...</CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center justify-center p-6">
+        <CardContent className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </CardContent>
       </Card>
     );
   }
   
-  if (!profile) {
+  if (error || !profile) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Profil non disponible</CardTitle>
-          <CardDescription>
-            Vous devez être connecté pour modifier votre profil
-          </CardDescription>
+          <CardTitle>Erreur</CardTitle>
+          <CardDescription>Impossible de charger votre profil</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={() => navigate('/auth')}>Se connecter</Button>
+          <p className="text-red-500">{error?.message || "Vous devez être connecté pour modifier votre profil"}</p>
         </CardContent>
+        <CardFooter>
+          <Button onClick={() => navigate('/profile')}>Retour</Button>
+        </CardFooter>
       </Card>
     );
   }
   
-  const handleChange = (field: keyof UserProfile, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-  
-  const handleNotificationChange = (field: keyof UserProfile['notification_settings'], value: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      notification_settings: {
-        ...prev.notification_settings!,
-        [field]: value,
-      },
-    }));
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    
-    try {
-      const result = await updateProfile(formData);
-      if (result.success) {
-        navigate('/profile');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Modifier mon profil</CardTitle>
-        <CardDescription>
-          Mettez à jour vos informations personnelles et préférences
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Modifier mon profil</CardTitle>
+          <CardDescription>Mettez à jour vos informations personnelles</CardDescription>
+        </CardHeader>
+        
         <CardContent className="space-y-6">
+          {/* Informations de base */}
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Nom complet</Label>
-                <Input 
-                  id="full_name" 
-                  value={formData.full_name || ''} 
-                  onChange={(e) => handleChange('full_name', e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="username">Nom d'utilisateur</Label>
-                <Input 
-                  id="username" 
-                  value={formData.username || ''} 
-                  onChange={(e) => handleChange('username', e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={formData.email || ''} 
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone">Téléphone</Label>
-                <Input 
-                  id="phone" 
-                  value={formData.phone || ''} 
-                  onChange={(e) => handleChange('phone', e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="avatar_url">URL de l'avatar</Label>
-              <Input 
-                id="avatar_url" 
-                type="url" 
-                value={formData.avatar_url || ''} 
-                onChange={(e) => handleChange('avatar_url', e.target.value)}
-                placeholder="https://example.com/avatar.jpg"
+            <div>
+              <Label htmlFor="full_name">Nom complet</Label>
+              <Input
+                id="full_name"
+                name="full_name"
+                value={formData.full_name || ''}
+                onChange={handleChange}
+                placeholder="Votre nom complet"
               />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="language">Langue</Label>
-                <Select 
-                  value={formData.language || 'fr'}
-                  onValueChange={(value) => handleChange('language', value)}
-                >
-                  <SelectTrigger id="language">
-                    <SelectValue placeholder="Sélectionnez une langue" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGES.map((language) => (
-                      <SelectItem key={language.value} value={language.value}>
-                        {language.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="timezone">Fuseau horaire</Label>
-                <Select 
-                  value={formData.timezone || 'Europe/Paris'}
-                  onValueChange={(value) => handleChange('timezone', value)}
-                >
-                  <SelectTrigger id="timezone">
-                    <SelectValue placeholder="Sélectionnez un fuseau horaire" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIMEZONES.map((timezone) => (
-                      <SelectItem key={timezone.value} value={timezone.value}>
-                        {timezone.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="username">Nom d'utilisateur (optionnel)</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username || ''}
+                onChange={handleChange}
+                placeholder="Votre nom d'utilisateur"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                value={profile.email}
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                L'adresse email ne peut pas être modifiée directement
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="phone">Téléphone (optionnel)</Label>
+              <Input
+                id="phone"
+                name="phone"
+                value={formData.phone || ''}
+                onChange={handleChange}
+                placeholder="Votre numéro de téléphone"
+              />
             </div>
           </div>
           
-          <div>
-            <h3 className="text-lg font-medium mb-4">Préférences de notification</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="notify_email">Notifications par email</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Recevoir des notifications par email
-                  </p>
-                </div>
-                <Switch 
-                  id="notify_email" 
-                  checked={formData.notification_settings?.email || false}
-                  onCheckedChange={(checked) => handleNotificationChange('email', checked)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="notify_push">Notifications push</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Recevoir des notifications push dans l'application
-                  </p>
-                </div>
-                <Switch 
-                  id="notify_push" 
-                  checked={formData.notification_settings?.push || false}
-                  onCheckedChange={(checked) => handleNotificationChange('push', checked)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="notify_sms">Notifications SMS</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Recevoir des notifications par SMS
-                  </p>
-                </div>
-                <Switch 
-                  id="notify_sms" 
-                  checked={formData.notification_settings?.sms || false}
-                  onCheckedChange={(checked) => handleNotificationChange('sms', checked)}
-                />
-              </div>
+          {/* Préférences */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="font-medium">Préférences</h3>
+            
+            <div>
+              <Label htmlFor="language">Langue</Label>
+              <Select
+                value={formData.language || 'fr'}
+                onValueChange={handleLanguageChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner une langue" />
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.map(lang => (
+                    <SelectItem key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="timezone">Fuseau horaire</Label>
+              <Select
+                value={formData.timezone || 'Europe/Paris'}
+                onValueChange={handleTimezoneChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un fuseau horaire" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timezones.map(tz => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Notifications */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="font-medium">Préférences de notification</h3>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="emailNotif" className="cursor-pointer">Notifications par email</Label>
+              <Switch
+                id="emailNotif"
+                checked={formData.notification_settings?.email || false}
+                onCheckedChange={(checked) => handleNotificationChange('email', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="pushNotif" className="cursor-pointer">Notifications push</Label>
+              <Switch
+                id="pushNotif"
+                checked={formData.notification_settings?.push || false}
+                onCheckedChange={(checked) => handleNotificationChange('push', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="smsNotif" className="cursor-pointer">Notifications SMS</Label>
+              <Switch
+                id="smsNotif"
+                checked={formData.notification_settings?.sms || false}
+                onCheckedChange={(checked) => handleNotificationChange('sms', checked)}
+              />
             </div>
           </div>
         </CardContent>
         
         <CardFooter className="flex justify-between">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/profile')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour
+          <Button variant="outline" type="button" onClick={() => navigate('/profile')}>
+            Annuler
           </Button>
-          
-          <Button type="submit" disabled={submitting}>
-            {submitting ? (
+          <Button type="submit" disabled={isSaving}>
+            {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Enregistrement...
               </>
             ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Enregistrer
-              </>
+              'Enregistrer les modifications'
             )}
           </Button>
         </CardFooter>
-      </form>
-    </Card>
+      </Card>
+    </form>
   );
 }

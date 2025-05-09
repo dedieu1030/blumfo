@@ -241,6 +241,60 @@ export type Database = {
           },
         ]
       }
+      invoice_reminders: {
+        Row: {
+          created_at: string
+          email_body: string | null
+          email_subject: string | null
+          id: string
+          invoice_id: string
+          metadata: Json | null
+          reminder_rule_id: string | null
+          sent_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          invoice_id: string
+          metadata?: Json | null
+          reminder_rule_id?: string | null
+          sent_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          invoice_id?: string
+          metadata?: Json | null
+          reminder_rule_id?: string | null
+          sent_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_reminders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_reminders_reminder_rule_id_fkey"
+            columns: ["reminder_rule_id"]
+            isOneToOne: false
+            referencedRelation: "reminder_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_templates: {
         Row: {
           color_scheme: Json | null
@@ -616,6 +670,47 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      stripe_customers: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          email: string
+          id: string
+          metadata: Json | null
+          stripe_customer_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          metadata?: Json | null
+          stripe_customer_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          metadata?: Json | null
+          stripe_customer_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_customers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stripe_invoices: {
         Row: {

@@ -1,9 +1,86 @@
-export interface ReminderTrigger {
+
+export interface InvoiceData {
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate?: string;
+  clientName: string;
+  clientEmail: string;
+  clientAddress: string;
+  issuerInfo?: CompanyProfile;
+  serviceLines: ServiceLine[];
+  subtotal: number;
+  tax?: number;
+  total: number;
+  notes?: string;
+  paymentDelay?: string;
+}
+
+export interface ServiceLine {
+  id: string;
+  description: string;
+  quantity: string;
+  unitPrice: string;
+  totalPrice: number;
+}
+
+export interface CompanyProfile {
+  name: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  tpsNumber?: string;
+  tvqNumber?: string;
+  businessType?: string;
+  businessTypeCustom?: string;
+  emailType?: string;
+  logoUrl?: string;
+}
+
+export interface PaymentTermTemplate {
+  id: string;
+  name: string;
+  delay: string;
+  customDate?: string;
+  termsText: string;
+  isDefault: boolean;
+}
+
+export interface PaymentMethodDetails {
+  type: string;
+  enabled: boolean;
+  details?: Record<string, any>;
+}
+
+// Nouvelles interfaces pour les relances
+export interface InvoiceReminder {
+  id: string;
+  invoiceId: string;
+  reminderRuleId?: string;
+  sentAt: string;
+  status: string;
+  emailSubject?: string;
+  emailBody?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReminderRule {
+  id: string;
+  scheduleId?: string;
+  triggerType: 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
+  triggerValue: number;
+  emailSubject?: string;
+  emailBody?: string;
+}
+
+export interface ReminderTrigger extends ReminderRule {
   id: string;
   triggerType: 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
   triggerValue: number;
-  emailSubject: string;
-  emailBody: string;
+  emailSubject?: string;
+  emailBody?: string;
 }
 
 export interface ReminderSchedule {
@@ -14,128 +91,14 @@ export interface ReminderSchedule {
   triggers: ReminderTrigger[];
 }
 
-// Invoice types
-export interface InvoiceData {
-  invoiceNumber: string;
-  issueDate: string;
-  dueDate: string;
-  invoiceDate?: string;
+// Interfaces pour les clients Stripe
+export interface StripeCustomer {
+  id: string;
+  userId: string;
   clientId?: string;
-  clientName: string;
-  clientEmail?: string;
-  clientAddress?: string;
-  clientPhone?: string;
-  issuerInfo?: CompanyProfile;
-  items: ServiceLine[];
-  subtotal: number;
-  taxRate: number; // Ensuring this is ALWAYS a number type
-  taxAmount?: number;
-  taxTotal?: number;
-  totalAmount: number;
-  total?: number;
-  notes?: string;
-  paymentTerms?: string;
-  status?: 'draft' | 'pending' | 'paid' | 'overdue' | 'cancelled';
-  templateId?: string;
-  currency?: string;
-  paymentMethods?: PaymentMethodDetails[];
-  paymentDelay?: string;
-  customPaymentTerms?: string;
-  paymentTermsId?: string;
-}
-
-export interface ServiceLine {
-  id: string;
-  description: string;
-  quantity: string;
-  unitPrice: string;
-  totalPrice: number;
-  tva?: string; // Tax rate for this specific line
-  total?: string; // Total for this line including tax
-}
-
-// Company Profile types
-export interface CompanyProfile {
-  id?: string;
-  name: string;
-  accountHolder?: string;
+  stripeCustomerId: string;
   email: string;
-  phone?: string;
-  address: string;
-  logo?: string;
-  website?: string;
-  taxId?: string;
-  vatNumber?: string;
-  businessType?: string;
-  businessTypeCustom?: string;
-  bankName?: string;
-  bankAccount?: string;
-  iban?: string;
-  swift?: string;
-  taxRate: number; // Changed to always be a number internally
-  defaultCurrency: string;
-  termsAndConditions?: string;
-  thankYouMessage?: string;
-  paypal?: string;
-  payoneer?: string;
-  profileType?: 'personal' | 'business';
-  profileSubtype?: string;
-  emailType?: 'personal' | 'professional' | 'company';
-}
-
-// Payment method types
-export type PaymentMethod = 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
-
-export interface PaymentMethodDetails {
-  type: PaymentMethod;
-  enabled: boolean;
-  details?: string;
-}
-
-// Payment terms types
-export interface PaymentTermTemplate {
-  id: string;
-  name: string;
-  delay: string;
-  termsText: string;
-  isDefault: boolean;
-  customDate?: string;
-}
-
-// Invoice numbering configuration
-export interface InvoiceNumberingConfig {
-  prefix: string;
-  suffix: string;
-  pattern: string;
-  digits: number;
-  separator: string;
-  nextNumber: number;
-  resetPeriod: 'never' | 'yearly' | 'monthly';
-  lastReset?: string;
-  padding?: number;
-  resetAnnually?: boolean;
-}
-
-// Currency types
-export interface CurrencyInfo {
-  code: string;
-  name: string;
-  symbol: string;
-  position: 'before' | 'after';
-}
-
-export type Currency = string; // ISO currency code
-
-// Invoice interface used in InvoiceList component
-export interface Invoice {
-  id: string;
-  number: string;
-  invoice_number: string;
-  client: string;
-  amount: string;
-  date: string;
-  dueDate: string;
-  status: 'paid' | 'pending' | 'overdue' | 'draft';
-  paymentUrl?: string;
-  stripeInvoiceId?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
 }

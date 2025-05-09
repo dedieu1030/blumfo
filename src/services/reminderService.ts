@@ -86,36 +86,45 @@ export async function getReminderSchedules(): Promise<{
   error?: string;
 }> {
   try {
-    // For now, we'll use a dummy implementation since the actual table might not exist
-    // We'll return example data that matches the expected structure
-    const dummySchedules: ReminderSchedule[] = [
-      {
-        id: "1",
-        name: "Relances automatiques standard",
-        enabled: true,
-        isDefault: true,
-        triggers: [
-          {
-            id: "101",
-            triggerType: "days_before_due",
-            triggerValue: 2,
-            emailSubject: "Rappel de facture à venir",
-            emailBody: "Votre facture arrive à échéance dans 2 jours."
-          },
-          {
-            id: "102",
-            triggerType: "days_after_due",
-            triggerValue: 1,
-            emailSubject: "Facture échue",
-            emailBody: "Votre facture est échue depuis 1 jour."
-          }
-        ]
-      }
-    ];
+    // Récupérer les planifications depuis la base de données
+    const { data: schedules, error: schedulesError } = await supabase
+      .from('reminder_schedules')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (schedulesError) throw schedulesError;
+    
+    // Pour chaque planification, récupérer les règles associées
+    const schedulesWithRules: ReminderSchedule[] = [];
+    
+    for (const schedule of schedules || []) {
+      const { data: rules, error: rulesError } = await supabase
+        .from('reminder_rules')
+        .select('*')
+        .eq('schedule_id', schedule.id)
+        .order('trigger_value', { ascending: true });
+      
+      if (rulesError) throw rulesError;
+      
+      schedulesWithRules.push({
+        id: schedule.id,
+        name: schedule.name,
+        enabled: schedule.enabled,
+        isDefault: schedule.is_default,
+        triggers: (rules || []).map(rule => ({
+          id: rule.id,
+          scheduleId: rule.schedule_id,
+          triggerType: rule.trigger_type,
+          triggerValue: rule.trigger_value,
+          emailSubject: rule.email_subject,
+          emailBody: rule.email_body
+        }))
+      });
+    }
     
     return {
       success: true,
-      schedules: dummySchedules
+      schedules: schedulesWithRules
     };
   } catch (error) {
     console.error('Error fetching reminder schedules:', error);
@@ -144,13 +153,71 @@ export async function saveReminderSchedule(schedule: ReminderSchedule): Promise<
         error: "User not authenticated"
       };
     }
-
-    // For now, return a mock successful response
+    
+    const scheduleData = {
+      id: schedule.id || undefined, // undefined pour qu'il génère un nouvel ID si nécessaire
+      name: schedule.name,
+      enabled: schedule.enabled,
+      is_default: schedule.isDefault,
+      user_id: user.id
+    };
+    
+    // Si c'est une nouvelle planification, on l'insère
+    // Sinon on la met à jour
+    let operation;
+    if (!schedule.id) {
+      operation = supabase.from('reminder_schedules').insert(scheduleData).select().single();
+    } else {
+      operation = supabase.from('reminder_schedules').update(scheduleData).eq('id', schedule.id).select().single();
+    }
+    
+    const { data: savedSchedule, error: scheduleError } = await operation;
+    
+    if (scheduleError) throw scheduleError;
+    
+    // Si on a des règles, on les sauvegarde
+    if (schedule.triggers && schedule.triggers.length > 0) {
+      // On supprime d'abord les règles existantes si c'est une mise à jour
+      if (schedule.id) {
+        await supabase.from('reminder_rules').delete().eq('schedule_id', schedule.id);
+      }
+      
+      // On insère les nouvelles règles
+      const rulesData = schedule.triggers.map(rule => ({
+        schedule_id: savedSchedule.id,
+        trigger_type: rule.triggerType,
+        trigger_value: rule.triggerValue,
+        email_subject: rule.emailSubject,
+        email_body: rule.emailBody
+      }));
+      
+      const { error: rulesError } = await supabase.from('reminder_rules').insert(rulesData);
+      
+      if (rulesError) throw rulesError;
+    }
+    
+    // On récupère les règles mises à jour
+    const { data: rules } = await supabase
+      .from('reminder_rules')
+      .select('*')
+      .eq('schedule_id', savedSchedule.id)
+      .order('trigger_value', { ascending: true });
+    
     return {
       success: true,
       savedSchedule: {
-        ...schedule,
-        id: schedule.id || Date.now().toString()
+        id: savedSchedule.id,
+        name: savedSchedule.name,
+        enabled: savedSchedule.enabled,
+        isDefault: savedSchedule.is_default,
+        triggers: (rules || []).map(rule => ({
+          id: rule.id,
+          scheduleId: rule.schedule_id,
+          triggerType: rule.trigger_type,
+          triggerValue: rule.trigger_value,
+          emailSubject: rule.email_subject,
+          emailBody: rule.email_body
+        }))
       }
     };
   } catch (error) {
@@ -170,7 +237,22 @@ export async function deleteReminderSchedule(scheduleId: string): Promise<{
   error?: string;
 }> {
   try {
-    // For now, return a mock successful response
+    // On supprime d'abord les règles associées
+    const { error: rulesError } = await supabase
+      .from('reminder_rules')
+      .delete()
+      .eq('schedule_id', scheduleId);
+      
+    if (rulesError) throw rulesError;
+    
+    // Puis on supprime la planification
+    const { error: scheduleError } = await supabase
+      .from('reminder_schedules')
+      .delete()
+      .eq('id', scheduleId);
+      
+    if (scheduleError) throw scheduleError;
+    
     return {
       success: true
     };
@@ -192,10 +274,20 @@ export async function getInvoiceReminderHistory(invoiceId: string): Promise<{
   error?: string;
 }> {
   try {
-    // For now, return a mock successful response with empty history
+    const { data, error } = await supabase
+      .from('invoice_reminders')
+      .select(`
+        *,
+        reminder_rules(*)
+      `)
+      .eq('invoice_id', invoiceId)
+      .order('sent_at', { ascending: false });
+      
+    if (error) throw error;
+    
     return {
       success: true,
-      history: []
+      history: data
     };
   } catch (error) {
     console.error('Error fetching reminder history:', error);
