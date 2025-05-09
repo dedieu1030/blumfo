@@ -1,5 +1,10 @@
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  Drawer, 
+  DrawerContent, 
+  DrawerTrigger, 
+  DrawerClose 
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -29,7 +34,6 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     return location.pathname === path;
   };
   
-  // Updated navigationItems to match the ones in Sidebar.tsx
   const navigationItems = [
     { icon: BarChart2, name: t('dashboard'), path: "/" },
     { icon: PlusCircle, name: t('invoicing'), path: "/invoicing" },
@@ -41,15 +45,9 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
   ];
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-[#F0EBE7] border-t border-sidebar-border p-0">
+    <Drawer open={isOpen} onOpenChange={onOpenChange}>
+      <DrawerContent className="h-[85vh] rounded-t-[10px] bg-[#F0EBE7] border-t border-sidebar-border p-0">
         <div className="flex flex-col h-full">
-          <div className="p-8 flex items-center justify-center">
-            <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-[#003427]">
-              blumfoo
-            </h1>
-          </div>
-          
           <div className="flex-1 overflow-auto py-4">
             <div className="px-4 space-y-1">
               {navigationItems.map((item) => (
@@ -68,7 +66,6 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
                 </Link>
               ))}
               
-              {/* Sélecteur de langue dans le menu de navigation mobile */}
               <div className="px-4 py-3 mt-4">
                 <p className="text-sm font-medium text-gray-600 mb-2">{t('language')}</p>
                 <LanguageSelector />
@@ -88,8 +85,8 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
             </div>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
