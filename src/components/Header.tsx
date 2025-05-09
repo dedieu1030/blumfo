@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useIsToplevel } from "@/hooks/use-is-toplevel";
 import { useWindowSize } from "@/hooks/use-window-size";
@@ -61,6 +60,7 @@ export const Header = ({
       </div>
       
       <div className="flex items-center space-x-2">
+        <NotificationBell />
         {actions}
       </div>
     </div>
