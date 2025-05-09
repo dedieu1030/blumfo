@@ -16,6 +16,8 @@ import Templates from "./pages/Templates";
 import StripeCallback from "./pages/StripeCallback";
 import NotFound from "./pages/NotFound";
 import Notifications from "./pages/Notifications";
+import Profile from "./pages/Profile";
+import ProfileEdit from "./pages/ProfileEdit";
 import { NotificationsProvider } from "./context/NotificationsContext";
 
 const queryClient = new QueryClient();
@@ -41,6 +43,8 @@ const App = () => (
                   <Route path="/templates" element={<Templates />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/profile/edit" element={<ProfileEdit />} />
                   <Route path="/stripe/callback" element={<StripeCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

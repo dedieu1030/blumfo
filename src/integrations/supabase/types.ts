@@ -504,6 +504,48 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          language: string
+          notification_settings: Json
+          phone: string | null
+          timezone: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          language?: string
+          notification_settings?: Json
+          phone?: string | null
+          timezone?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          language?: string
+          notification_settings?: Json
+          phone?: string | null
+          timezone?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       reminder_rules: {
         Row: {
           created_at: string | null
