@@ -5,17 +5,17 @@ import { InvoiceNumberingConfig, CurrencyInfo } from "@/types/invoice";
 // Update currency information with correct position types
 export const getCurrencies = (): { [key: string]: CurrencyInfo } => {
   return {
-    USD: { code: "USD", name: "US Dollar", symbol: "$", position: "before" },
-    EUR: { code: "EUR", name: "Euro", symbol: "€", position: "after" },
-    GBP: { code: "GBP", name: "British Pound", symbol: "£", position: "before" },
-    CAD: { code: "CAD", name: "Canadian Dollar", symbol: "$", position: "before" },
-    AUD: { code: "AUD", name: "Australian Dollar", symbol: "$", position: "before" },
-    JPY: { code: "JPY", name: "Japanese Yen", symbol: "¥", position: "before" },
-    CHF: { code: "CHF", name: "Swiss Franc", symbol: "CHF", position: "before" },
-    CNY: { code: "CNY", name: "Chinese Yuan", symbol: "¥", position: "before" },
-    INR: { code: "INR", name: "Indian Rupee", symbol: "₹", position: "before" },
-    BRL: { code: "BRL", name: "Brazilian Real", symbol: "R$", position: "before" },
-    MXN: { code: "MXN", name: "Mexican Peso", symbol: "$", position: "before" }
+    USD: { code: "USD", name: "US Dollar", symbol: "$", symbolPosition: "before", decimalPlaces: 2 },
+    EUR: { code: "EUR", name: "Euro", symbol: "€", symbolPosition: "after", decimalPlaces: 2 },
+    GBP: { code: "GBP", name: "British Pound", symbol: "£", symbolPosition: "before", decimalPlaces: 2 },
+    CAD: { code: "CAD", name: "Canadian Dollar", symbol: "$", symbolPosition: "before", decimalPlaces: 2 },
+    AUD: { code: "AUD", name: "Australian Dollar", symbol: "$", symbolPosition: "before", decimalPlaces: 2 },
+    JPY: { code: "JPY", name: "Japanese Yen", symbol: "¥", symbolPosition: "before", decimalPlaces: 0 },
+    CHF: { code: "CHF", name: "Swiss Franc", symbol: "CHF", symbolPosition: "before", decimalPlaces: 2 },
+    CNY: { code: "CNY", name: "Chinese Yuan", symbol: "¥", symbolPosition: "before", decimalPlaces: 2 },
+    INR: { code: "INR", name: "Indian Rupee", symbol: "₹", symbolPosition: "before", decimalPlaces: 2 },
+    BRL: { code: "BRL", name: "Brazilian Real", symbol: "R$", symbolPosition: "before", decimalPlaces: 2 },
+    MXN: { code: "MXN", name: "Mexican Peso", symbol: "$", symbolPosition: "before", decimalPlaces: 2 }
   };
 };
 
@@ -36,13 +36,16 @@ export const getInvoiceNumberingConfig = (): InvoiceNumberingConfig => {
   return {
     prefix: "INV",
     suffix: "",
-    digits: 3,
+    startNumber: 1,
+    padding: 3,
     separator: "-",
+    includeDate: true,
+    dateFormat: "YYYY-MM-DD",
+    digits: 3,
     nextNumber: 1,
     pattern: "PREFIX-YEAR-NUMBER",
     resetPeriod: "never",
     lastReset: "",
-    padding: 3,
     resetAnnually: false
   };
 };

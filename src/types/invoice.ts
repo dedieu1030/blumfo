@@ -1,9 +1,8 @@
 
-
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
-  issueDate?: string; // Added to fix InvoiceDialog errors
+  issueDate?: string;
   dueDate?: string;
   clientName: string;
   clientEmail: string;
@@ -141,7 +140,7 @@ export interface Invoice {
   amount: string;
   date: string;
   dueDate: string;
-  status: string;
+  status: "paid" | "pending" | "overdue" | "draft";  // Fixed to use specific string literals
 }
 
 export interface InvoiceNumberingConfig {
@@ -152,6 +151,13 @@ export interface InvoiceNumberingConfig {
   separator: string;
   includeDate: boolean;
   dateFormat: string;
+  // Additional properties needed in the code
+  digits?: number;
+  nextNumber?: number;
+  pattern?: string;
+  resetPeriod?: "never" | "yearly" | "monthly";
+  lastReset?: string;
+  resetAnnually?: boolean;
 }
 
 export interface CurrencyInfo {
@@ -160,6 +166,7 @@ export interface CurrencyInfo {
   symbol: string;
   decimalPlaces: number;
   symbolPosition: 'before' | 'after';
+  position?: 'before' | 'after'; // Added for backward compatibility
 }
 
 export type Currency = 'USD' | 'EUR' | 'CAD' | 'GBP' | 'AUD' | 'JPY' | 'CHF';

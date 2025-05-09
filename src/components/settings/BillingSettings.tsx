@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,13 +16,17 @@ export function BillingSettings() {
   const [numberingConfig, setNumberingConfig] = useState<InvoiceNumberingConfig>({
     prefix: "INV",
     suffix: "",
-    digits: 3,
+    startNumber: 1,
+    padding: 3,
     separator: "-",
+    includeDate: true,
+    dateFormat: "YYYY-MM-DD",
+    // Additional properties 
+    digits: 3,
     nextNumber: 1,
     pattern: "PREFIX-YEAR-NUMBER",
     resetPeriod: "never",
     lastReset: "",
-    padding: 3,
     resetAnnually: false
   });
 

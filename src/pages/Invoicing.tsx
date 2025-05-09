@@ -41,13 +41,16 @@ export default function Invoicing() {
   const [numberingConfig, setNumberingConfig] = useState<InvoiceNumberingConfig>({
     prefix: "INV",
     suffix: "",
-    digits: 3,
+    startNumber: 1,
+    padding: 3,
     separator: "-",
+    includeDate: true,
+    dateFormat: "YYYY-MM-DD",
+    digits: 3,
     nextNumber: 1,
     pattern: "PREFIX-YEAR-NUMBER",
     resetPeriod: "never",
     lastReset: "",
-    padding: 3,
     resetAnnually: false
   });
   const [defaultCurrency, setDefaultCurrency] = useState<string>(getDefaultCurrency());

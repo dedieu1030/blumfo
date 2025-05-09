@@ -353,6 +353,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       // Prepare invoice data for preview with all required properties
       const invoiceData: InvoiceData = {
         invoiceNumber,
+        invoiceDate: invoiceDate,  // Using invoiceDate instead of issueDate
         issueDate: invoiceDate,
         dueDate: paymentDelay === "custom" ? dueDate : "",
         clientName,
@@ -373,11 +374,13 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           thankYouMessage: "",
           defaultCurrency: "EUR"
         },
+        serviceLines: serviceLines,
         items: serviceLines,
         subtotal,
         // Ensure taxRate is always a number
         taxRate: numericTaxRate,
         taxAmount: taxTotal,
+        total: total,
         totalAmount: total,
         paymentDelay,
         paymentMethods,
@@ -465,6 +468,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       // Prepare complete invoice data
       const invoiceData: InvoiceData = {
         invoiceNumber,
+        invoiceDate: invoiceDate,  // Using invoiceDate instead of issueDate
         issueDate: invoiceDate,
         dueDate: paymentDelay === "custom" ? dueDate : "",
         clientName,
@@ -485,11 +489,13 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           thankYouMessage: "",
           defaultCurrency: "EUR"
         },
+        serviceLines: serviceLines,
         items: serviceLines,
         subtotal,
         // Ensure taxRate is always a number
         taxRate: numericTaxRate,
         taxAmount: taxTotal,
+        total: total,
         totalAmount: total,
         paymentDelay,
         paymentMethods,
@@ -853,6 +859,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     // Create the complete invoice data object to pass to the preview component
     const currentInvoiceData: InvoiceData = {
       invoiceNumber,
+      invoiceDate: invoiceDate,  // Using invoiceDate instead of issueDate
       issueDate: invoiceDate,
       dueDate: paymentDelay === "custom" ? dueDate : "",
       clientName,
@@ -873,11 +880,13 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         thankYouMessage: "",
         defaultCurrency: "EUR"
       },
+      serviceLines: serviceLines,
       items: serviceLines,
       subtotal,
       // Ensure taxRate is always a number
       taxRate: numericTaxRate,
       taxAmount: taxTotal,
+      total: total,
       totalAmount: total,
       paymentDelay,
       paymentMethods,
