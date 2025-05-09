@@ -1,7 +1,5 @@
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { 
@@ -11,10 +9,12 @@ import {
   Settings, 
   PlusCircle,
   Package,
-  LayoutTemplate
+  LayoutTemplate,
+  X
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
+import { Button } from "@/components/ui/button";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -29,7 +29,6 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     return location.pathname === path;
   };
   
-  // Updated navigationItems to match the ones in Sidebar.tsx
   const navigationItems = [
     { icon: BarChart2, name: t('dashboard'), path: "/" },
     { icon: PlusCircle, name: t('invoicing'), path: "/invoicing" },
@@ -41,16 +40,19 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
   ];
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-[10px] bg-[#F0EBE7] border-t border-sidebar-border p-0">
+    <Drawer open={isOpen} onOpenChange={onOpenChange}>
+      <DrawerContent className="h-[85vh] bg-[#F0EBE7] p-0 border-t border-sidebar-border">
         <div className="flex flex-col h-full">
-          <div className="p-8 flex items-center justify-center">
-            <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-[#003427]">
-              blumfoo
-            </h1>
+          {/* Bouton de fermeture en haut à droite */}
+          <div className="absolute top-4 right-4">
+            <DrawerClose asChild>
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </DrawerClose>
           </div>
           
-          <div className="flex-1 overflow-auto py-4">
+          <div className="flex-1 overflow-auto py-8">
             <div className="px-4 space-y-1">
               {navigationItems.map((item) => (
                 <Link
@@ -88,8 +90,8 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
             </div>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
