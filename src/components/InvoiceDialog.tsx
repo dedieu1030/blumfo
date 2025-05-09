@@ -370,7 +370,9 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         },
         items: serviceLines,
         subtotal,
-        taxRate: companyProfile?.taxRate,
+        taxRate: typeof companyProfile?.taxRate === 'string' 
+          ? parseFloat(companyProfile.taxRate) 
+          : companyProfile?.taxRate || 0,
         taxAmount: taxTotal,
         totalAmount: total,
         paymentDelay,
@@ -476,7 +478,9 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         },
         items: serviceLines,
         subtotal,
-        taxRate: companyProfile?.taxRate,
+        taxRate: typeof companyProfile?.taxRate === 'string' 
+          ? parseFloat(companyProfile.taxRate) 
+          : companyProfile?.taxRate || 0,
         taxAmount: taxTotal,
         totalAmount: total,
         paymentDelay,
@@ -846,19 +850,21 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         name: "",
         address: "",
         email: "",
-        emailType: "professional", // Add the missing emailType property
+        emailType: "professional",
         phone: "",
         bankAccount: "",
         bankName: "",
         accountHolder: "",
-        taxRate: 20, // Ensure this is a number
+        taxRate: 20,
         termsAndConditions: "",
         thankYouMessage: "",
         defaultCurrency: "EUR"
       },
       items: serviceLines,
       subtotal,
-      taxRate: companyProfile?.taxRate,
+      taxRate: typeof companyProfile?.taxRate === 'string' 
+        ? parseFloat(companyProfile.taxRate) 
+        : companyProfile?.taxRate || 0,
       taxAmount: taxTotal,
       totalAmount: total,
       paymentDelay,

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Product } from "./productService";
@@ -69,12 +68,16 @@ export async function fetchSubscriptions() {
     if (error) throw error;
     
     return data.map(subscription => {
+      // Make sure clients data exists and has the expected properties
       const clientData = subscription.clients || {};
+      const clientName = clientData && typeof clientData === 'object' && 'name' in clientData ? clientData.name : null;
+      const clientEmail = clientData && typeof clientData === 'object' && 'email' in clientData ? clientData.email : null;
+      
       return {
         ...subscription,
         // Safely access client data with fallbacks
-        client_name: clientData.name ?? 'Unknown Client',
-        client_email: clientData.email ?? '',
+        client_name: clientName ?? 'Unknown Client',
+        client_email: clientEmail ?? '',
         recurring_interval: validateRecurringInterval(subscription.recurring_interval),
         status: validateStatus(subscription.status)
       };
@@ -111,6 +114,8 @@ export async function fetchSubscription(id: string) {
     
     // Safely handle client data and transform stripe products to our Product format
     const clientData = subscription.clients || {};
+    const clientName = clientData && typeof clientData === 'object' && 'name' in clientData ? clientData.name : null;
+    const clientEmail = clientData && typeof clientData === 'object' && 'email' in clientData ? clientData.email : null;
     
     // Fixed syntax error here: properly format the map operation
     const transformedItems = items.map(item => ({
@@ -124,8 +129,8 @@ export async function fetchSubscription(id: string) {
     // Cast as unknown first then as Subscription to avoid TypeScript errors
     return {
       ...subscription,
-      client_name: clientData.name ?? 'Unknown Client',
-      client_email: clientData.email ?? '',
+      client_name: clientName ?? 'Unknown Client',
+      client_email: clientEmail ?? '',
       recurring_interval: validateRecurringInterval(subscription.recurring_interval),
       status: validateStatus(subscription.status),
       items: transformedItems
