@@ -28,7 +28,7 @@ export const LanguageSelector: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1 bg-white border-gray-200">
+        <Button variant="outline" size="sm" className="gap-1">
           <Globe className="h-4 w-4" />
           <span>
             {currentLang.flag} {currentLang.name}
