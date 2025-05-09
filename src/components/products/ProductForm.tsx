@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -38,7 +39,7 @@ export function ProductForm({ open, onOpenChange, product, onUpdate }: ProductFo
   const [description, setDescription] = useState("");
   const [priceCents, setPriceCents] = useState("");
   const [currency, setCurrency] = useState("EUR");
-  const [taxRate, setTaxRate] = useState<number>(20); // Changed to number type
+  const [taxRate, setTaxRate] = useState<number>(20); // Using number type for taxRate
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState<string | null>("month");
   const [recurringIntervalCount, setRecurringIntervalCount] = useState("1");

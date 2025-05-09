@@ -1,5 +1,3 @@
-
-
 export interface ReminderTrigger {
   id: string;
   triggerType: 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
@@ -30,7 +28,7 @@ export interface InvoiceData {
   issuerInfo?: CompanyProfile;
   items: ServiceLine[];
   subtotal: number;
-  taxRate?: number;
+  taxRate?: number; // Ensuring this is a number type
   taxAmount?: number;
   taxTotal?: number;
   totalAmount: number;
