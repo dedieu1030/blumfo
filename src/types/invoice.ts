@@ -1,4 +1,3 @@
-
 export interface CompanyProfile {
   name: string;
   address: string;
@@ -174,4 +173,3 @@ export interface Product {
   category_id?: string;
   category_name?: string;
 }
-

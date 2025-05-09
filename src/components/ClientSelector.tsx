@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,6 @@ import { NewClientForm } from "./NewClientForm";
 import { Client, DbClient } from "@/types/invoice";
 
 // Fonction d'adaptation depuis les données de la base Supabase vers notre modèle Client
-// Exporter la fonction pour la réutiliser ailleurs (y compris dans NewClientForm)
 export const mapDbClientToClient = (dbClient: DbClient, invoiceCount: number = 0): Client => {
   return {
     id: dbClient.id,

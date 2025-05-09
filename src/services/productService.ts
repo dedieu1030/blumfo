@@ -43,10 +43,10 @@ export async function fetchProducts(includeInactive: boolean = false) {
         category_name: categoryObj?.name,
         recurring_interval: validateRecurringInterval(product.recurring_interval),
         product_type: validateProductType(product.product_type)
-      };
+      } as Product;
     });
     
-    return mappedProducts as Product[];
+    return mappedProducts;
   } catch (error) {
     console.error('Error fetching products:', error);
     toast.error('Erreur lors du chargement des produits');
@@ -216,7 +216,7 @@ export async function deleteProduct(id: string) {
 // Category CRUD operations
 export async function fetchCategories() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('product_categories')
       .select('*')
       .order('name');
