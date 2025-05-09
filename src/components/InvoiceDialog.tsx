@@ -348,7 +348,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       // Get the numeric tax rate value
       const numericTaxRate = typeof companyProfile?.taxRate === 'string' 
         ? parseFloat(companyProfile.taxRate) || 0
-        : (companyProfile?.taxRate || 0) as number;
+        : Number(companyProfile?.taxRate || 0);
       
       // Prepare invoice data for preview with all required properties
       const invoiceData: InvoiceData = {
@@ -460,7 +460,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       // Get the numeric tax rate value
       const numericTaxRate = typeof companyProfile?.taxRate === 'string' 
         ? parseFloat(companyProfile.taxRate) || 0
-        : (companyProfile?.taxRate || 0) as number;
+        : Number(companyProfile?.taxRate || 0);
       
       // Prepare complete invoice data
       const invoiceData: InvoiceData = {
@@ -848,7 +848,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     // Get the numeric tax rate value for the preview
     const numericTaxRate = typeof companyProfile?.taxRate === 'string' 
       ? parseFloat(companyProfile.taxRate) || 0
-      : (companyProfile?.taxRate || 0) as number;
+      : Number(companyProfile?.taxRate || 0);
     
     // Create the complete invoice data object to pass to the preview component
     const currentInvoiceData: InvoiceData = {
