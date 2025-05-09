@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,9 +51,10 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
   }, [initialData]);
 
   const handleChange = (field: keyof CompanyProfile, value: string | number) => {
-    if (field === 'taxRate' && typeof value === 'string') {
+    if (field === 'taxRate') {
       // Convert taxRate string to number when updating state
-      setFormData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+      const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+      setFormData(prev => ({ ...prev, [field]: numericValue }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
@@ -340,7 +342,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 md:col-span-2">
                 <TaxRateSelector
-                  defaultValue={formData.taxRate}
+                  defaultValue={formData.taxRate as number}
                   onChange={(value) => handleChange("taxRate", value)}
                 />
               </div>

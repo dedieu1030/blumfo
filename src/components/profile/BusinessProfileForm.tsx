@@ -65,9 +65,10 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
   }, [subtype]);
 
   const handleChange = (field: keyof CompanyProfile, value: string | number) => {
-    if (field === 'taxRate' && typeof value === 'string') {
-      // Convert taxRate string to number for internal state
-      setFormData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    if (field === 'taxRate') {
+      // Always ensure taxRate is stored as a number
+      const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+      setFormData(prev => ({ ...prev, [field]: numericValue }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
@@ -267,7 +268,7 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 md:col-span-2">
             <TaxRateSelector
-              defaultValue={formData.taxRate}
+              defaultValue={formData.taxRate as number}
               onChange={(value) => handleChange("taxRate", value)}
             />
           </div>
