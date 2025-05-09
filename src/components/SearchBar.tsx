@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Search, FileText, Users, Settings, Plus, X } from "lucide-react";
 import { 
@@ -118,7 +119,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <div 
-            className="flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2 cursor-pointer"
+            className="flex items-center w-full h-9 rounded-md border border-input bg-background px-3 py-2 cursor-pointer"
             onClick={() => {
               if (inputRef.current) {
                 inputRef.current.focus();
