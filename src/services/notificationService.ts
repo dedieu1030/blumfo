@@ -8,21 +8,21 @@ import { toast } from "sonner";
  */
 export const fetchNotifications = async (): Promise<Notification[]> => {
   try {
-    // Comme la table notifications n'existe peut-être pas encore, 
-    // retournons un tableau vide pour éviter les erreurs
-    // TODO: Implémenter la récupération des notifications une fois la table créée
-    // const { data, error } = await supabase
-    //  .from('notifications')
-    //  .select('*')
-    //  .order('created_at', { ascending: false });
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) {
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false });
     
-    // if (error) {
-    //   throw error;
-    // }
+    if (error) {
+      throw error;
+    }
     
-    // return (data as unknown as Notification[]) || [];
-    
-    return [];
+    return (data as unknown as Notification[]) || [];
   } catch (error) {
     console.error("Error fetching notifications:", error);
     return [];
@@ -34,17 +34,14 @@ export const fetchNotifications = async (): Promise<Notification[]> => {
  */
 export const markNotificationAsRead = async (id: string): Promise<boolean> => {
   try {
-    // Comme la table notifications n'existe peut-être pas encore,
-    // simulons une réussite pour éviter les erreurs
-    // TODO: Implémenter la mise à jour des notifications une fois la table créée
-    // const { error } = await supabase
-    //  .from('notifications')
-    //  .update({ is_read: true })
-    //  .eq('id', id);
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', id);
     
-    // if (error) {
-    //   throw error;
-    // }
+    if (error) {
+      throw error;
+    }
     
     return true;
   } catch (error) {
@@ -58,21 +55,49 @@ export const markNotificationAsRead = async (id: string): Promise<boolean> => {
  */
 export const markAllNotificationsAsRead = async (): Promise<boolean> => {
   try {
-    // Comme la table notifications n'existe peut-être pas encore,
-    // simulons une réussite pour éviter les erreurs
-    // TODO: Implémenter la mise à jour de toutes les notifications une fois la table créée
-    // const { error } = await supabase
-    //  .from('notifications')
-    //  .update({ is_read: true })
-    //  .eq('is_read', false);
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('is_read', false);
     
-    // if (error) {
-    //  throw error;
-    // }
+    if (error) {
+      throw error;
+    }
     
     return true;
   } catch (error) {
     console.error("Error marking all notifications as read:", error);
+    return false;
+  }
+};
+
+/**
+ * Creates a new notification
+ */
+export const createNotification = async (notification: Omit<Notification, 'id' | 'created_at' | 'is_read'>): Promise<boolean> => {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      return false;
+    }
+
+    const notificationData = {
+      ...notification,
+      user_id: userData.user.id,
+      is_read: false
+    };
+
+    const { error } = await supabase
+      .from('notifications')
+      .insert([notificationData]);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error creating notification:", error);
     return false;
   }
 };
@@ -83,10 +108,6 @@ export const markAllNotificationsAsRead = async (): Promise<boolean> => {
 export const subscribeToNotifications = (
   onNotification: (notification: Notification) => void
 ) => {
-  // Comme la table notifications n'existe peut-être pas encore,
-  // retournons une fonction de nettoyage vide
-  // TODO: Implémenter l'abonnement aux notifications une fois la table créée
-  /*
   const channel = supabase
     .channel('notification-changes')
     .on(
@@ -115,8 +136,5 @@ export const subscribeToNotifications = (
   return () => {
     supabase.removeChannel(channel);
   };
-  */
-  
-  // Return dummy cleanup function
-  return () => {};
 };
+
