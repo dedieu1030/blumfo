@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -953,7 +953,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       unitPrice: (product.price_cents / 100).toString(),
       tva: product.tax_rate?.toString() || "20",
       total: (product.price_cents / 100).toString(),
-      totalPrice: (product.price_cents / 100).toString()
+      totalPrice: product.price_cents / 100  // Keep this as a number, don't convert to string
     };
 
     setServiceLines([...serviceLines, newServiceLine]);
