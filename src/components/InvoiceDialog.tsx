@@ -102,7 +102,8 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       quantity: "1",
       unitPrice: "0",
       tva: "20",
-      total: "0"
+      total: "0",
+      totalPrice: 0
     }
   ]);
   const [notes, setNotes] = useState("");
@@ -195,7 +196,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     serviceLines.forEach(line => {
       const lineQuantity = parseFloat(line.quantity) || 0;
       const lineUnitPrice = parseFloat(line.unitPrice) || 0;
-      const lineTva = parseFloat(line.tva) || 0;
+      const lineTva = parseFloat(line.tva || "0") || 0;
       
       const lineTotal = lineQuantity * lineUnitPrice;
       const lineTaxAmount = lineTotal * (lineTva / 100);
@@ -211,7 +212,8 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     // Update the total in service lines
     const updatedServiceLines = serviceLines.map(line => ({
       ...line,
-      total: ((parseFloat(line.quantity) || 0) * (parseFloat(line.unitPrice) || 0)).toFixed(2)
+      total: ((parseFloat(line.quantity) || 0) * (parseFloat(line.unitPrice) || 0)).toFixed(2),
+      totalPrice: (parseFloat(line.quantity) || 0) * (parseFloat(line.unitPrice) || 0)
     }));
     
     if (JSON.stringify(updatedServiceLines) !== JSON.stringify(serviceLines)) {
@@ -229,7 +231,8 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         quantity: "1",
         unitPrice: "0",
         tva: "20",
-        total: "0"
+        total: "0",
+        totalPrice: 0
       }
     ]);
   };
@@ -332,7 +335,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       // Prepare invoice data for preview with all required properties
       const invoiceData: InvoiceData = {
         invoiceNumber,
-        invoiceDate,
+        issueDate: invoiceDate,
         dueDate: paymentDelay === "custom" ? dueDate : "",
         clientName,
         clientEmail,
@@ -347,15 +350,15 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           bankAccount: "",
           bankName: "",
           accountHolder: "",
-          taxRate: "20",
+          taxRate: 20,
           termsAndConditions: "",
           thankYouMessage: "",
           defaultCurrency: "EUR"
         },
-        serviceLines,
+        items: serviceLines,
         subtotal,
         taxTotal,
-        total,
+        totalAmount: total,
         paymentDelay,
         paymentMethods,
         notes,
@@ -437,7 +440,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       // Prepare complete invoice data
       const invoiceData: InvoiceData = {
         invoiceNumber,
-        invoiceDate,
+        issueDate: invoiceDate,
         dueDate: paymentDelay === "custom" ? dueDate : "",
         clientName,
         clientEmail,
@@ -452,15 +455,15 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           bankAccount: "",
           bankName: "",
           accountHolder: "",
-          taxRate: "20",
+          taxRate: 20,
           termsAndConditions: "",
           thankYouMessage: "",
           defaultCurrency: "EUR"
         },
-        serviceLines,
+        items: serviceLines,
         subtotal,
         taxTotal,
-        total,
+        totalAmount: total,
         paymentDelay,
         paymentMethods,
         notes,
@@ -818,7 +821,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     // Create the complete invoice data object to pass to the preview component
     const currentInvoiceData: InvoiceData = {
       invoiceNumber,
-      invoiceDate,
+      issueDate: invoiceDate,
       dueDate: paymentDelay === "custom" ? dueDate : "",
       clientName,
       clientEmail,
@@ -833,15 +836,15 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         bankAccount: "",
         bankName: "",
         accountHolder: "",
-        taxRate: "20",
+        taxRate: 20,
         termsAndConditions: "",
         thankYouMessage: "",
         defaultCurrency: "EUR"
       },
-      serviceLines,
+      items: serviceLines,
       subtotal,
       taxTotal,
-      total,
+      totalAmount: total,
       paymentDelay,
       paymentMethods,
       notes,
@@ -915,7 +918,8 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       quantity: "1",
       unitPrice: (product.price_cents / 100).toString(),
       tva: product.tax_rate?.toString() || "20",
-      total: (product.price_cents / 100).toString()
+      total: (product.price_cents / 100).toString(),
+      totalPrice: (product.price_cents / 100).toString()
     };
 
     setServiceLines([...serviceLines, newServiceLine]);

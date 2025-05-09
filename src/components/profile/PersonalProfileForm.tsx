@@ -26,7 +26,7 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
     bankAccount: "",
     bankName: "",
     accountHolder: "",
-    taxRate: "20",
+    taxRate: 20, // Use numeric value for internal state
     termsAndConditions: "Paiement à réception de facture. Des pénalités de retard de 3 fois le taux d'intérêt légal seront appliquées en cas de paiement après la date d'échéance.",
     thankYouMessage: "Merci pour votre confiance",
     defaultCurrency: "EUR",
@@ -63,12 +63,24 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
   }, [subtype]);
 
   const handleChange = (field: keyof CompanyProfile, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'taxRate') {
+      // Convert taxRate string to number for internal state
+      setFormData(prev => ({ ...prev, [field]: parseFloat(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData as CompanyProfile);
+    
+    // Convert taxRate to string for saving
+    const profileToSave: CompanyProfile = {
+      ...formData as CompanyProfile,
+      taxRate: String(formData.taxRate)
+    };
+    
+    onSave(profileToSave);
   };
 
   // Récupérer les labels adaptés en fonction du type d'activité

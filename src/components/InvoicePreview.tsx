@@ -7,15 +7,15 @@ import { InvoiceData } from '@/types/invoice';
 
 interface InvoicePreviewProps {
   htmlContent: string;
-  invoiceData?: InvoiceData;
-  templateId?: string; // ID du template utilisé
-  showDownloadButton?: boolean; // Option pour afficher le bouton de téléchargement
+  invoiceData: InvoiceData;
+  templateId: string;
+  showDownloadButton?: boolean;
 }
 
 export function InvoicePreview({ 
   htmlContent, 
   invoiceData, 
-  templateId = 'classic',
+  templateId, 
   showDownloadButton = false
 }: InvoicePreviewProps) {
   const [iframeHeight, setIframeHeight] = useState(842); // A4 height in pixels (at 96 DPI)
@@ -219,6 +219,17 @@ export function InvoicePreview({
     </body>
     </html>
   `;
+
+  const getIssuerName = () => {
+    if (invoiceData.issuerInfo?.name) {
+      return invoiceData.issuerInfo.name;
+    }
+    return "Facture";
+  };
+
+  const getClientName = () => {
+    return invoiceData.clientName || "Client";
+  };
 
   return (
     <div className="flex flex-col">

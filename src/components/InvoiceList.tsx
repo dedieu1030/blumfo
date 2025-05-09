@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 interface Invoice {
   id: string;
   number: string;
-  invoice_number: string; // Added to match required property
+  invoice_number: string;
   client: string;
   amount: string;
   date: string;

@@ -25,7 +25,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
     bankAccount: "",
     bankName: "",
     accountHolder: "",
-    taxRate: "20",
+    taxRate: 20, // Use numeric value for internal state
     termsAndConditions: "Paiement sous 30 jours. Pénalité 1.5%/mois en cas de retard.",
     thankYouMessage: "Merci pour votre confiance",
     defaultCurrency: "EUR",
@@ -45,7 +45,12 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
   }, [initialData]);
 
   const handleChange = (field: keyof CompanyProfile, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'taxRate') {
+      // Convert taxRate string to number when updating state
+      setFormData(prev => ({ ...prev, [field]: parseFloat(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
     
     if (field === "businessType") {
       setShowCustomBusinessType(value === "other");
@@ -54,7 +59,14 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData as CompanyProfile);
+    
+    // Convert taxRate to string before saving
+    const profileToSave: CompanyProfile = {
+      ...formData as CompanyProfile,
+      taxRate: String(formData.taxRate)
+    };
+    
+    onSave(profileToSave);
     toast({
       title: "Profil enregistré",
       description: "Vos informations ont été mises à jour avec succès."

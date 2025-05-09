@@ -1,3 +1,4 @@
+
 export interface ReminderTrigger {
   id: string;
   triggerType: 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
@@ -19,29 +20,39 @@ export interface InvoiceData {
   invoiceNumber: string;
   issueDate: string;
   dueDate: string;
+  invoiceDate?: string;
   clientId?: string;
   clientName: string;
   clientEmail?: string;
   clientAddress?: string;
+  clientPhone?: string;
+  issuerInfo?: CompanyProfile;
   items: ServiceLine[];
   subtotal: number;
-  taxRate: number;
-  taxAmount: number;
+  taxRate?: number;
+  taxAmount?: number;
+  taxTotal?: number;
   totalAmount: number;
+  total?: number;
   notes?: string;
   paymentTerms?: string;
   status?: 'draft' | 'pending' | 'paid' | 'overdue' | 'cancelled';
   templateId?: string;
   currency?: string;
   paymentMethods?: PaymentMethodDetails[];
+  paymentDelay?: string;
+  customPaymentTerms?: string;
+  paymentTermsId?: string;
 }
 
 export interface ServiceLine {
   id: string;
   description: string;
-  quantity: number;
-  unitPrice: number;
+  quantity: string;
+  unitPrice: string;
   totalPrice: number;
+  tva?: string;
+  total?: string;
 }
 
 // Company Profile types
@@ -70,6 +81,7 @@ export interface CompanyProfile {
   payoneer?: string;
   profileType?: 'personal' | 'business';
   profileSubtype?: string;
+  emailType?: 'personal' | 'professional' | 'company';
 }
 
 // Payment method types
@@ -101,6 +113,8 @@ export interface InvoiceNumberingConfig {
   nextNumber: number;
   resetPeriod: 'never' | 'yearly' | 'monthly';
   lastReset?: string;
+  padding?: number;
+  resetAnnually?: boolean;
 }
 
 // Currency types
@@ -108,7 +122,21 @@ export interface CurrencyInfo {
   code: string;
   name: string;
   symbol: string;
-  position: 'before' | 'after';
+  position: 'before' | 'after' | 'prefix' | 'suffix';
 }
 
 export type Currency = string; // ISO currency code
+
+// Invoice interface used in InvoiceList component
+export interface Invoice {
+  id: string;
+  number: string;
+  invoice_number: string;
+  client: string;
+  amount: string;
+  date: string;
+  dueDate: string;
+  status: 'paid' | 'pending' | 'overdue' | 'draft';
+  paymentUrl?: string;
+  stripeInvoiceId?: string;
+}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -39,7 +38,18 @@ export default function Invoicing() {
   const [isGenerating, setIsGenerating] = useState(false);
   
   // États pour la configuration de facturation
-  const [numberingConfig, setNumberingConfig] = useState<InvoiceNumberingConfig>(getInvoiceNumberingConfig());
+  const [numberingConfig, setNumberingConfig] = useState<InvoiceNumberingConfig>({
+    prefix: "INV",
+    suffix: "",
+    digits: 3,
+    separator: "-",
+    nextNumber: 1,
+    pattern: "PREFIX-YEAR-NUMBER",
+    resetPeriod: "never",
+    lastReset: "",
+    padding: 3,
+    resetAnnually: false
+  });
   const [defaultCurrency, setDefaultCurrency] = useState<string>(getDefaultCurrency());
   const [defaultPaymentTerm, setDefaultPaymentTerm] = useState<string>(getDefaultPaymentTerm());
   const [customDueDate, setCustomDueDate] = useState<Date | undefined>(undefined);
@@ -150,6 +160,22 @@ export default function Invoicing() {
     return Promise.resolve();
   };
 
+  const handlePaddingChange = (value: string) => {
+    const padding = parseInt(value, 10);
+    setNumberingConfig(prev => ({
+      ...prev,
+      padding: isNaN(padding) ? 3 : padding
+    }));
+  };
+
+  const handleResetAnnuallyChange = (checked: boolean) => {
+    setNumberingConfig(prev => ({
+      ...prev,
+      resetAnnually: checked,
+      resetPeriod: checked ? "yearly" : "never"
+    }));
+  };
+
   return (
     <>
       <Header 
@@ -190,7 +216,7 @@ export default function Invoicing() {
                   <Label htmlFor="padding">{t("padding")}</Label>
                   <Select 
                     value={numberingConfig.padding.toString()} 
-                    onValueChange={(value) => setNumberingConfig({...numberingConfig, padding: parseInt(value)})}
+                    onValueChange={(value) => handlePaddingChange(value)}
                   >
                     <SelectTrigger id="padding">
                       <SelectValue placeholder={t("chooseDelay")} />
@@ -221,7 +247,7 @@ export default function Invoicing() {
                   <Switch 
                     id="reset-annually" 
                     checked={numberingConfig.resetAnnually}
-                    onCheckedChange={(checked) => setNumberingConfig({...numberingConfig, resetAnnually: checked})}
+                    onCheckedChange={(checked) => handleResetAnnuallyChange(checked)}
                   />
                   <Label htmlFor="reset-annually">
                     {t("resetAnnually")}
