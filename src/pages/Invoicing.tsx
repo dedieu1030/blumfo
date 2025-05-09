@@ -185,15 +185,10 @@ export default function Invoicing() {
         title={t("invoicing")} 
         description={t("invoicingDescription")}
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
-        showNewInvoiceButton={false}
-        actions={
-          <Button onClick={handleGenerateInvoice} variant="default">
-            <Plus className="h-4 w-4 mr-1" />
-            {t("newInvoice")}
-          </Button>
-        }
       />
       
+      {/* J'ai supprimé le bouton "Nouvelle facture" ici comme demandé */}
+
       <Card>
         <CardHeader>
           <CardTitle>{t("billingConfiguration")}</CardTitle>
