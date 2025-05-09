@@ -1,29 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import { NewClientForm } from "./NewClientForm";
-import { DbClient } from "@/types/invoice";
-
-export interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  notes?: string | null;
-  created_at: string;
-  updated_at: string | null;
-  user_id: string;
-  invoiceCount?: number;
-}
-
-interface ClientSelectorProps {
-  onClientSelect: (client: Client) => void;
-  buttonText?: string;
-}
+import { Client, DbClient } from "@/types/invoice";
 
 // Fonction d'adaptation depuis les données de la base Supabase vers notre modèle Client
 // Exporter la fonction pour la réutiliser ailleurs (y compris dans NewClientForm)
@@ -41,6 +22,11 @@ export const mapDbClientToClient = (dbClient: DbClient, invoiceCount: number = 0
     invoiceCount
   };
 };
+
+interface ClientSelectorProps {
+  onClientSelect: (client: Client) => void;
+  buttonText?: string;
+}
 
 export const ClientSelector = ({ onClientSelect, buttonText = "Créer un nouveau client" }: ClientSelectorProps) => {
   const [searchQuery, setSearchQuery] = useState("");

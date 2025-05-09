@@ -17,11 +17,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Client } from "@/components/ClientSelector";
+import { Client, DbClient } from "@/types/invoice";
 import { supabase } from "@/integrations/supabase/client";
 import InvoicePaymentAlert from "@/components/InvoicePaymentAlert";
 import { checkOverdueInvoices } from "@/services/reminderService";
 import { Badge } from "@/components/ui/badge";
+import { mapDbClientToClient } from "@/components/ClientSelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -190,11 +191,11 @@ export default function Clients() {
         // Fetch categories for all clients
         const clientsWithCategories = await Promise.all((clientsData || []).map(async (dbClient: any) => {
           // Récupérer le nombre de factures pour chaque client
-          // Utilisons any pour contourner l'erreur de type
-          const { data: countData } = await (supabase.rpc as any)(
+          // Using type assertion to bypass type checking issues with Supabase client
+          const { data: countData } = await (supabase as any).rpc(
             'get_client_invoice_count', 
             { client_id: dbClient.id }
-          ) as { data: number };
+          );
           
           // Récupérer les catégories pour chaque client
           const { data: categoryData, error: categoryError } = await supabase.rpc(

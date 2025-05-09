@@ -1,3 +1,4 @@
+
 export interface CompanyProfile {
   name: string;
   address: string;
@@ -127,3 +128,50 @@ export interface DbClient {
   group_id?: string | null;
   reference_number?: string | null;
 }
+
+// Type Client pour l'utilisation dans l'application
+export interface Client {
+  id: string;
+  name: string;  // Corresponds to client_name in the database
+  email: string;
+  phone?: string;
+  address?: string;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string | null;
+  user_id: string;  // Corresponds to company_id in the database
+  invoiceCount?: number;
+}
+
+// Adding Notification type
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+  user_id?: string;
+  metadata?: Record<string, any>;
+}
+
+// Adding Product type
+export interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  currency: string;
+  tax_rate: number | null;
+  is_recurring: boolean;
+  recurring_interval: 'day' | 'week' | 'month' | 'year' | null;
+  recurring_interval_count: number | null;
+  product_type: 'product' | 'service' | null;
+  active: boolean;
+  metadata: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
+  category_id?: string;
+  category_name?: string;
+}
+

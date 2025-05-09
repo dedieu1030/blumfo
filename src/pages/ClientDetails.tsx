@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -7,15 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvoiceStatus } from "@/components/InvoiceStatus";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Save, Mail, Phone, Building, Calendar, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Phone, Building, Calendar, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Client } from "@/components/ClientSelector";
+import { Client, DbClient } from "@/types/invoice";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ClientCategorySelector } from "@/components/ClientCategorySelector";
 import { ClientNotes } from "@/components/ClientNotes";
 import { formatCurrency } from "@/lib/utils";
+import { mapDbClientToClient } from "@/components/ClientSelector";
 
 type ClientDetailsParams = {
   id: string;
@@ -67,7 +69,9 @@ export default function ClientDetails() {
         if (error) throw error;
         
         if (data) {
-          setClient(data as Client);
+          // Convert DbClient to Client
+          const clientData = mapDbClientToClient(data as DbClient);
+          setClient(clientData);
           
           // Fetch client categories
           const { data: categoryData, error: categoryError } = await supabase

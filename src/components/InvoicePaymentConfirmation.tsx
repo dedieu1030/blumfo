@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -70,7 +69,8 @@ export function InvoicePaymentConfirmation({
         }
       };
       
-      const { error } = await supabase
+      // Using "as any" to bypass type checking issues with Supabase client
+      const { error } = await (supabase as any)
         .from('stripe_invoices')
         .update(updateData)
         .eq('stripe_invoice_id', invoice.stripeInvoiceId)
@@ -79,8 +79,8 @@ export function InvoicePaymentConfirmation({
       if (error) throw error;
       
       toast({
-        title: t("paymentConfirmed"),
-        description: t("invoiceMarkedAsPaid", { number: invoice.number }),
+        title: t("paymentConfirmed", "Paiement confirmé"),
+        description: t("invoiceMarkedAsPaid", "La facture {{number}} a été marquée comme payée", { number: invoice.number }),
       });
       
       onConfirm();
@@ -89,7 +89,7 @@ export function InvoicePaymentConfirmation({
       console.error("Erreur lors de la confirmation du paiement:", error);
       toast({
         title: t("error", "Erreur"),
-        description: t("paymentConfirmError"),
+        description: t("paymentConfirmError", "Erreur lors de la confirmation du paiement"),
         variant: "destructive"
       });
     } finally {

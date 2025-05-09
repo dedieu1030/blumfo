@@ -1,25 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price_cents: number;
-  currency: string;
-  tax_rate: number | null;
-  is_recurring: boolean;
-  recurring_interval: 'day' | 'week' | 'month' | 'year' | null;
-  recurring_interval_count: number | null;
-  product_type: 'product' | 'service' | null;
-  active: boolean;
-  metadata: Record<string, any> | null;
-  created_at: string;
-  updated_at: string;
-  category_id?: string;
-  category_name?: string;
-}
+import { Product } from "@/types/invoice";
 
 export interface Category {
   id: string;
@@ -32,7 +13,7 @@ export interface Category {
 // Product CRUD operations
 export async function fetchProducts(includeInactive: boolean = false) {
   try {
-    let query = supabase
+    let query = (supabase as any)
       .from('stripe_products')
       .select('*');
     
@@ -45,16 +26,16 @@ export async function fetchProducts(includeInactive: boolean = false) {
     if (error) throw error;
     
     // Also fetch categories to use for mapping
-    const { data: categories } = await supabase
+    const { data: categories } = await (supabase as any)
       .from('product_categories')
       .select('*');
     
     // Map products with their categories
-    return data.map(product => {
+    const mappedProducts = data.map((product: any) => {
       // Get category_id from metadata if it exists
       const metadata = product.metadata as Record<string, any> | null;
       const categoryId = metadata?.category_id;
-      const categoryObj = categories?.find(c => c.id === categoryId);
+      const categoryObj = categories?.find((c: any) => c.id === categoryId);
       
       return {
         ...product,
@@ -63,7 +44,9 @@ export async function fetchProducts(includeInactive: boolean = false) {
         recurring_interval: validateRecurringInterval(product.recurring_interval),
         product_type: validateProductType(product.product_type)
       };
-    }) as Product[];
+    });
+    
+    return mappedProducts as Product[];
   } catch (error) {
     console.error('Error fetching products:', error);
     toast.error('Erreur lors du chargement des produits');
@@ -73,7 +56,7 @@ export async function fetchProducts(includeInactive: boolean = false) {
 
 export async function fetchProduct(id: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('stripe_products')
       .select('*')
       .eq('id', id)
@@ -88,7 +71,7 @@ export async function fetchProduct(id: string) {
     // Fetch category if there's a category_id in metadata
     let categoryName;
     if (categoryId) {
-      const { data: category } = await supabase
+      const { data: category } = await (supabase as any)
         .from('product_categories')
         .select('name')
         .eq('id', categoryId)
@@ -144,7 +127,7 @@ export async function createProduct(product: Partial<Product>) {
       metadata.category_id = product.category_id;
     }
     
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('stripe_products')
       .insert({
         name: product.name,
