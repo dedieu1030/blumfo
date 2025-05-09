@@ -172,10 +172,17 @@ export const NewClientForm = ({ open, onOpenChange, onClientCreated }: NewClient
             />
             
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleClose}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleClose}
+              >
                 Annuler
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="submit"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? "Création..." : "Créer un client"}
               </Button>
             </DialogFooter>
@@ -186,18 +193,4 @@ export const NewClientForm = ({ open, onOpenChange, onClientCreated }: NewClient
   );
 };
 
-// Exporter la fonction d'adaptation pour la réutiliser
-export const mapDbClientToClient = (dbClient: any): Client => {
-  return {
-    id: dbClient.id,
-    name: dbClient.client_name,
-    email: dbClient.email || "",
-    phone: dbClient.phone || undefined,
-    address: dbClient.address || undefined,
-    notes: dbClient.notes || undefined,
-    created_at: dbClient.created_at,
-    updated_at: dbClient.updated_at,
-    user_id: dbClient.company_id || "", // Utilisation de company_id comme user_id
-    invoiceCount: 0
-  };
-};
+// Supprimer la définition dupliquée de mapDbClientToClient car elle est déjà importée

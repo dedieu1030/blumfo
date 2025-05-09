@@ -26,7 +26,8 @@ interface ClientSelectorProps {
 }
 
 // Fonction d'adaptation depuis les données de la base Supabase vers notre modèle Client
-const mapDbClientToClient = (dbClient: DbClient, invoiceCount: number = 0): Client => {
+// Exporter la fonction pour la réutiliser ailleurs (y compris dans NewClientForm)
+export const mapDbClientToClient = (dbClient: DbClient, invoiceCount: number = 0): Client => {
   return {
     id: dbClient.id,
     name: dbClient.client_name,
