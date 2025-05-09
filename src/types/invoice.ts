@@ -3,18 +3,27 @@
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
+  issueDate?: string; // Added to fix InvoiceDialog errors
   dueDate?: string;
   clientName: string;
   clientEmail: string;
   clientAddress: string;
+  clientPhone?: string;
   issuerInfo?: CompanyProfile;
   serviceLines: ServiceLine[];
+  items?: ServiceLine[]; // Alternative name used in some components
   subtotal: number;
   tax?: number;
+  taxRate?: number;
+  taxAmount?: number;
   total: number;
+  totalAmount?: number;
   notes?: string;
   paymentDelay?: string;
-  paymentMethods?: PaymentMethodDetails[]; // Ajout de cette propriété
+  paymentMethods?: PaymentMethodDetails[];
+  templateId?: string;
+  paymentTermsId?: string;
+  customPaymentTerms?: string;
 }
 
 export interface ServiceLine {
@@ -23,8 +32,8 @@ export interface ServiceLine {
   quantity: string;
   unitPrice: string;
   totalPrice: number;
-  tva?: string; // Ajout de cette propriété
-  total?: string; // Ajout de cette propriété
+  tva?: string; // TVA percentage
+  total?: string; // Formatted total
 }
 
 export interface CompanyProfile {
@@ -39,7 +48,7 @@ export interface CompanyProfile {
   businessTypeCustom?: string;
   emailType?: string;
   logoUrl?: string;
-  // Nouvelles propriétés
+  // Additional properties
   bankAccount?: string;
   bankName?: string;
   accountHolder?: string;
@@ -49,6 +58,9 @@ export interface CompanyProfile {
   thankYouMessage?: string;
   paypal?: string;
   payoneer?: string;
+  // Profile type properties
+  profileType?: "personal" | "business";
+  profileSubtype?: string;
 }
 
 export interface PaymentTermTemplate {
@@ -63,13 +75,13 @@ export interface PaymentTermTemplate {
 export interface PaymentMethodDetails {
   type: string;
   enabled: boolean;
-  details?: string | Record<string, any>; // Modification pour accepter string ou Record
+  details?: string | Record<string, any>; // Support both string and object details
 }
 
-// Ajout d'un type pour les méthodes de paiement
+// Payment method types
 export type PaymentMethod = 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
 
-// Nouvelles interfaces pour les relances
+// Reminder interfaces
 export interface InvoiceReminder {
   id: string;
   invoiceId: string;
@@ -108,7 +120,7 @@ export interface ReminderSchedule {
   triggers: ReminderTrigger[];
 }
 
-// Interfaces pour les clients Stripe
+// Stripe customer interfaces
 export interface StripeCustomer {
   id: string;
   userId: string;
@@ -119,3 +131,35 @@ export interface StripeCustomer {
   createdAt: string;
   updatedAt: string;
 }
+
+// Adding missing interfaces
+export interface Invoice {
+  id: string;
+  number: string;
+  invoice_number: string;
+  client: string;
+  amount: string;
+  date: string;
+  dueDate: string;
+  status: string;
+}
+
+export interface InvoiceNumberingConfig {
+  prefix: string;
+  suffix: string;
+  startNumber: number;
+  padding: number;
+  separator: string;
+  includeDate: boolean;
+  dateFormat: string;
+}
+
+export interface CurrencyInfo {
+  code: string;
+  name: string;
+  symbol: string;
+  decimalPlaces: number;
+  symbolPosition: 'before' | 'after';
+}
+
+export type Currency = 'USD' | 'EUR' | 'CAD' | 'GBP' | 'AUD' | 'JPY' | 'CHF';

@@ -1,301 +1,211 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { useUserProfile } from '@/hooks/use-user-profile';
-import { Loader2, User } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserProfile, NotificationSettings } from '@/types/user';
+import { UserProfile, NotificationSettings } from "@/types/user";
+import { useUser } from "@/hooks/use-user";
+import { useTranslation } from 'react-i18next';
 
-// Liste des langues disponibles
-const languages = [
-  { value: 'fr', label: 'Français' },
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'it', label: 'Italiano' },
-];
+interface UserProfileFormProps {
+  initialData?: Partial<UserProfile>;
+  onSave: (data: UserProfile) => void;
+  onCancel?: () => void;
+}
 
-// Liste des fuseaux horaires
-const timezones = [
-  { value: 'Europe/Paris', label: 'Europe/Paris' },
-  { value: 'Europe/London', label: 'Europe/London' },
-  { value: 'America/New_York', label: 'America/New_York' },
-  { value: 'America/Los_Angeles', label: 'America/Los_Angeles' },
-  { value: 'Asia/Tokyo', label: 'Asia/Tokyo' },
-  { value: 'Australia/Sydney', label: 'Australia/Sydney' },
-];
-
-export function UserProfileForm() {
-  const { profile, loading, error, updateProfile } = useUserProfile();
-  const [formData, setFormData] = useState<Partial<UserProfile>>({});
-  const [isSaving, setIsSaving] = useState(false);
+export function UserProfileForm({ initialData, onSave, onCancel }: UserProfileFormProps) {
   const { toast } = useToast();
-  const navigate = useNavigate();
-  
-  // Initialiser les données du formulaire lorsque le profil est chargé
-  React.useEffect(() => {
-    if (profile) {
-      setFormData({
-        full_name: profile.full_name,
-        username: profile.username,
-        phone: profile.phone,
-        language: profile.language,
-        timezone: profile.timezone,
-        notification_settings: profile.notification_settings,
+  const { t } = useTranslation();
+  const { user, updateProfile } = useUser();
+  const [userData, setUserData] = useState<Partial<UserProfile>>({
+    full_name: '',
+    email: '',
+    phone: '',
+    language: 'fr',
+    timezone: 'Europe/Paris',
+    notification_settings: {
+      email: true,
+      push: false,
+      sms: false
+    },
+    ...initialData
+  });
+
+  useEffect(() => {
+    if (user) {
+      setUserData({
+        id: user.id,
+        username: user.username,
+        full_name: user.full_name,
+        avatar_url: user.avatar_url,
+        email: user.email,
+        phone: user.phone,
+        language: user.language,
+        timezone: user.timezone,
+        notification_settings: user.notification_settings,
+        created_at: user.created_at,
+        updated_at: user.updated_at
       });
     }
-  }, [profile]);
-  
-  // Gérer les changements dans les champs du formulaire
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  }, [user]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setUserData(prev => ({ ...prev, [id]: value }));
   };
-  
-  // Gérer les changements de langue
-  const handleLanguageChange = (value: string) => {
-    setFormData(prev => ({ ...prev, language: value }));
-  };
-  
-  // Gérer les changements de fuseau horaire
-  const handleTimezoneChange = (value: string) => {
-    setFormData(prev => ({ ...prev, timezone: value }));
-  };
-  
-  // Gérer les changements de paramètres de notification
-  const handleNotificationChange = (type: keyof NotificationSettings, value: boolean) => {
-    setFormData(prev => ({
+
+  // Fix the notification settings update to ensure all required properties are present
+  const updateNotificationSettings = (type: keyof NotificationSettings, value: boolean) => {
+    setUserData(prev => ({
       ...prev,
       notification_settings: {
-        ...(prev.notification_settings || {}),
-        [type]: value
+        email: type === 'email' ? value : Boolean(prev.notification_settings?.email),
+        push: type === 'push' ? value : Boolean(prev.notification_settings?.push),
+        sms: type === 'sms' ? value : Boolean(prev.notification_settings?.sms)
       }
     }));
   };
-  
-  // Gérer la soumission du formulaire
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
     
-    try {
-      const result = await updateProfile(formData);
-      
-      if (result.success) {
-        toast({
-          title: "Profil mis à jour",
-          description: "Vos informations ont été enregistrées avec succès",
-        });
-        
-        // Rediriger vers la page de profil
-        navigate('/profile');
-      } else {
-        toast({
-          title: "Erreur",
-          description: result.error || "Une erreur s'est produite lors de la mise à jour du profil",
-          variant: "destructive",
-        });
-      }
-    } catch (err) {
+    if (!userData.full_name || !userData.email) {
       toast({
-        title: "Erreur",
-        description: "Une erreur inattendue s'est produite",
+        title: t('error'),
+        description: t('fullNameAndEmailRequired'),
         variant: "destructive",
       });
-      console.error(err);
-    } finally {
-      setIsSaving(false);
+      return;
+    }
+
+    try {
+      // Ensure all required properties are present
+      const updatedProfile: UserProfile = {
+        id: user?.id || '',
+        username: userData.username || '',
+        full_name: userData.full_name,
+        avatar_url: userData.avatar_url || '',
+        email: userData.email,
+        phone: userData.phone || '',
+        language: userData.language || 'fr',
+        timezone: userData.timezone || 'Europe/Paris',
+        notification_settings: {
+          email: userData.notification_settings?.email !== undefined ? userData.notification_settings.email : true,
+          push: userData.notification_settings?.push !== undefined ? userData.notification_settings.push : false,
+          sms: userData.notification_settings?.sms !== undefined ? userData.notification_settings.sms : false
+        },
+        created_at: user?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      await updateProfile(updatedProfile);
+      
+      toast({
+        title: t('profileUpdated'),
+        description: t('profileUpdatedSuccessfully'),
+      });
+      
+      onSave(updatedProfile);
+    } catch (error: any) {
+      toast({
+        title: t('error'),
+        description: error.message || t('profileUpdateFailed'),
+        variant: "destructive",
+      });
     }
   };
-  
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Modifier mon profil</CardTitle>
-          <CardDescription>Chargement de vos informations...</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (error || !profile) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Erreur</CardTitle>
-          <CardDescription>Impossible de charger votre profil</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-500">{error?.message || "Vous devez être connecté pour modifier votre profil"}</p>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={() => navigate('/profile')}>Retour</Button>
-        </CardFooter>
-      </Card>
-    );
-  }
-  
+
   return (
-    <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>Modifier mon profil</CardTitle>
-          <CardDescription>Mettez à jour vos informations personnelles</CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          {/* Informations de base */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="full_name">Nom complet</Label>
-              <Input
-                id="full_name"
-                name="full_name"
-                value={formData.full_name || ''}
-                onChange={handleChange}
-                placeholder="Votre nom complet"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="username">Nom d'utilisateur (optionnel)</Label>
-              <Input
-                id="username"
-                name="username"
-                value={formData.username || ''}
-                onChange={handleChange}
-                placeholder="Votre nom d'utilisateur"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                value={profile.email}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                L'adresse email ne peut pas être modifiée directement
-              </p>
-            </div>
-            
-            <div>
-              <Label htmlFor="phone">Téléphone (optionnel)</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone || ''}
-                onChange={handleChange}
-                placeholder="Votre numéro de téléphone"
-              />
-            </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="full_name">{t('fullName')}</Label>
+        <Input
+          type="text"
+          id="full_name"
+          value={userData.full_name || ''}
+          onChange={handleChange}
+          placeholder={t('yourFullName')}
+        />
+      </div>
+      <div>
+        <Label htmlFor="email">{t('email')}</Label>
+        <Input
+          type="email"
+          id="email"
+          value={userData.email || ''}
+          onChange={handleChange}
+          placeholder={t('yourEmail')}
+        />
+      </div>
+      <div>
+        <Label htmlFor="phone">{t('phone')}</Label>
+        <Input
+          type="tel"
+          id="phone"
+          value={userData.phone || ''}
+          onChange={handleChange}
+          placeholder={t('yourPhone')}
+        />
+      </div>
+      <div>
+        <Label htmlFor="language">{t('language')}</Label>
+        <Input
+          type="text"
+          id="language"
+          value={userData.language || ''}
+          onChange={handleChange}
+          placeholder={t('yourLanguage')}
+        />
+      </div>
+      <div>
+        <Label htmlFor="timezone">{t('timezone')}</Label>
+        <Input
+          type="text"
+          id="timezone"
+          value={userData.timezone || ''}
+          onChange={handleChange}
+          placeholder={t('yourTimezone')}
+        />
+      </div>
+      <div>
+        <Label>{t('notificationSettings')}</Label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="email-notifications"
+              checked={userData.notification_settings?.email || false}
+              onCheckedChange={(checked) => updateNotificationSettings('email', checked as boolean)}
+            />
+            <Label htmlFor="email-notifications">{t('emailNotifications')}</Label>
           </div>
-          
-          {/* Préférences */}
-          <div className="space-y-4 pt-4 border-t">
-            <h3 className="font-medium">Préférences</h3>
-            
-            <div>
-              <Label htmlFor="language">Langue</Label>
-              <Select
-                value={formData.language || 'fr'}
-                onValueChange={handleLanguageChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner une langue" />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map(lang => (
-                    <SelectItem key={lang.value} value={lang.value}>
-                      {lang.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="timezone">Fuseau horaire</Label>
-              <Select
-                value={formData.timezone || 'Europe/Paris'}
-                onValueChange={handleTimezoneChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner un fuseau horaire" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timezones.map(tz => (
-                    <SelectItem key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="push-notifications"
+              checked={userData.notification_settings?.push || false}
+              onCheckedChange={(checked) => updateNotificationSettings('push', checked as boolean)}
+            />
+            <Label htmlFor="push-notifications">{t('pushNotifications')}</Label>
           </div>
-          
-          {/* Notifications */}
-          <div className="space-y-4 pt-4 border-t">
-            <h3 className="font-medium">Préférences de notification</h3>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="emailNotif" className="cursor-pointer">Notifications par email</Label>
-              <Switch
-                id="emailNotif"
-                checked={formData.notification_settings?.email || false}
-                onCheckedChange={(checked) => handleNotificationChange('email', checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="pushNotif" className="cursor-pointer">Notifications push</Label>
-              <Switch
-                id="pushNotif"
-                checked={formData.notification_settings?.push || false}
-                onCheckedChange={(checked) => handleNotificationChange('push', checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="smsNotif" className="cursor-pointer">Notifications SMS</Label>
-              <Switch
-                id="smsNotif"
-                checked={formData.notification_settings?.sms || false}
-                onCheckedChange={(checked) => handleNotificationChange('sms', checked)}
-              />
-            </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="sms-notifications"
+              checked={userData.notification_settings?.sms || false}
+              onCheckedChange={(checked) => updateNotificationSettings('sms', checked as boolean)}
+            />
+            <Label htmlFor="sms-notifications">{t('smsNotifications')}</Label>
           </div>
-        </CardContent>
-        
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" type="button" onClick={() => navigate('/profile')}>
-            Annuler
+        </div>
+      </div>
+      <div className="flex justify-end">
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel} className="mr-2">
+            {t('cancel')}
           </Button>
-          <Button type="submit" disabled={isSaving}>
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enregistrement...
-              </>
-            ) : (
-              'Enregistrer les modifications'
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+        )}
+        <Button type="submit">{t('save')}</Button>
+      </div>
     </form>
   );
 }

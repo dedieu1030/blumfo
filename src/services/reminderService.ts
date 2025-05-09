@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ReminderSchedule, ReminderTrigger } from "@/types/invoice";
 import { toast } from "sonner";
@@ -114,7 +113,8 @@ export async function getReminderSchedules(): Promise<{
         triggers: (rules || []).map(rule => ({
           id: rule.id,
           scheduleId: rule.schedule_id,
-          triggerType: rule.trigger_type,
+          // Ensure trigger_type is cast to the correct union type
+          triggerType: rule.trigger_type as 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder',
           triggerValue: rule.trigger_value,
           emailSubject: rule.email_subject,
           emailBody: rule.email_body
@@ -213,7 +213,8 @@ export async function saveReminderSchedule(schedule: ReminderSchedule): Promise<
         triggers: (rules || []).map(rule => ({
           id: rule.id,
           scheduleId: rule.schedule_id,
-          triggerType: rule.trigger_type,
+          // Ensure trigger_type is cast to the correct union type
+          triggerType: rule.trigger_type as 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder',
           triggerValue: rule.trigger_value,
           emailSubject: rule.email_subject,
           emailBody: rule.email_body
