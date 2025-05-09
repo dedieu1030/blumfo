@@ -56,12 +56,14 @@ export async function fetchProducts(includeInactive = false) {
     if (error) throw error;
     
     // Format products with their categories
-    return (data || []).map(product => ({
+    const formattedProducts = (data || []).map(product => ({
       ...product,
       is_recurring: !!product.recurring_interval,
       category_name: '',
       price: formatPrice(product.price_cents || 0)
-    })) as Product[];
+    }));
+    
+    return formattedProducts as Product[];
   } catch (error) {
     console.error('Error fetching products:', error);
     toast.error('Erreur lors du chargement des produits');
@@ -180,7 +182,7 @@ export async function deleteProduct(id: string) {
   }
 }
 
-// Type pour Category
+// Type for Category
 export type Category = ProductCategory;
 
 // Fetch product categories
@@ -201,7 +203,7 @@ export async function fetchProductCategories() {
   }
 }
 
-// Alias pour la fonction fetchProductCategories
+// Alias for the fetchProductCategories function
 export const fetchCategories = fetchProductCategories;
 
 // Create a product category
@@ -226,7 +228,7 @@ export async function createProductCategory(category: Partial<ProductCategory>) 
   }
 }
 
-// Alias pour la fonction createProductCategory
+// Alias for the createProductCategory function
 export const createCategory = createProductCategory;
 
 // Update a product category
@@ -253,7 +255,7 @@ export async function updateProductCategory(id: string, category: Partial<Produc
   }
 }
 
-// Alias pour la fonction updateProductCategory
+// Alias for the updateProductCategory function
 export const updateCategory = updateProductCategory;
 
 // Delete a product category
@@ -282,5 +284,5 @@ export async function deleteProductCategory(id: string) {
   }
 }
 
-// Alias pour la fonction deleteProductCategory
+// Alias for the deleteProductCategory function
 export const deleteCategory = deleteProductCategory;

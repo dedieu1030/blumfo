@@ -465,6 +465,77 @@ export type Database = {
         }
         Relationships: []
       }
+      reminder_rules: {
+        Row: {
+          created_at: string | null
+          email_body: string | null
+          email_subject: string | null
+          id: string
+          schedule_id: string | null
+          trigger_type: string
+          trigger_value: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          schedule_id?: string | null
+          trigger_type: string
+          trigger_value: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          schedule_id?: string | null
+          trigger_type?: string
+          trigger_value?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_rules_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "reminder_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_schedules: {
+        Row: {
+          created_at: string | null
+          enabled: boolean
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       stripe_invoices: {
         Row: {
           amount_total: number
@@ -518,6 +589,7 @@ export type Database = {
       stripe_products: {
         Row: {
           active: boolean | null
+          category_id: string | null
           created_at: string | null
           currency: string | null
           description: string | null
@@ -533,6 +605,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          category_id?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
@@ -548,6 +621,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          category_id?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
