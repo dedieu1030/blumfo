@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,34 +64,30 @@ export default function Clients() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user);
-    };
+  // Define fetchCategories first to avoid "used before its declaration" error
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('client_categories')
+        .select('*');
 
-    fetchSession();
-  }, []);
+      if (error) {
+        throw error;
+      }
 
-  useEffect(() => {
-    fetchClients();
-    fetchCategories();
-  }, [fetchClients]);
-
-  useEffect(() => {
-    if (searchQuery) {
-      const filtered = clients.filter(client =>
-        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (client.phone && client.phone.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      setFilteredClients(filtered);
-    } else {
-      setFilteredClients(clients);
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error("Error fetching categories:", error);
+      toast({
+        title: "Erreur!",
+        description: "Erreur lors du chargement des catégories",
+        variant: "destructive"
+      })
     }
-  }, [searchQuery, clients]);
-
-  const fetchClients = useCallback(async () => {
+  };
+  
+  // Define fetchClients after using it in the useEffect dependency array
+  const fetchClients = async () => {
     setLoading(true);
     try {
       let query = supabase
@@ -123,7 +119,7 @@ export default function Clients() {
           }
 
           const categoryIds = clientCategories?.map(mapping => mapping.category_id) || [];
-          const categories = categories.filter(cat => categoryIds.includes(cat.id));
+          const clientCategories2 = categories.filter(cat => categoryIds.includes(cat.id));
 
           // Convertir en format Client
           const client = mapDbClientToClient(dbClient);
@@ -131,7 +127,7 @@ export default function Clients() {
           // Ajouter les catégories au client
           return {
             ...client,
-            categories
+            categories: clientCategories2
           };
         })
       );
@@ -149,28 +145,34 @@ export default function Clients() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, categories]);
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('client_categories')
-        .select('*');
-
-      if (error) {
-        throw error;
-      }
-
-      setCategories(data || []);
-    } catch (error: any) {
-      console.error("Error fetching categories:", error);
-      toast({
-        title: "Erreur!",
-        description: "Erreur lors du chargement des catégories",
-        variant: "destructive"
-      })
-    }
   };
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user);
+    };
+
+    fetchSession();
+  }, []);
+
+  useEffect(() => {
+    fetchClients();
+    fetchCategories();
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = clients.filter(client =>
+        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (client.phone && client.phone.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+      setFilteredClients(filtered);
+    } else {
+      setFilteredClients(clients);
+    }
+  }, [searchQuery, clients]);
 
   const handleCreateClient = async (formData: any) => {
     setIsCreateDialogOpen(false);

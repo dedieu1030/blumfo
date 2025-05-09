@@ -1,107 +1,85 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Notification } from "@/types/invoice";
 import { toast } from "sonner";
+import { Notification } from "@/types/invoice";
 
-/**
- * Fetches all notifications for the current user
- */
-export const fetchNotifications = async (): Promise<Notification[]> => {
+// Fetch notifications for the current user
+export const fetchNotifications = async (limit: number = 10, offset: number = 0) => {
   try {
-    // Using type assertion to bypass type checking issues with Supabase client
-    const response = await (supabase as any)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return [];
+
+    const { data, error } = await (supabase as any)
       .from('notifications')
       .select('*')
-      .order('created_at', { ascending: false });
+      .eq('user_id', session?.user.id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
     
-    if (response.error) {
-      throw response.error;
-    }
-    
-    return response.data || [];
+    if (error) throw error;
+    return data as Notification[];
   } catch (error) {
-    console.error("Error fetching notifications:", error);
+    console.error('Error fetching notifications:', error);
     return [];
   }
 };
 
-/**
- * Marks a notification as read
- */
-export const markNotificationAsRead = async (id: string): Promise<boolean> => {
+// Mark notification as read
+export const markNotificationAsRead = async (notificationId: string) => {
   try {
-    // Using type assertion to bypass type checking issues with Supabase client
-    const response = await (supabase as any)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
+
+    const { error } = await (supabase as any)
       .from('notifications')
       .update({ is_read: true })
-      .eq('id', id);
+      .eq('id', notificationId)
+      .eq('user_id', session.user.id);
     
-    if (response.error) {
-      throw response.error;
-    }
-    
+    if (error) throw error;
     return true;
   } catch (error) {
-    console.error("Error marking notification as read:", error);
+    console.error('Error marking notification as read:', error);
     return false;
   }
 };
 
-/**
- * Marks all notifications as read
- */
-export const markAllNotificationsAsRead = async (): Promise<boolean> => {
+// Mark all notifications as read
+export const markAllNotificationsAsRead = async () => {
   try {
-    // Using type assertion to bypass type checking issues with Supabase client
-    const response = await (supabase as any)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
+
+    const { error } = await (supabase as any)
       .from('notifications')
       .update({ is_read: true })
+      .eq('user_id', session.user.id)
       .eq('is_read', false);
     
-    if (response.error) {
-      throw response.error;
-    }
-    
+    if (error) throw error;
     return true;
   } catch (error) {
-    console.error("Error marking all notifications as read:", error);
+    console.error('Error marking all notifications as read:', error);
     return false;
   }
 };
 
-/**
- * Subscribes to real-time notifications
- */
-export const subscribeToNotifications = (
-  onNotification: (notification: Notification) => void
-) => {
-  // Using type assertion to bypass type checking issues with Supabase client
-  const channel = (supabase as any)
-    .channel('notification-changes')
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications'
-      },
-      (payload: any) => {
-        const newNotification = payload.new as Notification;
-        
-        // Show toast notification
-        toast(newNotification.title, {
-          description: newNotification.message,
-          duration: 5000
-        });
-        
-        // Call the callback with the new notification
-        onNotification(newNotification);
-      }
-    )
-    .subscribe();
+// Count unread notifications
+export const countUnreadNotifications = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return 0;
+
+    const { count, error } = await (supabase as any)
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', session.user.id)
+      .eq('is_read', false);
     
-  // Return a cleanup function
-  return () => {
-    supabase.removeChannel(channel);
-  };
+    if (error) throw error;
+    return count;
+  } catch (error) {
+    console.error('Error counting unread notifications:', error);
+    return 0;
+  }
 };

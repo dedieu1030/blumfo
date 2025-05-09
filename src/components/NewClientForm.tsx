@@ -17,8 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Client, mapDbClientToClient } from "./ClientSelector";
 import { DbClient } from "@/types/invoice";
+import { mapDbClientToClient } from "./ClientSelector";
+import { Client } from "@/types/invoice";
 
 const clientSchema = z.object({
   client_name: z.string().min(1, "Le nom est requis"),
