@@ -28,7 +28,7 @@ export interface InvoiceData {
   issuerInfo?: CompanyProfile;
   items: ServiceLine[];
   subtotal: number;
-  taxRate?: number; // Ensuring this is a number type
+  taxRate: number; // Ensuring this is ALWAYS a number type
   taxAmount?: number;
   taxTotal?: number;
   totalAmount: number;

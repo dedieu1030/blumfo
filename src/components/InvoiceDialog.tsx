@@ -372,7 +372,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         subtotal,
         // Ensure taxRate is always a number
         taxRate: typeof companyProfile?.taxRate === 'string' 
-          ? parseFloat(companyProfile.taxRate) 
+          ? parseFloat(companyProfile.taxRate) || 0
           : (companyProfile?.taxRate as number) || 0,
         taxAmount: taxTotal,
         totalAmount: total,
@@ -479,9 +479,9 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         },
         items: serviceLines,
         subtotal,
-        // Fixed line 947: Ensure taxRate is always a number
+        // Fixed: Ensure taxRate is always a number for all instances
         taxRate: typeof companyProfile?.taxRate === 'string' 
-          ? parseFloat(companyProfile.taxRate) 
+          ? parseFloat(companyProfile.taxRate) || 0 
           : (companyProfile?.taxRate as number) || 0,
         taxAmount: taxTotal,
         totalAmount: total,
@@ -866,7 +866,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       subtotal,
       // Ensure taxRate is always a number
       taxRate: typeof companyProfile?.taxRate === 'string' 
-        ? parseFloat(companyProfile.taxRate) 
+        ? parseFloat(companyProfile.taxRate) || 0
         : (companyProfile?.taxRate as number) || 0,
       taxAmount: taxTotal,
       totalAmount: total,
