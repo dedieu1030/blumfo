@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Globe } from "lucide-react";
+import { Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,10 +28,10 @@ export const LanguageSelector: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1">
-          <Globe className="h-4 w-4" />
-          <span>
-            {currentLang.flag} {currentLang.name}
+        <Button variant="outline" size="sm" className="border-0">
+          <span className="flex items-center gap-1">
+            <span className="w-6">{currentLang.flag}</span>
+            <span className="hidden md:inline">{currentLang.name}</span>
           </span>
         </Button>
       </DropdownMenuTrigger>

@@ -22,7 +22,7 @@ export const Header = ({
   description, 
   onOpenMobileMenu,
   actions,
-  showNewInvoiceButton = true, // Par défaut, on affiche le bouton
+  showNewInvoiceButton = true,
 }: HeaderProps) => {
   const { t } = useTranslation();
   const isTopLevel = useIsToplevel();
@@ -46,42 +46,58 @@ export const Header = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 mb-6">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col mb-6">
+      <div className="flex items-center justify-between py-2 border-b">
+        {/* Section de gauche: Bouton menu (mobile) ou bouton retour + titre */}
         <div className="flex items-center">
-          {!isMobileScreen ? (
-            <>
-              {renderBackButton()}
-              <div>
-                <h1 className="text-2xl font-semibold">{title}</h1>
-                {description && <p className="text-muted-foreground mt-1">{description}</p>}
-              </div>
-            </>
+          {isMobileScreen ? (
+            <Button variant="ghost" size="icon" onClick={onOpenMobileMenu}>
+              <Menu className="h-5 w-5" />
+            </Button>
           ) : (
-            <div className="flex items-center">
-              <Button variant="ghost" size="icon" onClick={onOpenMobileMenu} className="mr-2">
-                <Menu className="h-5 w-5" />
-              </Button>
-              <h1 className="text-xl font-semibold">{title}</h1>
-            </div>
+            renderBackButton()
+          )}
+          
+          {/* Sur mobile, afficher le titre près du menu */}
+          {isMobileScreen && (
+            <h1 className="text-xl font-semibold ml-2">{title}</h1>
           )}
         </div>
         
-        <div className="flex items-center space-x-2">
-          <LanguageSelector />
-          <NotificationBell />
+        {/* Section centrale: barre de recherche */}
+        <div className="flex-1 mx-4 max-w-2xl hidden md:block">
+          <SearchBar />
+        </div>
+        
+        {/* Section de droite: Boutons d'action */}
+        <div className="flex items-center gap-2">
           {showNewInvoiceButton && (
-            <Button onClick={() => navigate("/invoicing")} size={isMobileScreen ? "sm" : "default"}>
+            <Button onClick={() => navigate("/invoicing")} className="hidden sm:flex" variant="default">
               <Plus className="h-4 w-4 mr-1" />
-              {!isMobileScreen && t('newInvoice')}
+              {t('newInvoice')}
             </Button>
           )}
+          
+          <LanguageSelector />
+          <NotificationBell />
           {actions}
         </div>
       </div>
       
-      {/* Barre de recherche sous l'en-tête principal */}
-      {!isMobileScreen && <div className="w-full max-w-md"><SearchBar /></div>}
+      {/* Titre et description (desktop seulement) */}
+      {!isMobileScreen && (
+        <div className="mt-6">
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          {description && <p className="text-muted-foreground mt-1">{description}</p>}
+        </div>
+      )}
+      
+      {/* Barre de recherche sur mobile */}
+      {isMobileScreen && (
+        <div className="mt-4">
+          <SearchBar />
+        </div>
+      )}
     </div>
   );
 };

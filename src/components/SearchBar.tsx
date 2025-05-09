@@ -107,7 +107,6 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
     if (!open) {
       setOpen(true);
     }
-    // Ne pas changer le focus, laisser l'input actif
   };
 
   // Détermine le texte du placeholder en fonction de la taille de l'écran
@@ -146,7 +145,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                 <X className="h-3 w-3" />
               </button>
             )}
-            {/* Afficher le raccourci clavier même sur mobile */}
+            {/* Afficher le raccourci clavier */}
             <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
               <span className="text-xs">⌘</span>K
             </kbd>
