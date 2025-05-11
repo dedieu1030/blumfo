@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useIsToplevel } from "@/hooks/use-is-toplevel";
 import { useWindowSize } from "@/hooks/use-window-size";
-import { ChevronLeft, Menu } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
@@ -51,9 +51,6 @@ export const Header = ({
           </>
         ) : (
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" onClick={onOpenMobileMenu} className="mr-2">
-              <Menu className="h-5 w-5" />
-            </Button>
             <h1 className="text-xl font-semibold">{title}</h1>
           </div>
         )}

@@ -23,16 +23,18 @@ import { NotificationsProvider } from "./context/NotificationsContext";
 import { useIsMobile } from "./hooks/use-mobile";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { FilePlus, Menu, Plus } from "lucide-react";
 import { NotificationBell } from "./components/NotificationBell";
 import { LanguageSelector } from "./components/LanguageSelector";
 import { InvoiceDialog } from "./components/InvoiceDialog";
+import { MobileNavigation } from "./components/MobileNavigation";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const isMobile = useIsMobile();
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen">
@@ -52,12 +54,30 @@ const AppContent = () => {
               size={isMobile ? "sm" : "default"}
               className="bg-violet hover:bg-violet/90 whitespace-nowrap"
             >
-              <Plus className="mr-1 h-4 w-4" /> {!isMobile && "Nouvelle facture"}
+              {isMobile ? (
+                <FilePlus className="h-4 w-4" />
+              ) : (
+                <>
+                  <Plus className="mr-1 h-4 w-4" /> Nouvelle facture
+                </>
+              )}
             </Button>
             
             {!isMobile && <LanguageSelector />}
             
             <NotificationBell />
+            
+            {/* Menu button moved to the far right on mobile */}
+            {isMobile && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9"
+                onClick={() => setIsMobileMenuOpen(true)}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
         <div className="container mx-auto px-4 py-8">
@@ -83,6 +103,12 @@ const AppContent = () => {
       <InvoiceDialog 
         open={invoiceDialogOpen}
         onOpenChange={setInvoiceDialogOpen}
+      />
+      
+      {/* Mobile Navigation */}
+      <MobileNavigation 
+        isOpen={isMobileMenuOpen}
+        onOpenChange={setIsMobileMenuOpen}
       />
     </div>
   );

@@ -33,7 +33,6 @@ export const en = {
   
   // Statuses
   paid: "Paid",
-  // Removing the duplicate "pending" key that was causing the error
   overdue: "Overdue",
   draft: "Draft",
   
