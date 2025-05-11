@@ -38,13 +38,15 @@ const AppContent = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1 overflow-auto md:ml-64">
-        {/* Search bar container - adjusted padding to align with logo */}
-        <div className={`sticky top-0 z-10 bg-background px-4 py-8 flex items-center justify-between ${isMobile ? 'border-b' : ''}`}>
-          <div className="max-w-md w-full">
+        {/* Search bar container - adjusted to fill space better */}
+        <div className={`sticky top-0 z-10 bg-background px-4 py-8 flex items-center ${isMobile ? 'border-b' : ''}`}>
+          {/* Flexible search bar container that fills available space */}
+          <div className="flex-1 mr-4">
             <SearchBar placeholder="Rechercher dans l'application..." />
           </div>
           
-          <div className="flex items-center gap-2 ml-2">
+          {/* Tightly grouped action buttons */}
+          <div className="flex items-center gap-2 shrink-0">
             <Button 
               onClick={() => setInvoiceDialogOpen(true)}
               size={isMobile ? "sm" : "default"}
