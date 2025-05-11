@@ -1,3 +1,4 @@
+
 export const fr = {
   // Commun
   dashboard: "Dashboard",
@@ -133,9 +134,6 @@ export const fr = {
   paymentConfirmed: "Paiement confirmé",
   invoiceMarkedAsPaid: "La facture {{number}} a été marquée comme payée.",
   paymentConfirmError: "Impossible de confirmer le paiement. Veuillez réessayer.",
-  paymentFailed: "Paiement échoué",
-  paymentSuccessMessage: "Merci pour votre paiement. Votre facture a été réglée avec succès.",
-  paymentFailureMessage: "Nous n'avons pas pu traiter votre paiement.",
   
   // Lien de paiement de facture
   paymentLinkGenerated: "Lien de paiement Stripe généré",
@@ -206,7 +204,6 @@ export const fr = {
   close: "Fermer",
   
   // Payment Confirmation
-  paymentConfirmed: "Paiement confirmé",
   paymentFailed: "Paiement échoué",
   paymentSuccessMessage: "Merci pour votre paiement. Votre facture a été réglée avec succès.",
   paymentFailureMessage: "Nous n'avons pas pu traiter votre paiement.",

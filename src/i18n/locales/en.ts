@@ -1,3 +1,4 @@
+
 export const en = {
   // Common
   dashboard: "Dashboard",
@@ -207,8 +208,7 @@ export const en = {
   close: "Close",
   
   // Payment Confirmation
-  paymentConfirmed: "Payment confirmed",
-  paymentFailed: "Payment failed",
-  paymentSuccessMessage: "Thank you for your payment. Your invoice has been successfully paid.",
   paymentFailureMessage: "We couldn't process your payment.",
+  paymentSuccessMessage: "Thank you for your payment. Your invoice has been successfully paid.",
+  paymentFailed: "Payment failed",
 };

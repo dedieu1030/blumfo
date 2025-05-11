@@ -45,12 +45,12 @@ export function InvoicePaymentConfirmation({
           {success ? (
             <>
               <CheckCircle className="h-6 w-6 text-green-600 mr-2" />
-              <span>{t("paymentConfirmed", "Paiement confirmé")}</span>
+              <span>{t("paymentConfirmed")}</span>
             </>
           ) : (
             <>
               <AlertCircle className="h-6 w-6 text-red-600 mr-2" />
-              <span>{t("paymentFailed", "Paiement échoué")}</span>
+              <span>{t("paymentFailed")}</span>
             </>
           )}
         </CardTitle>
@@ -60,27 +60,27 @@ export function InvoicePaymentConfirmation({
         {success ? (
           <div className="space-y-4">
             <p className="text-center">
-              {t("paymentSuccessMessage", "Merci pour votre paiement. Votre facture a été réglée avec succès.")}
+              {t("paymentSuccessMessage")}
             </p>
             
             {invoice && (
               <div className="bg-green-50 p-3 rounded-md border border-green-100">
                 <p>
-                  <span className="font-medium">{t("invoiceNumber", "Numéro de facture")}:</span> {invoice.invoice_number}
+                  <span className="font-medium">{t("invoiceNumber")}:</span> {invoice.invoice_number}
                 </p>
               </div>
             )}
             
             <div className="flex justify-center mt-6">
               <Button onClick={handleClose}>
-                {t("ok", "OK")}
+                {t("ok")}
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-center">
-              {t("paymentFailureMessage", "Nous n'avons pas pu traiter votre paiement.")}
+              {t("paymentFailureMessage")}
             </p>
             
             {error && (
@@ -91,7 +91,7 @@ export function InvoicePaymentConfirmation({
             
             <div className="flex justify-center mt-6">
               <Button onClick={handleClose}>
-                {t("close", "Fermer")}
+                {t("close")}
               </Button>
             </div>
           </div>
