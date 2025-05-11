@@ -187,8 +187,6 @@ export default function Invoicing() {
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
       />
       
-      {/* J'ai supprimé le bouton "Nouvelle facture" ici comme demandé */}
-
       <Card>
         <CardHeader>
           <CardTitle>{t("billingConfiguration")}</CardTitle>
