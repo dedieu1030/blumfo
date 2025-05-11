@@ -208,10 +208,10 @@ const Clients = () => {
         <div className="flex flex-col space-y-6">
           <h2 className="text-2xl font-bold">Liste des clients</h2>
           
-          <div className="flex flex-wrap gap-3 w-full">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button 
               onClick={() => setIsNewClientFormOpen(true)} 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-violet hover:bg-violet/90"
             >
               <UserPlus className="h-5 w-5" />
               Ajouter un client
@@ -227,10 +227,12 @@ const Clients = () => {
           </div>
         </div>
 
+        {/* Removed the container that was creating the extra bar */}
+
         {isLoading ? (
-          <div className="text-center">Chargement des clients...</div>
+          <div className="text-center mt-4">Chargement des clients...</div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto mt-4">
             <Table>
               <TableHeader>
                 <TableRow>
