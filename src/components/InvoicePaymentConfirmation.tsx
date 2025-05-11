@@ -28,6 +28,15 @@ export function InvoicePaymentConfirmation({
   onConfirm
 }: InvoicePaymentConfirmationProps) {
   
+  const handleCloseAndRefresh = () => {
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+    if (onConfirm) {
+      onConfirm();
+    }
+  };
+  
   const content = (
     <Card className="max-w-md mx-auto">
       <CardHeader className={`${success ? 'bg-green-50' : 'bg-red-50'}`}>
@@ -63,14 +72,12 @@ export function InvoicePaymentConfirmation({
             
             <div className="flex justify-center mt-6 space-x-4">
               <Button asChild variant="outline">
-                <Link to={`/invoices${invoice ? `/${invoice.id}` : ''}`}>
+                <Link to={`/invoices/${invoice ? `/${invoice.id}` : ''}`}>
                   Voir la facture
                 </Link>
               </Button>
-              <Button asChild>
-                <Link to="/invoices">
-                  Retour aux factures
-                </Link>
+              <Button onClick={handleCloseAndRefresh}>
+                Retour aux factures
               </Button>
             </div>
           </div>
@@ -92,10 +99,8 @@ export function InvoicePaymentConfirmation({
                   Retour à la facture
                 </Link>
               </Button>
-              <Button asChild>
-                <Link to="/invoices">
-                  Toutes les factures
-                </Link>
+              <Button onClick={handleCloseAndRefresh}>
+                Toutes les factures
               </Button>
             </div>
           </div>

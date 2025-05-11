@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -66,10 +65,22 @@ export function InvoiceList({
   const handlePaymentConfirmed = () => {
     setIsConfirmDialogOpen(false);
     setIsPaymentDialogOpen(true);
+  };
+  
+  // Function to close dialogs and refresh data
+  const handleDialogClose = () => {
+    setIsPaymentDialogOpen(false);
     
-    if (onInvoiceStatusChanged) {
-      onInvoiceStatusChanged();
-    }
+    // Wait for the dialog animation to finish before updating
+    setTimeout(() => {
+      // Trigger the status changed callback to refresh data
+      if (onInvoiceStatusChanged) {
+        onInvoiceStatusChanged();
+      }
+      
+      // Reset the selected invoice state
+      setSelectedInvoice(null);
+    }, 300);
   };
   
   return (
@@ -228,7 +239,7 @@ export function InvoiceList({
             amount: parseFloat(selectedInvoice.amount.replace(/[^\d.-]/g, ''))
           }}
           success={true}
-          onConfirm={handlePaymentConfirmed}
+          onConfirm={handleDialogClose}
         />
       )}
     </div>
