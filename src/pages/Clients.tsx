@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, UserPlus, Trash2, Edit, Mail, Phone, Tag, Plus, MoreHorizontal } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, Mail, Phone, Tag, Plus, MoreHorizontal, User } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { ClientSelector } from "@/components/ClientSelector";
+import { NewClientForm } from "@/components/NewClientForm";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
@@ -51,6 +51,7 @@ const Clients = () => {
   const [editForm, setEditForm] = useState<Partial<Client>>({});
   const [updateLoading, setUpdateLoading] = useState(false);
   const [isClientSelectorOpen, setIsClientSelectorOpen] = useState(false);
+  const [isNewClientFormOpen, setIsNewClientFormOpen] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -82,7 +83,6 @@ const Clients = () => {
     }
   };
 
-  // Suppression de la fonction get_client_invoice_count qui n'existe pas encore et utilisation de get_client_categories à la place
   const fetchClientCategories = async (clientId: string) => {
     try {
       const { data, error } = await supabase
@@ -137,7 +137,6 @@ const Clients = () => {
     setIsEditModalOpen(true);
   };
 
-  // Dans la fonction handleUpdateClient, mettre à jour les données client correctement
   const handleUpdateClient = async () => {
     if (!selectedClient || !editForm) return;
 
@@ -186,11 +185,14 @@ const Clients = () => {
     // Handle the selected client here
     console.log('Selected client:', client);
     // You can perform any action with the selected client, such as displaying details or associating it with an invoice.
+    setIsClientSelectorOpen(false);
   };
 
   const handleNewClientCreated = (newClient: Client) => {
     // Add the new client to the clients list
     setClients(prevClients => [...prevClients, newClient]);
+    // Close the form dialog
+    setIsNewClientFormOpen(false);
   };
 
   return (
@@ -204,10 +206,16 @@ const Clients = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Liste des clients</h2>
-          <Button onClick={() => setIsClientSelectorOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter un client
-          </Button>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <Button onClick={() => setIsNewClientFormOpen(true)} className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Ajouter un client
+            </Button>
+            <Button variant="outline" onClick={() => setIsClientSelectorOpen(true)}>
+              <Search className="h-4 w-4 mr-2" />
+              Sélectionner un client
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -359,7 +367,7 @@ const Clients = () => {
         </Dialog>
 
         {/* Client Selector Modal */}
-        <Dialog open={isClientSelectorOpen} onOpenChange={() => setIsClientSelectorOpen(false)}>
+        <Dialog open={isClientSelectorOpen} onOpenChange={setIsClientSelectorOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Sélectionner un client</DialogTitle>
@@ -372,6 +380,13 @@ const Clients = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* New Client Form Modal */}
+        <NewClientForm 
+          open={isNewClientFormOpen} 
+          onOpenChange={setIsNewClientFormOpen} 
+          onClientCreated={handleNewClientCreated} 
+        />
       </div>
 
       <MobileNavigation
