@@ -35,6 +35,7 @@ interface InvoiceMobileCardProps {
 export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: InvoiceMobileCardProps) {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
+  const { toast } = useToast();
   
   return (
     <Card className={`mb-3 ${invoice.status === "overdue" ? "bg-amber-50" : ""}`}>

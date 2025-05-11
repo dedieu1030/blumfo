@@ -6,7 +6,7 @@ import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, FileText } from "lucide-react";
+import { Search, FileText, Filter } from "lucide-react";
 import { InvoiceReportDialog } from "@/components/InvoiceReportDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ import { differenceInDays, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Fonction pour vérifier si une facture est proche de l'échéance (sous 3 jours)
 const isNearDue = (dueDate: string) => {
@@ -168,6 +169,17 @@ export default function Invoices() {
     setActiveTab("near-due");
   };
 
+  // Structure de données pour les options de filtre
+  const filterOptions = [
+    { value: "all", label: `Toutes (${filteredInvoices.length})` },
+    { value: "pending", label: `En attente (${pendingInvoices.length})` },
+    { value: "paid", label: `Payées (${paidInvoices.length})` },
+    { value: "overdue", label: `En retard (${overdueInvoices.length})` },
+    { value: "needs-verification", label: `À vérifier (${needsVerificationInvoices.length})` },
+    { value: "near-due", label: `Échéance proche (${nearDueInvoices.length})` },
+    { value: "draft", label: `Brouillons (${draftInvoices.length})` }
+  ];
+
   return (
     <>
       <Header 
@@ -208,122 +220,110 @@ export default function Invoices() {
           </Button>
         </div>
         
-        <Tabs 
-          defaultValue={activeTab === "needs-verification" ? "needs-verification" : "all"} 
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <div className={`${isMobile ? 'overflow-x-auto pb-2' : ''}`}>
-            <TabsList className={`${isMobile ? 'w-max min-w-full' : 'w-full'} justify-start border-b rounded-none h-auto p-0 bg-transparent`}>
-              <TabsTrigger 
-                value="all" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-                disabled={isLoading}
-              >
-                Toutes ({filteredInvoices.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="pending"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-                disabled={isLoading}
-              >
-                En attente ({pendingInvoices.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="paid"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-                disabled={isLoading}
-              >
-                Payées ({paidInvoices.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="overdue"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-                disabled={isLoading}
-              >
-                En retard ({overdueInvoices.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="needs-verification"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-                disabled={isLoading}
-              >
-                À vérifier ({needsVerificationInvoices.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="near-due"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-                disabled={isLoading}
-              >
-                Échéance proche ({nearDueInvoices.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="draft"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-                disabled={isLoading}
-              >
-                Brouillons ({draftInvoices.length})
-              </TabsTrigger>
-            </TabsList>
+        {/* Version mobile: utilisation d'un Select au lieu des tabs horizontales */}
+        {isMobile ? (
+          <div className="mb-4">
+            <Select 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full">
+                <div className="flex items-center">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filtrer les factures" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {filterOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          
-          <TabsContent value="all" className="pt-6">
+        ) : (
+          // Version desktop : Tabs horizontales classiques
+          <Tabs 
+            defaultValue={activeTab === "needs-verification" ? "needs-verification" : "all"} 
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
+              {filterOptions.map(option => (
+                <TabsTrigger 
+                  key={option.value}
+                  value={option.value} 
+                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+                  disabled={isLoading}
+                >
+                  {option.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
+        
+        {/* Contenu des tabs - même pour mobile et desktop */}
+        <div className="pt-2">
+          {activeTab === "all" && (
             <InvoiceList 
               title="" 
               invoices={filteredInvoices} 
               onInvoiceStatusChanged={handleInvoiceStatusChange}
             />
-          </TabsContent>
+          )}
           
-          <TabsContent value="pending" className="pt-6">
+          {activeTab === "pending" && (
             <InvoiceList 
               title="" 
               invoices={pendingInvoices}
               onInvoiceStatusChanged={handleInvoiceStatusChange} 
             />
-          </TabsContent>
+          )}
           
-          <TabsContent value="paid" className="pt-6">
+          {activeTab === "paid" && (
             <InvoiceList 
               title="" 
               invoices={paidInvoices}
               onInvoiceStatusChanged={handleInvoiceStatusChange} 
             />
-          </TabsContent>
+          )}
           
-          <TabsContent value="overdue" className="pt-6">
+          {activeTab === "overdue" && (
             <InvoiceList 
               title="" 
               invoices={overdueInvoices}
               onInvoiceStatusChanged={handleInvoiceStatusChange} 
             />
-          </TabsContent>
+          )}
           
-          <TabsContent value="needs-verification" className="pt-6">
+          {activeTab === "needs-verification" && (
             <InvoiceList 
               title="" 
               invoices={needsVerificationInvoices}
               onInvoiceStatusChanged={handleInvoiceStatusChange} 
             />
-          </TabsContent>
+          )}
           
-          <TabsContent value="near-due" className="pt-6">
+          {activeTab === "near-due" && (
             <InvoiceList 
               title="" 
               invoices={nearDueInvoices}
               onInvoiceStatusChanged={handleInvoiceStatusChange}
             />
-          </TabsContent>
+          )}
           
-          <TabsContent value="draft" className="pt-6">
+          {activeTab === "draft" && (
             <InvoiceList 
               title="" 
               invoices={draftInvoices}
               onInvoiceStatusChanged={handleInvoiceStatusChange}
             />
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </div>
       
       <InvoiceReportDialog 
