@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Search, FileText, Users, Settings, Plus, X } from "lucide-react";
 import { 
@@ -140,6 +139,13 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onClick={handleInputClick}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+              inputMode="search"
+              type="search"
+              style={{ fontSize: "16px" }}  // Taille minimale pour éviter le zoom sur iOS
             />
             {searchTerm && (
               <button 

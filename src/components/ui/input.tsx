@@ -13,6 +13,8 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
+        inputMode={type === "search" ? "search" : undefined}
+        autoComplete={type === "search" ? "off" : undefined}
         {...props}
       />
     )
