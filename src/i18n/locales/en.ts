@@ -15,6 +15,11 @@ export const en = {
   recentInvoices: "Recent Invoices",
   resumeDraft: "Resume Draft",
   noDrafts: "No drafts to display.",
+  totalBilledThisMonth: "Total billed this month",
+  totalPaid: "Total paid",
+  pending: "Pending",
+  overdueInvoices: "Overdue invoices",
+  sinceLastMonth: "since last month",
   
   // Notifications
   manageNotifications: "Manage your notifications",
