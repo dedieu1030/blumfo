@@ -9,12 +9,10 @@ import {
   Settings, 
   PlusCircle,
   Package,
-  LayoutTemplate,
-  X
+  LayoutTemplate
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
-import { Button } from "./ui/button";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -43,18 +41,14 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     <Drawer open={isOpen} onOpenChange={onOpenChange} shouldScaleBackground={false}>
       <DrawerContent className="h-[85vh] p-0 border-t border-sidebar-border">
         <div className="flex flex-col h-full relative">
-          {/* Bouton X en haut à droite avec bordure comme la barre de recherche */}
-          <div className="absolute top-4 right-4">
-            <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="border border-input text-foreground hover:bg-background/90">
-                <X className="h-5 w-5" />
-              </Button>
-            </DrawerClose>
+          {/* Indicateur de défilement - petite barre au centre en haut */}
+          <div className="w-full flex justify-center pt-2 pb-2">
+            <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
           </div>
 
-          <div className="flex-1 overflow-auto py-12 px-4">
+          <div className="flex-1 overflow-auto py-6 px-4">
             {/* Ajout d'un padding-top supplémentaire pour commencer le menu plus bas */}
-            <div className="px-4 space-y-1 pt-6">
+            <div className="px-4 space-y-1">
               {navigationItems.map((item) => (
                 <Link
                   key={item.path}
