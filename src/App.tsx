@@ -72,7 +72,7 @@ const AppContent = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-9 w-9 ml-0.5"
+                className="h-9 w-9 ml-0.5 border border-input"
                 onClick={() => setIsMobileMenuOpen(true)}
               >
                 <Menu className="h-4 w-4" />

@@ -14,11 +14,13 @@ import { fr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const NotificationBell = () => {
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const handleNotificationClick = async (notification: any) => {
     // Mark notification as read
@@ -36,7 +38,11 @@ export const NotificationBell = () => {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn("relative", isMobile && "border border-input h-9 w-9")}
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge
