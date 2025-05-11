@@ -23,7 +23,7 @@ import { NotificationsProvider } from "./context/NotificationsContext";
 import { useIsMobile } from "./hooks/use-mobile";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FilePlus, Menu, Plus } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 import { NotificationBell } from "./components/NotificationBell";
 import { LanguageSelector } from "./components/LanguageSelector";
 import { InvoiceDialog } from "./components/InvoiceDialog";
@@ -49,19 +49,15 @@ const AppContent = () => {
           
           {/* Tightly grouped action buttons without excessive margins on mobile */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <Button 
-              onClick={() => setInvoiceDialogOpen(true)}
-              size={isMobile ? "sm" : "default"}
-              className="bg-violet hover:bg-violet/90 whitespace-nowrap"
-            >
-              {isMobile ? (
-                <FilePlus className="h-4 w-4" />
-              ) : (
-                <>
-                  <Plus className="mr-1 h-4 w-4" /> Nouvelle facture
-                </>
-              )}
-            </Button>
+            {/* Bouton de création de facture - affiché uniquement en version desktop */}
+            {!isMobile && (
+              <Button 
+                onClick={() => setInvoiceDialogOpen(true)}
+                className="bg-violet hover:bg-violet/90 whitespace-nowrap"
+              >
+                <Plus className="mr-1 h-4 w-4" /> Nouvelle facture
+              </Button>
+            )}
             
             {!isMobile && <LanguageSelector />}
             

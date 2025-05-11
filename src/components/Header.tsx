@@ -2,8 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { useIsToplevel } from "@/hooks/use-is-toplevel";
 import { useWindowSize } from "@/hooks/use-window-size";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, FilePlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
+import { InvoiceDialog } from "./InvoiceDialog";
 
 interface HeaderProps {
   title: string;
@@ -21,10 +24,11 @@ export const Header = ({
   const { t } = useTranslation();
   const isTopLevel = useIsToplevel();
   const { width } = useWindowSize();
-  const isMobileScreen = width < 768;
+  const isMobile = useIsMobile();
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
 
   const renderBackButton = () => {
-    if (isMobileScreen || isTopLevel) return null;
+    if (isMobile || isTopLevel) return null;
     
     return (
       <Button 
@@ -39,26 +43,42 @@ export const Header = ({
   };
 
   return (
-    <div className="flex justify-between items-center mb-6">
-      <div className="flex items-center">
-        {!isMobileScreen ? (
-          <>
-            {renderBackButton()}
-            <div>
-              <h1 className="text-2xl font-semibold">{title}</h1>
-              {description && <p className="text-muted-foreground mt-1">{description}</p>}
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center">
+          {!isMobile ? (
+            <>
+              {renderBackButton()}
+              <div>
+                <h1 className="text-2xl font-semibold">{title}</h1>
+                {description && <p className="text-muted-foreground mt-1">{description}</p>}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center">
+              {/* Bouton de création de facture en version mobile, avant le titre */}
+              <Button 
+                onClick={() => setInvoiceDialogOpen(true)}
+                size="sm"
+                className="bg-violet hover:bg-violet/90 mr-3"
+              >
+                <FilePlus className="h-4 w-4" />
+              </Button>
+              <h1 className="text-xl font-semibold">{title}</h1>
             </div>
-          </>
-        ) : (
-          <div className="flex items-center">
-            <h1 className="text-xl font-semibold">{title}</h1>
-          </div>
-        )}
+          )}
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {actions}
+        </div>
       </div>
-      
-      <div className="flex items-center space-x-2">
-        {actions}
-      </div>
-    </div>
+
+      {/* Invoice Dialog */}
+      <InvoiceDialog 
+        open={invoiceDialogOpen}
+        onOpenChange={setInvoiceDialogOpen}
+      />
+    </>
   );
 };
