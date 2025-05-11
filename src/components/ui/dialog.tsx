@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
@@ -34,16 +33,56 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   // Reference to track if we're in the process of closing
   const isClosingRef = React.useRef(false);
+  const contentRef = React.useRef<HTMLDivElement>(null);
+
+  // Merge refs
+  const handleRef = (element: HTMLDivElement | null) => {
+    contentRef.current = element;
+    
+    // Handle the ref prop
+    if (typeof ref === 'function') {
+      ref(element);
+    } else if (ref) {
+      ref.current = element;
+    }
+  };
+  
+  // Effect to add tab trapping and focus management
+  React.useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+    
+    // Find all focusable elements
+    const focusableElements = content.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length > 0) {
+      // Focus the first element with 'autoFocus' or default to the first focusable
+      const autoFocusElement = content.querySelector('[autoFocus]') as HTMLElement;
+      if (autoFocusElement) {
+        setTimeout(() => {
+          try {
+            autoFocusElement.focus();
+            console.log('Auto-focused element in dialog');
+          } catch (e) {
+            console.error('Failed to focus element:', e);
+          }
+        }, 100);
+      }
+    }
+  }, []);
   
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
-        ref={ref}
+        ref={handleRef}
         onCloseAutoFocus={(event) => {
           // Prevent default focus behavior only if we're in a controlled closing state
           if (isClosingRef.current) {
             event.preventDefault();
+            console.log('Dialog closing: preventing default focus behavior');
           }
           
           // Reset the closing state
@@ -58,9 +97,11 @@ const DialogContent = React.forwardRef<
           // Prevent multiple clicks from triggering multiple close events
           if (isClosingRef.current) {
             event.preventDefault();
+            console.log('Dialog already closing: preventing additional close events');
             return;
           }
           
+          console.log('Dialog pointer outside event: setting closing state');
           isClosingRef.current = true;
           
           // Call the original onPointerDownOutside if provided

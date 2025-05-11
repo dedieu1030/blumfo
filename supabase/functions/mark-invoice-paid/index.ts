@@ -11,6 +11,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
+    console.log("Mark invoice paid: CORS preflight request");
     return new Response(null, {
       headers: corsHeaders,
       status: 204,
@@ -28,9 +29,17 @@ serve(async (req) => {
     }
 
     // Create Supabase client with auth context
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Mark invoice paid: Missing Supabase environment variables");
+      throw new Error('Server configuration error: Missing Supabase environment variables');
+    }
+    
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      supabaseUrl,
+      supabaseAnonKey,
       { global: { headers: { Authorization: authHeader } } }
     )
 
@@ -86,6 +95,7 @@ serve(async (req) => {
     
     // First, try to update Stripe invoices table if it exists
     try {
+      console.log(`Mark invoice paid: Attempting to update stripe invoice ${invoiceId}`);
       const { data: stripeInvoice, error: stripeInvoiceError } = await supabase
         .from('stripe_invoices')
         .update({
@@ -99,20 +109,24 @@ serve(async (req) => {
         
       // If we successfully updated a stripe invoice
       if (!stripeInvoiceError && stripeInvoice) {
-        console.log(`Mark invoice paid: Updated Stripe invoice ${invoiceId}`)
+        console.log(`Mark invoice paid: Successfully updated Stripe invoice ${invoiceId}`, stripeInvoice)
         
         // Create a payment record for the Stripe invoice
         try {
+          const paymentData = {
+            invoice_id: stripeInvoice.invoice_id || invoiceId,
+            amount: stripeInvoice.amount_total,
+            payment_date: paidDate,
+            payment_method: paymentDetails?.method || 'manual',
+            status: 'completed',
+            client_id: stripeInvoice.client_id
+          };
+          
+          console.log("Mark invoice paid: Creating payment record with data:", paymentData);
+          
           const { data: payment, error: paymentError } = await supabase
             .from('payments')
-            .insert({
-              invoice_id: stripeInvoice.invoice_id || invoiceId,
-              amount: stripeInvoice.amount_total,
-              payment_date: paidDate,
-              payment_method: paymentDetails?.method || 'manual',
-              status: 'completed',
-              client_id: stripeInvoice.client_id
-            })
+            .insert(paymentData)
             .select()
             .single()
           
@@ -164,9 +178,12 @@ serve(async (req) => {
             }
           )
         }
-      } else if (stripeInvoiceError && stripeInvoiceError.code !== 'PGRST116') {
-        // If this is an actual database error and not just "no rows returned"
+      } else if (stripeInvoiceError) {
         console.error("Mark invoice paid: Error updating stripe invoice:", stripeInvoiceError)
+        // Only throw if this is not a "no rows returned" error
+        if (stripeInvoiceError.code !== 'PGRST116') {
+          throw new Error(`Error updating stripe invoice: ${stripeInvoiceError.message}`);
+        }
       }
     } catch (stripeError) {
       console.error("Mark invoice paid: Error updating stripe invoice:", stripeError)
@@ -209,17 +226,21 @@ serve(async (req) => {
       console.log(`Mark invoice paid: Updated regular invoice ${invoiceId}`, invoiceRecord)
       
       try {
+        const paymentData = {
+          invoice_id: invoiceId,
+          amount: invoiceRecord.total_amount,
+          payment_date: paidDate,
+          payment_method: paymentDetails?.method || 'manual',
+          status: 'completed',
+          client_id: invoiceRecord.client_id,
+          company_id: invoiceRecord.company_id
+        };
+        
+        console.log("Mark invoice paid: Creating payment record with data:", paymentData);
+        
         const { data: payment, error: paymentError } = await supabase
           .from('payments')
-          .insert({
-            invoice_id: invoiceId,
-            amount: invoiceRecord.total_amount,
-            payment_date: paidDate,
-            payment_method: paymentDetails?.method || 'manual',
-            status: 'completed',
-            client_id: invoiceRecord.client_id,
-            company_id: invoiceRecord.company_id
-          })
+          .insert(paymentData)
           .select()
           .single()
           
