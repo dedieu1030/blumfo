@@ -21,12 +21,12 @@ const DrawerPortal = DrawerPrimitive.Portal
 
 const DrawerClose = DrawerPrimitive.Close
 
-// Complètement supprimé l'effet d'overlay en retirant le composant Overlay
+// Empty component that doesn't render any overlay
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <div /> // Un div vide au lieu de l'overlay
+  <div /> // An empty div instead of the overlay
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
