@@ -43,10 +43,10 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
       <DrawerContent className="h-[85vh] p-0 border-t border-sidebar-border">
         <div className="flex flex-col h-full relative">
-          {/* Bouton X en haut à droite avec fond vert et bordure */}
+          {/* Bouton X en haut à droite avec fond vert */}
           <div className="absolute top-4 right-4">
             <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="text-white bg-[#003427] hover:bg-[#003427]/90 border border-input">
+              <Button variant="ghost" size="icon" className="text-white bg-[#003427] hover:bg-[#003427]/90">
                 <X className="h-5 w-5" />
               </Button>
             </DrawerClose>
@@ -61,7 +61,7 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
                   onClick={() => onOpenChange(false)}
                   className={`flex items-center px-4 py-3 rounded-md text-base font-medium ${
                     isActive(item.path)
-                      ? "bg-[#f8f8f8] text-foreground" // Couleur de fond blanc cassé pour l'élément sélectionné
+                      ? "bg-accent/10 text-foreground"
                       : "text-foreground/80 hover:text-foreground hover:bg-accent/10"
                   }`}
                 >
