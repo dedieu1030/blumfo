@@ -53,7 +53,8 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
           </div>
 
           <div className="flex-1 overflow-auto py-12 px-4">
-            <div className="px-4 space-y-1">
+            {/* Ajout d'un padding-top supplémentaire pour commencer le menu plus bas */}
+            <div className="px-4 space-y-1 pt-6">
               {navigationItems.map((item) => (
                 <Link
                   key={item.path}
