@@ -67,6 +67,12 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       // Pass the new client back to parent component
       onClientCreated(clientData);
       
+      // Reset form fields
+      setClientName("");
+      setEmail("");
+      setPhone("");
+      setAddress("");
+      
       onOpenChange(false);
     } catch (error) {
       console.error("Error creating client:", error);
