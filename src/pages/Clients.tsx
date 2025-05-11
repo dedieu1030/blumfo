@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, UserPlus, Trash2, Edit, Mail, Phone, Tag, Plus, MoreHorizontal, User } from "lucide-react";
+import { UserPlus, Trash2, Edit, Mail, Phone, Tag, Plus, MoreHorizontal, User, CheckSquare } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { ClientSelector } from "@/components/ClientSelector";
 import { NewClientForm } from "@/components/NewClientForm";
@@ -221,7 +221,7 @@ const Clients = () => {
               onClick={() => setIsClientSelectorOpen(true)}
               className="flex items-center gap-2"
             >
-              <Search className="h-5 w-5" />
+              <CheckSquare className="h-5 w-5" />
               Sélectionner un client
             </Button>
           </div>
