@@ -15,6 +15,11 @@ export const fr = {
   recentInvoices: "Factures récentes",
   resumeDraft: "Reprendre un brouillon",
   noDrafts: "Aucun brouillon à afficher.",
+  totalBilledThisMonth: "Total facturé ce mois",
+  totalPaid: "Total payé",
+  pending: "En attente",
+  overdueInvoices: "Factures en retard",
+  sinceLastMonth: "depuis le mois dernier",
   
   // Notifications
   manageNotifications: "Gérer vos notifications",
@@ -28,7 +33,6 @@ export const fr = {
   
   // Statuts
   paid: "Payé",
-  pending: "En attente",
   overdue: "En retard",
   draft: "Brouillon",
   

@@ -63,14 +63,6 @@ export function InvoicePaymentConfirmation({
               {t("paymentSuccessMessage")}
             </p>
             
-            {invoice && (
-              <div className="bg-green-50 p-3 rounded-md border border-green-100">
-                <p>
-                  <span className="font-medium">{t("invoiceNumber")}:</span> {invoice.invoice_number}
-                </p>
-              </div>
-            )}
-            
             <div className="flex justify-center mt-6">
               <Button onClick={handleClose}>
                 {t("ok")}
@@ -86,6 +78,14 @@ export function InvoicePaymentConfirmation({
             {error && (
               <div className="bg-red-50 p-3 rounded-md border border-red-100">
                 <p className="text-red-700">{error}</p>
+              </div>
+            )}
+            
+            {invoice && (
+              <div className="bg-red-50 p-3 rounded-md border border-red-100">
+                <p>
+                  <span className="font-medium">{t("invoiceNumber")}:</span> {invoice.invoice_number}
+                </p>
               </div>
             )}
             
