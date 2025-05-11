@@ -105,7 +105,7 @@ export function ReminderScheduleEditor({ schedule, onSave, onCancel }: ReminderS
           </p>
 
           {triggers.map((trigger, index) => (
-            <div key={trigger.id} className="bg-muted p-4 rounded-md mb-4">
+            <div key={trigger.id} className="bg-accent/50 p-4 rounded-md mb-4">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="font-medium">Rappel {index + 1}</h4>
                 {triggers.length > 1 && (
