@@ -15,6 +15,8 @@ import { InvoicePaymentConfirmDialog } from "./InvoicePaymentConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { InvoiceMobileCard } from "./InvoiceMobileCard";
 
 interface Invoice {
   id: string;
@@ -47,6 +49,7 @@ export function InvoiceList({
   const displayedInvoices = limit ? invoices.slice(0, limit) : invoices;
   const { toast } = useToast();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -110,14 +113,13 @@ export function InvoiceList({
     }
   };
   
-  // Function to close dialogs and refresh data - optimized version
+  // Function to close dialogs and refresh data
   const handleDialogClose = () => {
     setIsPaymentDialogOpen(false);
     setProcessingResult(null);
     
     // Only refresh data if callback is provided and payment was successful
     if (onInvoiceStatusChanged && processingResult?.success) {
-      // Wrap in a try/catch but don't use setTimeout
       try {
         onInvoiceStatusChanged();
       } catch (error) {
@@ -145,134 +147,164 @@ export function InvoiceList({
         )}
       </div>
       
-      <div className="border rounded-lg overflow-hidden relative">
-        {isProcessing && (
-          <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
-            <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-sm">{t("refreshing", "Actualisation...")}</span>
+      {/* Affichage mobile (vue par cartes) */}
+      {isMobile ? (
+        <div className="space-y-2 relative">
+          {isProcessing && (
+            <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-sm">{t("refreshing", "Actualisation...")}</span>
+              </div>
             </div>
-          </div>
-        )}
-        
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("invoice")}</TableHead>
-              <TableHead>{t("client")}</TableHead>
-              <TableHead>{t("date")}</TableHead>
-              <TableHead>{t("amount")}</TableHead>
-              <TableHead>{t("status")}</TableHead>
-              <TableHead className="text-right">{t("actions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayedInvoices.map((invoice) => (
-              <TableRow 
-                key={invoice.id}
-                className={invoice.status === "overdue" ? "bg-amber-50" : ""}
-              >
-                <TableCell className="font-medium">{invoice.number}</TableCell>
-                <TableCell>{invoice.client}</TableCell>
-                <TableCell>{invoice.date}</TableCell>
-                <TableCell>{invoice.amount}</TableCell>
-                <TableCell>
-                  <InvoiceStatus status={invoice.status} />
-                </TableCell>
-                <TableCell className="text-right space-x-1">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t("downloadInvoice")}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t("sendByEmail")}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    {invoice.paymentUrl && (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleCopyLink(invoice.paymentUrl!)}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{t("copyPaymentLink")}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => window.open(invoice.paymentUrl, '_blank')}
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{t("openPaymentLink")}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <QrCode className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{t("showQrCode")}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </>
-                    )}
-
-                    {/* Bouton pour marquer la facture comme payée */}
-                    {(invoice.status === "pending" || invoice.status === "overdue") && (
+          )}
+          
+          {displayedInvoices.map((invoice) => (
+            <InvoiceMobileCard 
+              key={invoice.id}
+              invoice={invoice}
+              onCopyLink={handleCopyLink}
+              onConfirmPayment={handleConfirmPayment}
+            />
+          ))}
+          
+          {displayedInvoices.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              {t("noInvoicesFound", "Aucune facture trouvée")}
+            </div>
+          )}
+        </div>
+      ) : (
+        // Affichage desktop (vue tableau)
+        <div className="border rounded-lg overflow-hidden relative">
+          {isProcessing && (
+            <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-sm">{t("refreshing", "Actualisation...")}</span>
+              </div>
+            </div>
+          )}
+          
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("invoice")}</TableHead>
+                <TableHead>{t("client")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("amount")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayedInvoices.map((invoice) => (
+                <TableRow 
+                  key={invoice.id}
+                  className={invoice.status === "overdue" ? "bg-amber-50" : ""}
+                >
+                  <TableCell className="font-medium">{invoice.number}</TableCell>
+                  <TableCell>{invoice.client}</TableCell>
+                  <TableCell>{invoice.date}</TableCell>
+                  <TableCell>{invoice.amount}</TableCell>
+                  <TableCell>
+                    <InvoiceStatus status={invoice.status} />
+                  </TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="text-success hover:bg-success/10"
-                            onClick={() => handleConfirmPayment(invoice)}
-                          >
-                            <Check className="h-4 w-4" />
+                          <Button variant="ghost" size="icon">
+                            <Download className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{t("markAsPaid")}</p>
+                          <p>{t("downloadInvoice")}</p>
                         </TooltipContent>
                       </Tooltip>
-                    )}
-                  </TooltipProvider>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{t("sendByEmail")}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      {invoice.paymentUrl && (
+                        <>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleCopyLink(invoice.paymentUrl!)}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t("copyPaymentLink")}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => window.open(invoice.paymentUrl, '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t("openPaymentLink")}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <QrCode className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t("showQrCode")}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </>
+                      )}
+
+                      {/* Bouton pour marquer la facture comme payée */}
+                      {(invoice.status === "pending" || invoice.status === "overdue") && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="text-success hover:bg-success/10"
+                              onClick={() => handleConfirmPayment(invoice)}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t("markAsPaid")}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </TooltipProvider>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
       
       {/* Dialogue de confirmation préalable */}
       {selectedInvoice && (

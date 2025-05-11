@@ -14,6 +14,7 @@ import { InvoicePaymentAlert } from "@/components/InvoicePaymentAlert";
 import { differenceInDays, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Fonction pour vérifier si une facture est proche de l'échéance (sous 3 jours)
 const isNearDue = (dueDate: string) => {
@@ -80,6 +81,7 @@ export default function Invoices() {
   const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   
   // Attempt to fetch invoices from Supabase if authenticated
   const { data: fetchedInvoices, isError, isLoading, refetch } = useQuery({
@@ -212,57 +214,59 @@ export default function Invoices() {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
-            <TabsTrigger 
-              value="all" 
-              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-              disabled={isLoading}
-            >
-              Toutes ({filteredInvoices.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="pending"
-              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-              disabled={isLoading}
-            >
-              En attente ({pendingInvoices.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="paid"
-              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-              disabled={isLoading}
-            >
-              Payées ({paidInvoices.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="overdue"
-              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-              disabled={isLoading}
-            >
-              En retard ({overdueInvoices.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="needs-verification"
-              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-              disabled={isLoading}
-            >
-              À vérifier ({needsVerificationInvoices.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="near-due"
-              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-              disabled={isLoading}
-            >
-              Échéance proche ({nearDueInvoices.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="draft"
-              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
-              disabled={isLoading}
-            >
-              Brouillons ({draftInvoices.length})
-            </TabsTrigger>
-          </TabsList>
+          <div className={`${isMobile ? 'overflow-x-auto pb-2' : ''}`}>
+            <TabsList className={`${isMobile ? 'w-max min-w-full' : 'w-full'} justify-start border-b rounded-none h-auto p-0 bg-transparent`}>
+              <TabsTrigger 
+                value="all" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+                disabled={isLoading}
+              >
+                Toutes ({filteredInvoices.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="pending"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+                disabled={isLoading}
+              >
+                En attente ({pendingInvoices.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="paid"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+                disabled={isLoading}
+              >
+                Payées ({paidInvoices.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="overdue"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+                disabled={isLoading}
+              >
+                En retard ({overdueInvoices.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="needs-verification"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+                disabled={isLoading}
+              >
+                À vérifier ({needsVerificationInvoices.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="near-due"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+                disabled={isLoading}
+              >
+                Échéance proche ({nearDueInvoices.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="draft"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet rounded-none h-10"
+                disabled={isLoading}
+              >
+                Brouillons ({draftInvoices.length})
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="all" className="pt-6">
             <InvoiceList 
