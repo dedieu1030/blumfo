@@ -13,6 +13,15 @@ export function formatCurrency(amount: number, currency: string = 'EUR'): string
   }).format(amount)
 }
 
+export function formatPercentage(value: number): string {
+  const sign = value >= 0 ? '+' : '';
+  return `${sign}${new Intl.NumberFormat('fr-FR', {
+    style: 'percent',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value / 100)}`;
+}
+
 export function formatDate(date: string | Date): string {
   if (!date) return '';
   

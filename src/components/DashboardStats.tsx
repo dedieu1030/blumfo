@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { Invoice } from "@/types/invoice";
 import { useTranslation } from "react-i18next";
+import { formatCurrency, formatPercentage } from "@/lib/utils";
 
 interface DashboardStatsProps {
   overdueInvoices: Invoice[];
@@ -18,33 +19,41 @@ export function DashboardStats({ overdueInvoices = [] }: DashboardStatsProps) {
     return !isNaN(amountNumeric) ? sum + amountNumeric : sum;
   }, 0);
 
-  // Format the total overdue amount with the Euro symbol
-  const formattedOverdueAmount = `${totalOverdueAmount.toFixed(2)} €`;
+  // Data for dashboard stats - in a real application these would come from API calls
+  const thisMonthTotal = 3450;
+  const totalPaid = 2100;
+  const totalPending = 1350;
+
+  // Calculate percentages - in a real application these would be calculated from historical data
+  const thisMonthPercentage = 12;
+  const paidPercentage = 8;
+  const pendingPercentage = 24;
+  const overduePercentage = overdueInvoices.length > 0 ? 100 : 0;
 
   const stats = [
     {
       title: t("totalBilledThisMonth", "Total facturé ce mois"),
-      value: "3,450 €",
-      change: "+12%",
+      value: formatCurrency(thisMonthTotal),
+      change: formatPercentage(thisMonthPercentage),
       increasing: true
     },
     {
       title: t("totalPaid", "Total payé"),
-      value: "2,100 €",
-      change: "+8%",
+      value: formatCurrency(totalPaid),
+      change: formatPercentage(paidPercentage),
       increasing: true
     },
     {
       title: t("pending", "En attente"),
-      value: "1,350 €",
-      change: "+24%",
+      value: formatCurrency(totalPending),
+      change: formatPercentage(pendingPercentage),
       increasing: true
     },
     {
       title: t("overdueInvoices", "Factures impayées"),
-      value: formattedOverdueAmount,
+      value: formatCurrency(totalOverdueAmount),
       secondaryValue: `${overdueInvoices.length} ${t("invoices", "factures")}`,
-      change: overdueInvoices.length > 0 ? "+100%" : "0%",
+      change: formatPercentage(overduePercentage),
       increasing: overdueInvoices.length > 0
     }
   ];

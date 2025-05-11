@@ -82,7 +82,7 @@ export function Dashboard() {
   const { t } = useTranslation();
 
   // Try to fetch invoices from Supabase if connected
-  const { data: fetchedInvoices } = useQuery({
+  const { data: fetchedInvoices, isLoading } = useQuery({
     queryKey: ["dashboard-invoices"],
     queryFn: async () => {
       try {
