@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 import { X } from "lucide-react"
@@ -22,7 +21,7 @@ const DrawerPortal = DrawerPrimitive.Portal
 
 const DrawerClose = DrawerPrimitive.Close
 
-// Overlay avec arrière-plan transparent qui capture toujours les clics
+// Overlay with transparent background that still captures clicks
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
@@ -30,7 +29,7 @@ const DrawerOverlay = React.forwardRef<
   <DrawerPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-40", // Suppression de bg-black/40 pour éliminer l'assombrissement
+      "fixed inset-0 z-40 bg-black/40",
       className
     )}
     {...props}
