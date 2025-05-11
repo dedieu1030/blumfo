@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -204,26 +205,25 @@ const Clients = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <div className="flex flex-col space-y-6">
           <h2 className="text-2xl font-bold">Liste des clients</h2>
-          <div className="flex flex-col md:flex-row gap-2 mt-4 md:mt-0 w-full md:w-auto">
-            <div className="flex gap-2 justify-center w-full md:w-auto">
-              <Button 
-                onClick={() => setIsNewClientFormOpen(true)} 
-                className="flex items-center gap-2 md:w-auto"
-              >
-                <UserPlus className="h-4 w-4" />
-                Ajouter un client
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsClientSelectorOpen(true)}
-                className="flex items-center gap-2 md:w-auto"
-              >
-                <Search className="h-4 w-4" />
-                Sélectionner un client
-              </Button>
-            </div>
+          
+          <div className="flex flex-wrap gap-3 w-full">
+            <Button 
+              onClick={() => setIsNewClientFormOpen(true)} 
+              className="flex items-center gap-2"
+            >
+              <UserPlus className="h-5 w-5" />
+              Ajouter un client
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsClientSelectorOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Search className="h-5 w-5" />
+              Sélectionner un client
+            </Button>
           </div>
         </div>
 
