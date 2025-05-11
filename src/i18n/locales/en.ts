@@ -119,6 +119,27 @@ export const en = {
   linkCopied: "Link copied",
   paymentLinkCopiedToClipboard: "The payment link has been copied to clipboard",
   
+  // Date filters
+  filterByDate: "Filter by date",
+  issueDate: "Issue date",
+  dueDate: "Due date",
+  selectDates: "Filter by date",
+  selectDateType: "Select date type",
+  noDateFilter: "No date filter",
+  dateRange: "Date range",
+  selectDate: "Select date",
+  reset: "Reset",
+  apply: "Apply",
+  dates: "Dates",
+  report: "Report",
+  generateReport: "Generate report",
+  toVerify: "To verify",
+  nearDue: "Near due date",
+  
+  // Show more/less
+  showMore: "Show more",
+  showLess: "Show less",
+  
   // Invoice Status Component
   paidStatus: "Paid",
   pendingStatus: "Pending",

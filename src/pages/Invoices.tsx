@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { InvoiceList } from "@/components/InvoiceList";
@@ -6,16 +5,19 @@ import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, FileText, Filter } from "lucide-react";
+import { Search, FileText, Filter, Calendar } from "lucide-react";
 import { InvoiceReportDialog } from "@/components/InvoiceReportDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { InvoicePaymentAlert } from "@/components/InvoicePaymentAlert";
-import { differenceInDays, parseISO } from "date-fns";
+import { differenceInDays, parseISO, isWithinInterval, startOfDay, endOfDay, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { fr, enUS, es } from "date-fns/locale";
 
 // Fonction pour vérifier si une facture est proche de l'échéance (sous 3 jours)
 const isNearDue = (dueDate: string) => {
@@ -81,8 +83,21 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isMobile = useIsMobile();
+  
+  // Nouveaux états pour les filtres de date
+  const [dateFilterType, setDateFilterType] = useState<"none" | "issue" | "due">("none");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  
+  // Fonction pour obtenir le bon locale pour le calendrier
+  const getLocale = () => {
+    const currentLang = i18n.language;
+    if (currentLang === 'fr') return fr;
+    if (currentLang === 'es') return es;
+    return enUS;
+  };
   
   // Attempt to fetch invoices from Supabase if authenticated
   const { data: fetchedInvoices, isError, isLoading, refetch } = useQuery({
@@ -129,14 +144,43 @@ export default function Invoices() {
     }
   };
   
-  // Filter invoices by search term
-  const filteredInvoices = invoices.filter((invoice) => {
-    const search = searchTerm.toLowerCase();
-    return (
-      invoice.number.toLowerCase().includes(search) ||
-      invoice.client.toLowerCase().includes(search)
-    );
-  });
+  // Fonction pour filtrer les factures par date
+  const filterInvoicesByDate = (invoicesToFilter: any[]) => {
+    if (dateFilterType === "none" || !startDate) {
+      return invoicesToFilter;
+    }
+    
+    return invoicesToFilter.filter(invoice => {
+      const invoiceDate = parseISO(dateFilterType === "issue" ? invoice.date : invoice.dueDate);
+      
+      if (startDate && !endDate) {
+        // Si seulement la date de début est définie, filtrer pour ce jour précis
+        return isWithinInterval(invoiceDate, {
+          start: startOfDay(startDate),
+          end: endOfDay(startDate)
+        });
+      } else if (startDate && endDate) {
+        // Si les deux dates sont définies, filtrer dans l'intervalle
+        return isWithinInterval(invoiceDate, {
+          start: startOfDay(startDate),
+          end: endOfDay(endDate)
+        });
+      }
+      
+      return true;
+    });
+  };
+  
+  // Filter invoices by search term and date
+  const filteredInvoices = filterInvoicesByDate(
+    invoices.filter((invoice) => {
+      const search = searchTerm.toLowerCase();
+      return (
+        invoice.number.toLowerCase().includes(search) ||
+        invoice.client.toLowerCase().includes(search)
+      );
+    })
+  );
   
   // Filter invoices by status
   const paidInvoices = filteredInvoices.filter(invoice => invoice.status === "paid");
@@ -171,14 +215,36 @@ export default function Invoices() {
 
   // Structure de données pour les options de filtre
   const filterOptions = [
-    { value: "all", label: `Toutes (${filteredInvoices.length})` },
-    { value: "pending", label: `En attente (${pendingInvoices.length})` },
-    { value: "paid", label: `Payées (${paidInvoices.length})` },
-    { value: "overdue", label: `En retard (${overdueInvoices.length})` },
-    { value: "needs-verification", label: `À vérifier (${needsVerificationInvoices.length})` },
-    { value: "near-due", label: `Échéance proche (${nearDueInvoices.length})` },
-    { value: "draft", label: `Brouillons (${draftInvoices.length})` }
+    { value: "all", label: `${t("all")} (${filteredInvoices.length})` },
+    { value: "pending", label: `${t("pendingStatus")} (${pendingInvoices.length})` },
+    { value: "paid", label: `${t("paidStatus")} (${paidInvoices.length})` },
+    { value: "overdue", label: `${t("overdueStatus")} (${overdueInvoices.length})` },
+    { value: "needs-verification", label: `${t("toVerify", "À vérifier")} (${needsVerificationInvoices.length})` },
+    { value: "near-due", label: `${t("nearDue", "Échéance proche")} (${nearDueInvoices.length})` },
+    { value: "draft", label: `${t("draftStatus")} (${draftInvoices.length})` }
   ];
+  
+  // Réinitialiser les dates
+  const handleResetDates = () => {
+    setDateFilterType("none");
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
+  // Formater l'affichage des dates
+  const formatDateRange = () => {
+    if (dateFilterType === "none") return t("selectDates", "Filtrer par date");
+    
+    if (startDate && !endDate) {
+      return `${dateFilterType === "issue" ? t("issueDate") : t("dueDate")}: ${format(startDate, "dd/MM/yyyy")}`;
+    }
+    
+    if (startDate && endDate) {
+      return `${format(startDate, "dd/MM/yyyy")} - ${format(endDate, "dd/MM/yyyy")}`;
+    }
+    
+    return t("selectDates", "Filtrer par date");
+  };
 
   return (
     <>
@@ -210,14 +276,92 @@ export default function Invoices() {
             />
           </div>
           
-          <Button 
-            onClick={() => setIsReportDialogOpen(true)}
-            className="gap-2"
-            disabled={isLoading}
-          >
-            <FileText className="h-4 w-4" />
-            Générer un rapport
-          </Button>
+          <div className="flex gap-2">
+            {/* Filtre de date */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline"
+                  className="flex-1 sm:flex-none gap-2 justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span className="hidden sm:inline">{formatDateRange()}</span>
+                    <span className="sm:hidden">{dateFilterType !== "none" ? "Filtres" : t("dates", "Dates")}</span>
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="end">
+                <div className="p-4 border-b">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">{t("filterByDate", "Filtrer par date")}</h4>
+                    <Select 
+                      value={dateFilterType} 
+                      onValueChange={(value) => setDateFilterType(value as "none" | "issue" | "due")}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t("selectDateType", "Sélectionner un type de date")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t("noDateFilter", "Pas de filtre de date")}</SelectItem>
+                        <SelectItem value="issue">{t("issueDate", "Date d'émission")}</SelectItem>
+                        <SelectItem value="due">{t("dueDate", "Date d'échéance")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {dateFilterType !== "none" && (
+                    <div className="mt-4">
+                      <div className="grid gap-2">
+                        <div>
+                          <p className="text-sm mb-1">{startDate && endDate ? t("dateRange", "Période") : t("selectDate", "Sélectionner une date")}</p>
+                          <Calendar
+                            mode="range"
+                            selected={{
+                              from: startDate,
+                              to: endDate,
+                            }}
+                            onSelect={(range) => {
+                              setStartDate(range?.from);
+                              setEndDate(range?.to);
+                            }}
+                            locale={getLocale()}
+                            className="rounded-md border pointer-events-auto"
+                            disabled={(date) => date > new Date(2100, 0, 1) || date < new Date(2000, 0, 1)}
+                          />
+                        </div>
+                        <div className="flex justify-between mt-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleResetDates}
+                          >
+                            {t("reset", "Réinitialiser")}
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => document.body.click()} // Ferme le popover
+                          >
+                            {t("apply", "Appliquer")}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <Button 
+              onClick={() => setIsReportDialogOpen(true)}
+              className="gap-2"
+              disabled={isLoading}
+            >
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("generateReport", "Générer un rapport")}</span>
+              <span className="sm:hidden">{t("report", "Rapport")}</span>
+            </Button>
+          </div>
         </div>
         
         {/* Version mobile: utilisation d'un Select au lieu des tabs horizontales */}
@@ -231,7 +375,7 @@ export default function Invoices() {
               <SelectTrigger className="w-full">
                 <div className="flex items-center">
                   <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filtrer les factures" />
+                  <SelectValue placeholder={t("filterInvoices", "Filtrer les factures")} />
                 </div>
               </SelectTrigger>
               <SelectContent>

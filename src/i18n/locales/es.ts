@@ -201,6 +201,27 @@ export const es = {
   noClientsFound: "No se encontraron clientes",
   clientSelected: "{{name}} ha sido seleccionado para esta factura.",
   
+  // Filtros de fecha
+  filterByDate: "Filtrar por fecha",
+  issueDate: "Fecha de emisión",
+  dueDate: "Fecha de vencimiento",
+  selectDates: "Filtrar por fecha",
+  selectDateType: "Seleccionar tipo de fecha",
+  noDateFilter: "Sin filtro de fecha",
+  dateRange: "Rango de fechas",
+  selectDate: "Seleccionar fecha",
+  reset: "Restablecer",
+  apply: "Aplicar",
+  dates: "Fechas",
+  report: "Informe",
+  generateReport: "Generar informe",
+  toVerify: "Por verificar",
+  nearDue: "Próximo vencimiento",
+  
+  // Mostrar más/menos
+  showMore: "Mostrar más",
+  showLess: "Mostrar menos",
+  
   // Common Actions
   ok: "OK",
   close: "Cerrar",
