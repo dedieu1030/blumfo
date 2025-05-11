@@ -3,8 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import { Link } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useTranslation } from "react-i18next";
 
 interface InvoicePaymentConfirmationProps {
   success: boolean;
@@ -27,8 +27,9 @@ export function InvoicePaymentConfirmation({
   onOpenChange,
   onConfirm
 }: InvoicePaymentConfirmationProps) {
+  const { t } = useTranslation();
   
-  const handleCloseAndRefresh = () => {
+  const handleClose = () => {
     if (onOpenChange) {
       onOpenChange(false);
     }
@@ -44,12 +45,12 @@ export function InvoicePaymentConfirmation({
           {success ? (
             <>
               <CheckCircle className="h-6 w-6 text-green-600 mr-2" />
-              <span>Paiement réussi</span>
+              <span>{t("paymentConfirmed", "Paiement confirmé")}</span>
             </>
           ) : (
             <>
               <AlertCircle className="h-6 w-6 text-red-600 mr-2" />
-              <span>Paiement échoué</span>
+              <span>{t("paymentFailed", "Paiement échoué")}</span>
             </>
           )}
         </CardTitle>
@@ -59,32 +60,27 @@ export function InvoicePaymentConfirmation({
         {success ? (
           <div className="space-y-4">
             <p className="text-center">
-              Merci pour votre paiement. Votre facture a été réglée avec succès.
+              {t("paymentSuccessMessage", "Merci pour votre paiement. Votre facture a été réglée avec succès.")}
             </p>
             
             {invoice && (
               <div className="bg-green-50 p-3 rounded-md border border-green-100">
                 <p>
-                  <span className="font-medium">Numéro de facture:</span> {invoice.invoice_number}
+                  <span className="font-medium">{t("invoiceNumber", "Numéro de facture")}:</span> {invoice.invoice_number}
                 </p>
               </div>
             )}
             
-            <div className="flex justify-center mt-6 space-x-4">
-              <Button asChild variant="outline">
-                <Link to={`/invoices/${invoice ? `/${invoice.id}` : ''}`}>
-                  Voir la facture
-                </Link>
-              </Button>
-              <Button onClick={handleCloseAndRefresh}>
-                Retour aux factures
+            <div className="flex justify-center mt-6">
+              <Button onClick={handleClose}>
+                {t("ok", "OK")}
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-center">
-              Nous n'avons pas pu traiter votre paiement.
+              {t("paymentFailureMessage", "Nous n'avons pas pu traiter votre paiement.")}
             </p>
             
             {error && (
@@ -93,14 +89,9 @@ export function InvoicePaymentConfirmation({
               </div>
             )}
             
-            <div className="flex justify-center mt-6 space-x-4">
-              <Button asChild variant="outline">
-                <Link to={`/invoices${invoice ? `/${invoice.id}` : ''}`}>
-                  Retour à la facture
-                </Link>
-              </Button>
-              <Button onClick={handleCloseAndRefresh}>
-                Toutes les factures
+            <div className="flex justify-center mt-6">
+              <Button onClick={handleClose}>
+                {t("close", "Fermer")}
               </Button>
             </div>
           </div>

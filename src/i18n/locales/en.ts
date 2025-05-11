@@ -1,4 +1,3 @@
-
 export const en = {
   // Common
   dashboard: "Dashboard",
@@ -201,5 +200,15 @@ export const en = {
   selectClient: "Select a client",
   searchClients: "Search clients...",
   noClientsFound: "No clients found",
-  clientSelected: "{{name}} has been selected for this invoice."
+  clientSelected: "{{name}} has been selected for this invoice.",
+  
+  // Common Actions
+  ok: "OK",
+  close: "Close",
+  
+  // Payment Confirmation
+  paymentConfirmed: "Payment confirmed",
+  paymentFailed: "Payment failed",
+  paymentSuccessMessage: "Thank you for your payment. Your invoice has been successfully paid.",
+  paymentFailureMessage: "We couldn't process your payment.",
 };
