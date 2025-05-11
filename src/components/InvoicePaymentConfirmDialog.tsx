@@ -42,7 +42,7 @@ export function InvoicePaymentConfirmDialog({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("confirmPayment", "Confirmer le paiement")}</AlertDialogTitle>
+          <AlertDialogTitle>{t("confirmPayment")}</AlertDialogTitle>
           <AlertDialogDescription>
             {t("confirmPaymentDesc", "Êtes-vous sûr de vouloir marquer cette facture comme payée ?")}
             <div className="mt-2 p-3 bg-muted rounded-md">
@@ -59,9 +59,9 @@ export function InvoicePaymentConfirmDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{t("cancel", "Annuler")}</AlertDialogCancel>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm} className="bg-success hover:bg-success/90">
-            {t("confirmPayment", "Confirmer le paiement")}
+            {t("confirmPayment")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
