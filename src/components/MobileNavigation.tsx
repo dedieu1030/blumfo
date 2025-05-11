@@ -40,7 +40,7 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
   ];
 
   return (
-    <Drawer open={isOpen} onOpenChange={onOpenChange}>
+    <Drawer open={isOpen} onOpenChange={onOpenChange} shouldScaleBackground={false}>
       <DrawerContent className="h-[85vh] p-0 border-t border-sidebar-border">
         <div className="flex flex-col h-full relative">
           {/* Bouton X en haut à droite avec bordure comme la barre de recherche */}
