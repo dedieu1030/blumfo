@@ -5,7 +5,7 @@ import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, FileText, Filter, Calendar } from "lucide-react";
+import { Search, FileText, Filter, Calendar as CalendarIcon } from "lucide-react";
 import { InvoiceReportDialog } from "@/components/InvoiceReportDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -285,7 +285,7 @@ export default function Invoices() {
                   className="flex-1 sm:flex-none gap-2 justify-between"
                 >
                   <span className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
+                    <CalendarIcon className="h-4 w-4" />
                     <span className="hidden sm:inline">{formatDateRange()}</span>
                     <span className="sm:hidden">{dateFilterType !== "none" ? "Filtres" : t("dates", "Dates")}</span>
                   </span>
@@ -327,7 +327,6 @@ export default function Invoices() {
                             }}
                             locale={getLocale()}
                             className="rounded-md border pointer-events-auto"
-                            disabled={(date) => date > new Date(2100, 0, 1) || date < new Date(2000, 0, 1)}
                           />
                         </div>
                         <div className="flex justify-between mt-2">

@@ -1,3 +1,4 @@
+
 export const es = {
   // Común
   dashboard: "Tablero",
@@ -107,6 +108,26 @@ export const es = {
   linkCopied: "Enlace copiado",
   paymentLinkCopiedToClipboard: "El enlace de pago ha sido copiado al portapapeles",
   
+  // Filtros de fecha
+  filterByDate: "Filtrar por fecha",
+  issueDate: "Fecha de emisión",
+  dueDate: "Fecha de vencimiento",
+  selectDates: "Filtrar por fecha",
+  selectDateType: "Seleccionar tipo de fecha",
+  noDateFilter: "Sin filtro de fecha",
+  dateRange: "Rango de fechas",
+  reset: "Restablecer",
+  apply: "Aplicar",
+  dates: "Fechas",
+  report: "Informe",
+  generateReport: "Generar informe",
+  toVerify: "Por verificar",
+  nearDue: "Próximo vencimiento",
+  
+  // Mostrar más/menos
+  showMore: "Mostrar más",
+  showLess: "Mostrar menos",
+  
   // Componente de estado de factura
   paidStatus: "Pagada",
   pendingStatus: "Pendiente",
@@ -116,6 +137,7 @@ export const es = {
   
   // Confirmación de pago de factura
   confirmPayment: "Confirmar pago",
+  confirmPaymentDesc: "¿Está seguro de que desea marcar esta factura como pagada?",
   paymentDate: "Fecha de pago",
   paymentMethod: "Método de pago",
   selectPaymentMethod: "Seleccionar un método",
@@ -200,27 +222,6 @@ export const es = {
   searchClients: "Buscar clientes...",
   noClientsFound: "No se encontraron clientes",
   clientSelected: "{{name}} ha sido seleccionado para esta factura.",
-  
-  // Filtros de fecha
-  filterByDate: "Filtrar por fecha",
-  issueDate: "Fecha de emisión",
-  dueDate: "Fecha de vencimiento",
-  selectDates: "Filtrar por fecha",
-  selectDateType: "Seleccionar tipo de fecha",
-  noDateFilter: "Sin filtro de fecha",
-  dateRange: "Rango de fechas",
-  selectDate: "Seleccionar fecha",
-  reset: "Restablecer",
-  apply: "Aplicar",
-  dates: "Fechas",
-  report: "Informe",
-  generateReport: "Generar informe",
-  toVerify: "Por verificar",
-  nearDue: "Próximo vencimiento",
-  
-  // Mostrar más/menos
-  showMore: "Mostrar más",
-  showLess: "Mostrar menos",
   
   // Common Actions
   ok: "OK",
