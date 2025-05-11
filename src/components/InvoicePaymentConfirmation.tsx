@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { Link } from 'react-router-dom';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface InvoicePaymentConfirmationProps {
   success: boolean;
@@ -107,7 +107,9 @@ export function InvoicePaymentConfirmation({
   if (isOpen !== undefined && onOpenChange) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        {content}
+        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-md">
+          {content}
+        </DialogContent>
       </Dialog>
     );
   }

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { InvoicePaymentConfirmation } from "./InvoicePaymentConfirmation";
+import { InvoicePaymentConfirmDialog } from "./InvoicePaymentConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
@@ -45,6 +47,7 @@ export function InvoiceList({
   const { toast } = useToast();
   const { t } = useTranslation();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   
   const handleCopyLink = (paymentUrl: string) => {
@@ -57,10 +60,13 @@ export function InvoiceList({
 
   const handleConfirmPayment = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
-    setIsPaymentDialogOpen(true);
+    setIsConfirmDialogOpen(true);
   };
   
   const handlePaymentConfirmed = () => {
+    setIsConfirmDialogOpen(false);
+    setIsPaymentDialogOpen(true);
+    
     if (onInvoiceStatusChanged) {
       onInvoiceStatusChanged();
     }
@@ -197,7 +203,21 @@ export function InvoiceList({
         </Table>
       </div>
       
-      {/* Boîte de dialogue de confirmation de paiement */}
+      {/* Dialogue de confirmation préalable */}
+      {selectedInvoice && (
+        <InvoicePaymentConfirmDialog
+          isOpen={isConfirmDialogOpen}
+          onOpenChange={setIsConfirmDialogOpen}
+          invoice={{
+            id: selectedInvoice.id,
+            invoice_number: selectedInvoice.invoice_number,
+            amount: parseFloat(selectedInvoice.amount.replace(/[^\d.-]/g, ''))
+          }}
+          onConfirm={handlePaymentConfirmed}
+        />
+      )}
+      
+      {/* Dialogue de confirmation de réussite du paiement */}
       {selectedInvoice && (
         <InvoicePaymentConfirmation
           isOpen={isPaymentDialogOpen}
