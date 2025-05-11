@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { InvoiceStatus } from "./InvoiceStatus";
-import { Download, Send, Copy, QrCode, ExternalLink, Check } from "lucide-react";
+import { Download, Send, Copy, QrCode, ExternalLink, Check, Loader2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -48,6 +49,7 @@ export function InvoiceList({
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const handleCopyLink = (paymentUrl: string) => {
     navigator.clipboard.writeText(paymentUrl);
@@ -67,20 +69,28 @@ export function InvoiceList({
     setIsPaymentDialogOpen(true);
   };
   
-  // Function to close dialogs and refresh data
+  // Function to close dialogs and refresh data - optimized version
   const handleDialogClose = () => {
     setIsPaymentDialogOpen(false);
+    setSelectedInvoice(null);
     
-    // Wait for the dialog animation to finish before updating
-    setTimeout(() => {
-      // Trigger the status changed callback to refresh data
-      if (onInvoiceStatusChanged) {
-        onInvoiceStatusChanged();
-      }
+    // Only refresh data if callback is provided
+    if (onInvoiceStatusChanged) {
+      setIsProcessing(true);
       
-      // Reset the selected invoice state
-      setSelectedInvoice(null);
-    }, 300);
+      try {
+        onInvoiceStatusChanged();
+      } catch (error) {
+        console.error("Error refreshing invoice data:", error);
+        toast({
+          title: t("refreshError", "Erreur de rafraîchissement"),
+          description: t("errorRefreshingData", "Erreur lors du rafraîchissement des données. Veuillez réessayer."),
+          variant: "destructive"
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    }
   };
   
   return (
@@ -94,7 +104,16 @@ export function InvoiceList({
         )}
       </div>
       
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden relative">
+        {isProcessing && (
+          <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-sm">{t("refreshing", "Actualisation...")}</span>
+            </div>
+          </div>
+        )}
+        
         <Table>
           <TableHeader>
             <TableRow>

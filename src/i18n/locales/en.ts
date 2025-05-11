@@ -40,6 +40,13 @@ export const en = {
   newInvoice: "New Invoice",
   viewAll: "View All",
   
+  // Loading and error states
+  refreshing: "Refreshing...",
+  refreshError: "Refresh Error",
+  errorRefreshingData: "Error refreshing data. Please try again.",
+  errorFetchingInvoices: "Error",
+  errorFetchingInvoicesDesc: "Failed to retrieve invoices. Please try again.",
+  
   // Stripe Connection
   checkingStripe: "Checking Stripe...",
   stripeConnected: "Stripe connected",
@@ -121,6 +128,7 @@ export const en = {
   
   // Invoice Payment Confirmation
   confirmPayment: "Confirm payment",
+  confirmPaymentDesc: "Are you sure you want to mark this invoice as paid?",
   paymentDate: "Payment date",
   paymentMethod: "Payment method",
   selectPaymentMethod: "Select a method",
