@@ -42,8 +42,13 @@ const DrawerContent = React.forwardRef<
   
   return (
     <DrawerPortal>
-      {/* Pass the onClick handler to close the drawer when clicking on the overlay */}
-      <DrawerOverlay onClick={() => onChange?.(false)} />
+      {/* Use DrawerClose to handle closing properly instead of directly calling onChange */}
+      <DrawerOverlay onClick={(e) => {
+        // Call onChange with the event if it exists
+        if (onChange) {
+          onChange(e);
+        }
+      }} />
       <DrawerPrimitive.Content
         ref={ref}
         className={cn(

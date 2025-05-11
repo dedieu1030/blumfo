@@ -38,9 +38,15 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     { icon: Settings, name: t('settings'), path: "/settings" }
   ];
 
+  // Custom handler for the DrawerContent onChange event
+  const handleDrawerChange = (e: React.FormEvent<HTMLDivElement>) => {
+    // Close the drawer when overlay is clicked
+    onOpenChange(false);
+  };
+
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[85vh] bg-[#F0EBE7] p-0 border-t border-sidebar-border relative" onChange={(val) => onOpenChange(!!val)}>
+      <DrawerContent className="h-[85vh] bg-[#F0EBE7] p-0 border-t border-sidebar-border relative" onChange={handleDrawerChange}>
         {/* Bouton de fermeture X en haut à droite avec fond vert foncé */}
         <button 
           onClick={() => onOpenChange(false)}
