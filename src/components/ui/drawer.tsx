@@ -21,48 +21,34 @@ const DrawerPortal = DrawerPrimitive.Portal
 
 const DrawerClose = DrawerPrimitive.Close
 
-// Custom overlay component with background and click handler
+// Empty component that doesn't render any overlay
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <div 
-    className="fixed inset-0 z-40 bg-black/20" 
-    onClick={props.onClick} 
-  /> 
+  <div /> // An empty div instead of the overlay
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => {
-  // Extract the onChange prop which is the correct property according to the error message
-  const { onChange } = props;
-  
-  return (
-    <DrawerPortal>
-      {/* Use DrawerClose to handle closing properly instead of directly calling onChange */}
-      <DrawerOverlay onClick={(e) => {
-        // Call onChange with the event if it exists
-        if (onChange) {
-          onChange(e);
-        }
-      }} />
-      <DrawerPrimitive.Content
-        ref={ref}
-        className={cn(
-          "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background animate-in fade-in-0 slide-in-from-bottom-5 duration-300",
-          className
-        )}
-        {...props}
-      >
-        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-        {children}
-      </DrawerPrimitive.Content>
-    </DrawerPortal>
-  );
-})
+>(({ className, children, ...props }, ref) => (
+  <DrawerPortal>
+    <DrawerOverlay />
+    <DrawerPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+        className
+      )}
+      {...props}
+    >
+      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+      {children}
+    </DrawerPrimitive.Content>
+  </DrawerPortal>
+))
 DrawerContent.displayName = "DrawerContent"
 
 const DrawerHeader = ({

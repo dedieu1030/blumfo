@@ -9,8 +9,7 @@ import {
   Settings, 
   PlusCircle,
   Package,
-  LayoutTemplate,
-  X
+  LayoutTemplate
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
@@ -38,24 +37,9 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
     { icon: Settings, name: t('settings'), path: "/settings" }
   ];
 
-  // Custom handler for the DrawerContent onChange event
-  const handleDrawerChange = (e: React.FormEvent<HTMLDivElement>) => {
-    // Close the drawer when overlay is clicked
-    onOpenChange(false);
-  };
-
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[85vh] bg-[#F0EBE7] p-0 border-t border-sidebar-border relative" onChange={handleDrawerChange}>
-        {/* Bouton de fermeture X en haut à droite avec fond vert foncé */}
-        <button 
-          onClick={() => onOpenChange(false)}
-          className="absolute top-4 right-4 bg-[#003427] text-white rounded-full p-2 flex items-center justify-center z-10 shadow-sm hover:bg-opacity-90 transition-colors"
-          aria-label="Fermer le menu"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
+      <DrawerContent className="h-[85vh] bg-[#F0EBE7] p-0 border-t border-sidebar-border">
         <div className="flex flex-col h-full">
           <div className="flex-1 overflow-auto py-8">
             <div className="px-4 space-y-1">
