@@ -39,63 +39,69 @@ const AppContent = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 overflow-auto md:ml-64">
-        {/* Search bar container - adjusted to fill space better */}
-        <div className={`sticky top-0 z-10 bg-background px-4 py-8 flex items-center ${isMobile ? 'border-b' : ''}`}>
-          {/* Flexible search bar container that fills available space */}
-          <div className="flex-1 mr-4">
-            <SearchBar placeholder="Rechercher dans l'application..." />
-          </div>
-          
-          {/* Tightly grouped action buttons */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Button 
-              onClick={() => setInvoiceDialogOpen(true)}
-              size={isMobile ? "sm" : "default"}
-              className="bg-violet hover:bg-violet/90 whitespace-nowrap"
-            >
-              {isMobile ? (
-                <FilePlus className="h-4 w-4" />
-              ) : (
-                <>
-                  <Plus className="mr-1 h-4 w-4" /> Nouvelle facture
-                </>
-              )}
-            </Button>
+      <div className="flex-1 flex flex-col h-screen md:ml-64">
+        {/* Search bar container - fixed at top */}
+        <div className="sticky top-0 z-30 bg-background border-b shadow-sm">
+          <div className="px-4 py-4 flex items-center">
+            {/* Flexible search bar container that fills available space */}
+            <div className="flex-1 mr-4">
+              <SearchBar placeholder="Rechercher dans l'application..." />
+            </div>
             
-            {!isMobile && <LanguageSelector />}
-            
-            <NotificationBell />
-            
-            {/* Menu button moved to the far right on mobile */}
-            {isMobile && (
+            {/* Tightly grouped action buttons */}
+            <div className="flex items-center gap-2 shrink-0">
               <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-9 w-9"
-                onClick={() => setIsMobileMenuOpen(true)}
+                onClick={() => setInvoiceDialogOpen(true)}
+                size={isMobile ? "sm" : "default"}
+                className="bg-violet hover:bg-violet/90 whitespace-nowrap"
               >
-                <Menu className="h-4 w-4" />
+                {isMobile ? (
+                  <FilePlus className="h-4 w-4" />
+                ) : (
+                  <>
+                    <Plus className="mr-1 h-4 w-4" /> Nouvelle facture
+                  </>
+                )}
               </Button>
-            )}
+              
+              {!isMobile && <LanguageSelector />}
+              
+              <NotificationBell />
+              
+              {/* Menu button moved to the far right on mobile */}
+              {isMobile && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-9 w-9"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-        <div className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/invoicing" element={<Invoicing />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/clients/:id" element={<ClientDetails />} />
-            <Route path="/products" element={<ProductsServices />} />
-            <Route path="/templates" element={<Templates />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/edit" element={<ProfileEdit />} />
-            <Route path="/stripe/callback" element={<StripeCallback />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+
+        {/* Scrollable content area with padding to avoid content being hidden under the fixed header */}
+        <div className="flex-1 overflow-auto">
+          <div className="container mx-auto px-4 py-8">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/invoicing" element={<Invoicing />} />
+              <Route path="/invoices" element={<Invoices />} />
+              <Route path="/clients" element={<Clients />} />
+              <Route path="/clients/:id" element={<ClientDetails />} />
+              <Route path="/products" element={<ProductsServices />} />
+              <Route path="/templates" element={<Templates />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/edit" element={<ProfileEdit />} />
+              <Route path="/stripe/callback" element={<StripeCallback />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </div>
       </div>
       

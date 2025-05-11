@@ -39,25 +39,27 @@ export const Header = ({
   };
 
   return (
-    <div className="flex justify-between items-center mb-6">
-      <div className="flex items-center">
-        {!isMobileScreen ? (
-          <>
-            {renderBackButton()}
-            <div>
-              <h1 className="text-2xl font-semibold">{title}</h1>
-              {description && <p className="text-muted-foreground mt-1">{description}</p>}
+    <div className="mb-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center">
+          {!isMobileScreen ? (
+            <>
+              {renderBackButton()}
+              <div>
+                <h1 className="text-2xl font-semibold">{title}</h1>
+                {description && <p className="text-muted-foreground mt-1">{description}</p>}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold">{title}</h1>
             </div>
-          </>
-        ) : (
-          <div className="flex items-center">
-            <h1 className="text-xl font-semibold">{title}</h1>
-          </div>
-        )}
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        {actions}
+          )}
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {actions}
+        </div>
       </div>
     </div>
   );
