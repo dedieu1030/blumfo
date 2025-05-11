@@ -1,9 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { useIsToplevel } from "@/hooks/use-is-toplevel";
 import { useWindowSize } from "@/hooks/use-window-size";
 import { ChevronLeft, Menu } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { NotificationBell } from "./NotificationBell";
 
 interface HeaderProps {
   title: string;
@@ -60,7 +60,6 @@ export const Header = ({
       </div>
       
       <div className="flex items-center space-x-2">
-        <NotificationBell />
         {actions}
       </div>
     </div>

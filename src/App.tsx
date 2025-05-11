@@ -21,20 +21,41 @@ import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import { NotificationsProvider } from "./context/NotificationsContext";
 import { useIsMobile } from "./hooks/use-mobile";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { NotificationBell } from "./components/NotificationBell";
+import { LanguageSelector } from "./components/LanguageSelector";
+import { InvoiceDialog } from "./components/InvoiceDialog";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const isMobile = useIsMobile();
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1 overflow-auto md:ml-64">
         {/* Search bar container - adjusted padding to align with logo */}
-        <div className={`sticky top-0 z-10 bg-background px-4 py-8 flex items-center ${isMobile ? 'border-b' : ''}`}>
+        <div className={`sticky top-0 z-10 bg-background px-4 py-8 flex items-center justify-between ${isMobile ? 'border-b' : ''}`}>
           <div className="max-w-md w-full">
             <SearchBar placeholder="Rechercher dans l'application..." />
+          </div>
+          
+          <div className="flex items-center gap-2 ml-2">
+            <Button 
+              onClick={() => setInvoiceDialogOpen(true)}
+              size={isMobile ? "sm" : "default"}
+              className="bg-violet hover:bg-violet/90 whitespace-nowrap"
+            >
+              <Plus className="mr-1 h-4 w-4" /> {!isMobile && "Nouvelle facture"}
+            </Button>
+            
+            {!isMobile && <LanguageSelector />}
+            
+            <NotificationBell />
           </div>
         </div>
         <div className="container mx-auto px-4 py-8">
@@ -55,6 +76,12 @@ const AppContent = () => {
           </Routes>
         </div>
       </div>
+      
+      {/* Invoice Dialog */}
+      <InvoiceDialog 
+        open={invoiceDialogOpen}
+        onOpenChange={setInvoiceDialogOpen}
+      />
     </div>
   );
 };
