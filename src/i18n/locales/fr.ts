@@ -112,6 +112,22 @@ export const fr = {
   linkCopied: "Lien copié",
   paymentLinkCopiedToClipboard: "Le lien de paiement a été copié dans le presse-papier",
   
+  // Filtres de date
+  filterByDate: "Filtrer par date",
+  issueDate: "Date d'émission",
+  dueDate: "Date d'échéance",
+  selectDates: "Filtrer par date",
+  selectDateType: "Sélectionner un type de date",
+  noDateFilter: "Pas de filtre de date",
+  dateRange: "Période",
+  reset: "Réinitialiser",
+  apply: "Appliquer",
+  dates: "Dates",
+  report: "Rapport",
+  generateReport: "Générer un rapport",
+  toVerify: "À vérifier",
+  nearDue: "Échéance proche",
+  
   // Composant de statut de facture
   paidStatus: "Payée",
   pendingStatus: "En attente",
@@ -165,7 +181,6 @@ export const fr = {
   paymentTerms: "Conditions de paiement",
   notesAndSignature: "Notes et signature",
   invoiceNumber: "Numéro de facture",
-  issueDate: "Date d'émission",
   clientNameLabel: "Nom / Raison sociale",
   clientNamePlaceholder: "SCI Legalis",
   emailLabel: "Email",

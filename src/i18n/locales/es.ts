@@ -155,9 +155,6 @@ export const es = {
   paymentConfirmed: "Pago confirmado",
   invoiceMarkedAsPaid: "La factura {{number}} ha sido marcada como pagada.",
   paymentConfirmError: "No se puede confirmar el pago. Inténtelo de nuevo.",
-  paymentFailed: "Pago fallido",
-  paymentSuccessMessage: "Gracias por su pago. Su factura ha sido pagada correctamente.",
-  paymentFailureMessage: "No pudimos procesar su pago.",
   
   // Enlace de pago de factura
   paymentLinkGenerated: "Enlace de pago de Stripe generado",
@@ -225,4 +222,9 @@ export const es = {
   // Common Actions
   ok: "OK",
   close: "Cerrar",
+  
+  // Payment Confirmation
+  paymentFailed: "Pago fallido",
+  paymentSuccessMessage: "Gracias por su pago. Su factura ha sido pagada correctamente.",
+  paymentFailureMessage: "No pudimos procesar su pago.",
 };

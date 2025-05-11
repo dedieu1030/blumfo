@@ -303,7 +303,6 @@ export default function Invoices() {
                         <SelectValue placeholder={t("selectDateType", "Sélectionner un type de date")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{t("noDateFilter", "Pas de filtre de date")}</SelectItem>
                         <SelectItem value="issue">{t("issueDate", "Date d'émission")}</SelectItem>
                         <SelectItem value="due">{t("dueDate", "Date d'échéance")}</SelectItem>
                       </SelectContent>
