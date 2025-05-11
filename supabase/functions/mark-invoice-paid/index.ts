@@ -28,7 +28,7 @@ serve(async (req) => {
     }
 
     // Create Supabase client with auth context
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } }
@@ -38,7 +38,7 @@ serve(async (req) => {
     const {
       data: { user },
       error: userError,
-    } = await supabaseClient.auth.getUser()
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
       console.error("Mark invoice paid: Unauthorized", userError?.message)
@@ -52,14 +52,33 @@ serve(async (req) => {
     }
 
     // Get invoice data from request body
-    const requestBody = await req.json()
+    let requestBody;
+    try {
+      requestBody = await req.json()
+    } catch (jsonError) {
+      console.error("Mark invoice paid: Invalid JSON in request body", jsonError)
+      return new Response(
+        JSON.stringify({ error: 'Invalid request format', details: 'Request body must be valid JSON' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+    
     const { invoiceId, paymentDetails } = requestBody
     
     console.log(`Mark invoice paid: Processing invoice ${invoiceId}`, paymentDetails)
     
     if (!invoiceId) {
       console.error("Mark invoice paid: Invoice ID is required")
-      throw new Error('Invoice ID is required')
+      return new Response(
+        JSON.stringify({ error: 'Invoice ID is required' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
     }
 
     // Get current date for payment date
@@ -67,7 +86,7 @@ serve(async (req) => {
     
     // First, try to update Stripe invoices table if it exists
     try {
-      const { data: stripeInvoice, error: stripeInvoiceError } = await supabaseClient
+      const { data: stripeInvoice, error: stripeInvoiceError } = await supabase
         .from('stripe_invoices')
         .update({
           status: 'paid',
@@ -83,36 +102,71 @@ serve(async (req) => {
         console.log(`Mark invoice paid: Updated Stripe invoice ${invoiceId}`)
         
         // Create a payment record for the Stripe invoice
-        const { data: payment, error: paymentError } = await supabaseClient
-          .from('payments')
-          .insert({
-            invoice_id: stripeInvoice.invoice_id || invoiceId,
-            amount: stripeInvoice.amount_total,
-            payment_date: paidDate,
-            payment_method: paymentDetails?.method || 'manual',
-            status: 'completed',
-            client_id: stripeInvoice.client_id
-          })
-          .select()
-          .single()
-        
-        if (paymentError) {
-          console.error("Mark invoice paid: Error creating payment record for stripe invoice:", paymentError)
-        } else {
-          console.log("Mark invoice paid: Created payment record for stripe invoice", payment)
-        }
-        
-        return new Response(
-          JSON.stringify({
-            success: true,
-            invoice: stripeInvoice,
-            payment: payment || null
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
+        try {
+          const { data: payment, error: paymentError } = await supabase
+            .from('payments')
+            .insert({
+              invoice_id: stripeInvoice.invoice_id || invoiceId,
+              amount: stripeInvoice.amount_total,
+              payment_date: paidDate,
+              payment_method: paymentDetails?.method || 'manual',
+              status: 'completed',
+              client_id: stripeInvoice.client_id
+            })
+            .select()
+            .single()
+          
+          if (paymentError) {
+            console.error("Mark invoice paid: Error creating payment record for stripe invoice:", paymentError)
+            
+            // Return success but with warning about payment record
+            return new Response(
+              JSON.stringify({
+                success: true,
+                invoice: stripeInvoice,
+                payment: null,
+                warning: "Invoice marked as paid but payment record creation failed"
+              }),
+              {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 200,
+              }
+            )
           }
-        )
+          
+          console.log("Mark invoice paid: Created payment record for stripe invoice", payment)
+          
+          return new Response(
+            JSON.stringify({
+              success: true,
+              invoice: stripeInvoice,
+              payment: payment || null
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            }
+          )
+        } catch (paymentCreateError) {
+          console.error("Mark invoice paid: Exception creating payment record:", paymentCreateError)
+          
+          // Return success but with warning about payment record
+          return new Response(
+            JSON.stringify({
+              success: true,
+              invoice: stripeInvoice,
+              payment: null,
+              warning: "Invoice marked as paid but payment record creation failed due to exception"
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            }
+          )
+        }
+      } else if (stripeInvoiceError && stripeInvoiceError.code !== 'PGRST116') {
+        // If this is an actual database error and not just "no rows returned"
+        console.error("Mark invoice paid: Error updating stripe invoice:", stripeInvoiceError)
       }
     } catch (stripeError) {
       console.error("Mark invoice paid: Error updating stripe invoice:", stripeError)
@@ -122,7 +176,7 @@ serve(async (req) => {
     // If no Stripe invoice was found, try the regular invoices table
     try {
       console.log(`Mark invoice paid: Attempting to update regular invoice ${invoiceId}`)
-      const { data: invoice, error: invoiceError } = await supabaseClient
+      const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
         .update({
           status: 'paid',
@@ -130,56 +184,52 @@ serve(async (req) => {
         })
         .eq('id', invoiceId)
         .select()
-        .single()
       
       if (invoiceError) {
         console.error(`Mark invoice paid: Error updating regular invoice:`, invoiceError)
         throw new Error(`Error updating invoice: ${invoiceError.message}`)
       }
       
-      // Create a payment record if successful
-      if (invoice) {
-        console.log(`Mark invoice paid: Updated regular invoice ${invoiceId}`)
-        try {
-          const { data: payment, error: paymentError } = await supabaseClient
-            .from('payments')
-            .insert({
-              invoice_id: invoiceId,
-              amount: invoice.total_amount,
-              payment_date: paidDate,
-              payment_method: paymentDetails?.method || 'manual',
-              status: 'completed',
-              client_id: invoice.client_id,
-              company_id: invoice.company_id
-            })
-            .select()
-            .single()
-            
-          if (paymentError) {
-            console.error("Mark invoice paid: Error creating payment record for regular invoice:", paymentError)
-          } else {
-            console.log("Mark invoice paid: Created payment record for regular invoice", payment)
+      if (!invoice || invoice.length === 0) {
+        console.error(`Mark invoice paid: No invoice found with ID ${invoiceId}`)
+        return new Response(
+          JSON.stringify({
+            error: 'Invoice not found',
+            success: false
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 404,
           }
+        )
+      }
+      
+      // Create a payment record if successful
+      const invoiceRecord = Array.isArray(invoice) ? invoice[0] : invoice;
+      console.log(`Mark invoice paid: Updated regular invoice ${invoiceId}`, invoiceRecord)
+      
+      try {
+        const { data: payment, error: paymentError } = await supabase
+          .from('payments')
+          .insert({
+            invoice_id: invoiceId,
+            amount: invoiceRecord.total_amount,
+            payment_date: paidDate,
+            payment_method: paymentDetails?.method || 'manual',
+            status: 'completed',
+            client_id: invoiceRecord.client_id,
+            company_id: invoiceRecord.company_id
+          })
+          .select()
+          .single()
+          
+        if (paymentError) {
+          console.error("Mark invoice paid: Error creating payment record for regular invoice:", paymentError)
           
           return new Response(
             JSON.stringify({
               success: true,
-              invoice,
-              payment: payment || null
-            }),
-            {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 200,
-            }
-          )
-        } catch (paymentError) {
-          console.error("Mark invoice paid: Error in payment creation:", paymentError)
-          
-          // Still return success since the invoice was marked as paid
-          return new Response(
-            JSON.stringify({
-              success: true,
-              invoice,
+              invoice: invoiceRecord,
               payment: null,
               warning: "Invoice marked as paid but payment record creation failed"
             }),
@@ -189,6 +239,36 @@ serve(async (req) => {
             }
           )
         }
+        
+        console.log("Mark invoice paid: Created payment record for regular invoice", payment)
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            invoice: invoiceRecord,
+            payment: payment || null
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+      } catch (paymentError) {
+        console.error("Mark invoice paid: Error in payment creation:", paymentError)
+        
+        // Still return success since the invoice was marked as paid
+        return new Response(
+          JSON.stringify({
+            success: true,
+            invoice: invoiceRecord,
+            payment: null,
+            warning: "Invoice marked as paid but payment record creation failed"
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
       }
     } catch (invoiceError) {
       console.error("Mark invoice paid: Error in invoice update:", invoiceError)
@@ -197,7 +277,16 @@ serve(async (req) => {
 
     // If we got here, neither table update worked
     console.error(`Mark invoice paid: Could not find matching invoice to update ${invoiceId}`)
-    throw new Error('Could not find matching invoice to update')
+    return new Response(
+      JSON.stringify({
+        error: 'Could not find matching invoice to update',
+        success: false
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404,
+      }
+    )
   } catch (error) {
     console.error('Error marking invoice as paid:', error)
     return new Response(

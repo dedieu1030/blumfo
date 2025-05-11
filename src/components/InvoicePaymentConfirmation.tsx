@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
 
 interface InvoicePaymentConfirmationProps {
   success: boolean;
@@ -28,18 +29,53 @@ export function InvoicePaymentConfirmation({
   onConfirm
 }: InvoicePaymentConfirmationProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const dialogTitleId = "payment-confirmation-title";
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const isMounted = useRef(true);
+  
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
+  // Focus the button when the dialog is opened
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      // Small timeout to ensure the dialog is fully rendered
+      setTimeout(() => {
+        if (buttonRef.current && isMounted.current) {
+          buttonRef.current.focus();
+        }
+      }, 100);
+    }
+  }, [isOpen]);
   
   const handleClose = () => {
+    if (!isMounted.current) return;
+    
     if (onOpenChange) {
       onOpenChange(false);
     }
+    
     // Add delay to ensure dialog fully closes before calling onConfirm
     setTimeout(() => {
+      if (!isMounted.current) return;
+      
       if (onConfirm) {
         onConfirm();
       }
-    }, 100);
+      
+      // Notify success
+      if (success) {
+        toast({
+          title: t("paymentConfirmed"),
+          description: t("invoiceMarkedAsPaid", { number: invoice?.invoice_number || '' }),
+          variant: "default",
+        });
+      }
+    }, 150);
   };
   
   const content = (
@@ -68,7 +104,11 @@ export function InvoicePaymentConfirmation({
             </p>
             
             <div className="flex justify-center mt-6">
-              <Button onClick={handleClose}>
+              <Button 
+                onClick={handleClose}
+                ref={buttonRef}
+                autoFocus
+              >
                 {t("ok")}
               </Button>
             </div>
@@ -88,7 +128,11 @@ export function InvoicePaymentConfirmation({
             )}
             
             <div className="flex justify-center mt-6">
-              <Button onClick={handleClose}>
+              <Button 
+                onClick={handleClose}
+                ref={buttonRef}
+                autoFocus
+              >
                 {t("close")}
               </Button>
             </div>
@@ -100,7 +144,13 @@ export function InvoicePaymentConfirmation({
   
   if (isOpen !== undefined && onOpenChange) {
     return (
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open && isMounted.current) {
+          handleClose();
+        } else {
+          onOpenChange(open);
+        }
+      }}>
         <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-md" aria-labelledby={dialogTitleId}>
           <DialogTitle className="sr-only" id={dialogTitleId}>
             {success ? t("paymentConfirmed") : t("paymentFailed")}

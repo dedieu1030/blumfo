@@ -81,7 +81,7 @@ export function InvoicePaymentConfirmDialog({
   }, [isOpen]);
   
   const handleConfirm = () => {
-    if (isMounted.current) {
+    if (isMounted.current && !isProcessing) {
       onConfirm({
         date: paymentDate,
         method: paymentMethod,
@@ -91,7 +91,14 @@ export function InvoicePaymentConfirmDialog({
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+    <AlertDialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        if (isMounted.current && !isProcessing) {
+          onOpenChange(open);
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("confirmPayment")}</AlertDialogTitle>
@@ -133,7 +140,11 @@ export function InvoicePaymentConfirmDialog({
                       <Calendar
                         mode="single"
                         selected={paymentDate}
-                        onSelect={(date) => date && setPaymentDate(date)}
+                        onSelect={(date) => {
+                          if (date && isMounted.current) {
+                            setPaymentDate(date);
+                          }
+                        }}
                         initialFocus
                       />
                     </div>
@@ -145,7 +156,11 @@ export function InvoicePaymentConfirmDialog({
                 <Label htmlFor="payment-method">{t("paymentMethod")}</Label>
                 <Select 
                   value={paymentMethod} 
-                  onValueChange={setPaymentMethod}
+                  onValueChange={(value) => {
+                    if (isMounted.current) {
+                      setPaymentMethod(value);
+                    }
+                  }}
                   disabled={isProcessing}
                 >
                   <SelectTrigger id="payment-method" className="w-full">
@@ -169,7 +184,11 @@ export function InvoicePaymentConfirmDialog({
                   id="payment-reference"
                   placeholder={t("referenceExample")}
                   value={paymentReference}
-                  onChange={(e) => setPaymentReference(e.target.value)}
+                  onChange={(e) => {
+                    if (isMounted.current) {
+                      setPaymentReference(e.target.value);
+                    }
+                  }}
                   disabled={isProcessing}
                 />
                 <p className="text-xs text-muted-foreground">
