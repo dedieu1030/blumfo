@@ -20,8 +20,44 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import { NotificationsProvider } from "./context/NotificationsContext";
+import { useIsMobile } from "./hooks/use-mobile";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const isMobile = useIsMobile();
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 overflow-auto md:ml-64">
+        {/* Search bar container - conditionally apply border only on mobile */}
+        <div className={`sticky top-0 z-10 bg-background px-4 py-2 flex items-center ${isMobile ? 'border-b' : ''}`}>
+          <div className="max-w-md w-full">
+            <SearchBar placeholder="Rechercher dans l'application..." />
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/invoicing" element={<Invoicing />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:id" element={<ClientDetails />} />
+            <Route path="/products" element={<ProductsServices />} />
+            <Route path="/templates" element={<Templates />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
+            <Route path="/stripe/callback" element={<StripeCallback />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,34 +66,7 @@ const App = () => (
       <Sonner />
       <NotificationsProvider>
         <BrowserRouter>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <div className="flex-1 overflow-auto md:ml-64">
-              {/* Universal Search Bar Container */}
-              <div className="sticky top-0 z-10 bg-background border-b px-4 py-2 flex items-center">
-                <div className="max-w-md w-full">
-                  <SearchBar placeholder="Rechercher dans l'application..." />
-                </div>
-              </div>
-              <div className="container mx-auto px-4 py-8">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/invoicing" element={<Invoicing />} />
-                  <Route path="/invoices" element={<Invoices />} />
-                  <Route path="/clients" element={<Clients />} />
-                  <Route path="/clients/:id" element={<ClientDetails />} />
-                  <Route path="/products" element={<ProductsServices />} />
-                  <Route path="/templates" element={<Templates />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/profile/edit" element={<ProfileEdit />} />
-                  <Route path="/stripe/callback" element={<StripeCallback />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-            </div>
-          </div>
+          <AppContent />
         </BrowserRouter>
       </NotificationsProvider>
     </TooltipProvider>
