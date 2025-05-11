@@ -204,17 +204,26 @@ const Clients = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Liste des clients</h2>
-          <div className="flex gap-2 mt-4 md:mt-0">
-            <Button onClick={() => setIsNewClientFormOpen(true)} className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4" />
-              Ajouter un client
-            </Button>
-            <Button variant="outline" onClick={() => setIsClientSelectorOpen(true)}>
-              <Search className="h-4 w-4 mr-2" />
-              Sélectionner un client
-            </Button>
+          <div className="flex flex-col md:flex-row gap-2 mt-4 md:mt-0 w-full md:w-auto">
+            <div className="flex gap-2 justify-center w-full md:w-auto">
+              <Button 
+                onClick={() => setIsNewClientFormOpen(true)} 
+                className="flex items-center gap-2 md:w-auto"
+              >
+                <UserPlus className="h-4 w-4" />
+                Ajouter un client
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsClientSelectorOpen(true)}
+                className="flex items-center gap-2 md:w-auto"
+              >
+                <Search className="h-4 w-4" />
+                Sélectionner un client
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -372,7 +381,7 @@ const Clients = () => {
             <DialogHeader>
               <DialogTitle>Sélectionner un client</DialogTitle>
             </DialogHeader>
-            <ClientSelector onClientSelect={handleClientSelect} buttonText="Créer un nouveau client" />
+            <ClientSelector onClientSelect={handleClientSelect} />
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsClientSelectorOpen(false)}>
                 Fermer
