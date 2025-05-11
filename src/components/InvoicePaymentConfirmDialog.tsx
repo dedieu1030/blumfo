@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,13 +59,35 @@ export function InvoicePaymentConfirmDialog({
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
   const [paymentMethod, setPaymentMethod] = useState<string>('bankTransfer');
   const [paymentReference, setPaymentReference] = useState<string>('');
+  const isMounted = useRef(true);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  
+  // Track if component is mounted to prevent state updates after unmount
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
+  // Reset form when the dialog opens
+  useEffect(() => {
+    if (isOpen && isMounted.current) {
+      setPaymentDate(new Date());
+      setPaymentMethod('bankTransfer');
+      setPaymentReference('');
+    }
+  }, [isOpen]);
   
   const handleConfirm = () => {
-    onConfirm({
-      date: paymentDate,
-      method: paymentMethod,
-      reference: paymentReference
-    });
+    if (isMounted.current) {
+      onConfirm({
+        date: paymentDate,
+        method: paymentMethod,
+        reference: paymentReference
+      });
+    }
   };
 
   return (
@@ -100,18 +122,21 @@ export function InvoicePaymentConfirmDialog({
                         !paymentDate && "text-muted-foreground"
                       )}
                       disabled={isProcessing}
+                      ref={buttonRef}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {paymentDate ? format(paymentDate, "PPP", { locale: fr }) : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={paymentDate}
-                      onSelect={(date) => date && setPaymentDate(date)}
-                      // Suppression de l'attribut initialFocus
-                    />
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div ref={calendarRef}>
+                      <Calendar
+                        mode="single"
+                        selected={paymentDate}
+                        onSelect={(date) => date && setPaymentDate(date)}
+                        initialFocus
+                      />
+                    </div>
                   </PopoverContent>
                 </Popover>
               </div>

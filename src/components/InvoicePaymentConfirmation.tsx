@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useTranslation } from "react-i18next";
 
 interface InvoicePaymentConfirmationProps {
@@ -28,20 +28,24 @@ export function InvoicePaymentConfirmation({
   onConfirm
 }: InvoicePaymentConfirmationProps) {
   const { t } = useTranslation();
+  const dialogTitleId = "payment-confirmation-title";
   
   const handleClose = () => {
     if (onOpenChange) {
       onOpenChange(false);
     }
-    if (onConfirm) {
-      onConfirm();
-    }
+    // Add delay to ensure dialog fully closes before calling onConfirm
+    setTimeout(() => {
+      if (onConfirm) {
+        onConfirm();
+      }
+    }, 100);
   };
   
   const content = (
     <Card className="max-w-md mx-auto">
       <CardHeader className={`${success ? 'bg-green-50' : 'bg-red-50'}`}>
-        <CardTitle className="flex items-center">
+        <CardTitle className="flex items-center" id={dialogTitleId}>
           {success ? (
             <>
               <CheckCircle className="h-6 w-6 text-green-600 mr-2" />
@@ -97,7 +101,10 @@ export function InvoicePaymentConfirmation({
   if (isOpen !== undefined && onOpenChange) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-md">
+        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-md" aria-labelledby={dialogTitleId}>
+          <DialogTitle className="sr-only" id={dialogTitleId}>
+            {success ? t("paymentConfirmed") : t("paymentFailed")}
+          </DialogTitle>
           {content}
         </DialogContent>
       </Dialog>
