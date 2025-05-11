@@ -40,15 +40,15 @@ const AppContent = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1 overflow-auto md:ml-64">
-        {/* Search bar container - adjusted to fill space better */}
-        <div className={`sticky top-0 z-10 bg-background px-4 py-8 flex items-center ${isMobile ? 'border-b' : ''}`}>
-          {/* Flexible search bar container that fills available space */}
-          <div className="flex-1 mr-4">
+        {/* Search bar container - ajusté pour une meilleure utilisation de l'espace sur mobile */}
+        <div className={`sticky top-0 z-10 bg-background px-4 py-8 flex items-center gap-1.5 ${isMobile ? 'border-b' : ''}`}>
+          {/* Flexible search bar container that fills available space but respects other elements */}
+          <div className={`flex-grow ${isMobile ? 'max-w-[60%]' : ''}`}>
             <SearchBar placeholder="Rechercher dans l'application..." />
           </div>
           
-          {/* Tightly grouped action buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Tightly grouped action buttons without excessive margins on mobile */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <Button 
               onClick={() => setInvoiceDialogOpen(true)}
               size={isMobile ? "sm" : "default"}
@@ -72,7 +72,7 @@ const AppContent = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-9 w-9"
+                className="h-9 w-9 ml-0.5"
                 onClick={() => setIsMobileMenuOpen(true)}
               >
                 <Menu className="h-4 w-4" />

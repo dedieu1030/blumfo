@@ -118,7 +118,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <div 
-            className="flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2 cursor-pointer"
+            className={`flex items-center w-full h-10 rounded-md border border-input bg-background px-3 py-2 cursor-pointer`}
             onClick={() => {
               if (inputRef.current) {
                 inputRef.current.focus();
@@ -126,10 +126,10 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
               setOpen(true);
             }}
           >
-            <Search className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Search className="h-4 w-4 mr-1.5 text-muted-foreground flex-shrink-0" />
             <input
               ref={inputRef}
-              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm overflow-hidden text-ellipsis"
+              className="flex-1 bg-transparent border-0 outline-none placeholder:text-muted-foreground text-sm overflow-hidden text-ellipsis min-w-0"
               placeholder={responsivePlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -137,7 +137,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
             />
             {searchTerm && (
               <button 
-                className="flex items-center justify-center h-5 w-5 rounded-full hover:bg-muted"
+                className="flex items-center justify-center h-5 w-5 rounded-full hover:bg-muted flex-shrink-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   setSearchTerm("");
@@ -146,8 +146,8 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                 <X className="h-3 w-3" />
               </button>
             )}
-            {/* Afficher le raccourci clavier même sur mobile */}
-            <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+            {/* Affiche le raccourci clavier de façon compacte sur mobile */}
+            <kbd className={`ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground ${isMobile ? 'opacity-70 px-1' : 'opacity-100'}`}>
               <span className="text-xs">⌘</span>K
             </kbd>
           </div>
