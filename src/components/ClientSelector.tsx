@@ -24,9 +24,10 @@ export interface Client {
 
 export interface ClientSelectorProps {
   onClientSelect: (client: Client) => void;
+  buttonText?: string; // Propriété optionnelle pour personnaliser le texte du bouton
 }
 
-export const ClientSelector = ({ onClientSelect }: ClientSelectorProps) => {
+export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
