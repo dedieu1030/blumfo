@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Search, FileText, Users, Settings, Plus, X } from "lucide-react";
 import { 
@@ -113,6 +114,11 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
   // Détermine le texte du placeholder en fonction de la taille de l'écran
   const responsivePlaceholder = isMobile ? "Rechercher..." : placeholder;
 
+  // Classes personnalisées pour le PopoverContent selon le device
+  const popoverContentClasses = isMobile 
+    ? "p-0 w-[95vw] max-w-[95vw] bg-popover border shadow-lg fixed-position data-[state=closed]:animate-none data-[state=open]:animate-none"
+    : "p-0 w-[330px] bg-popover border shadow-lg";
+
   return (
     <div className="relative w-full">
       <Popover open={open} onOpenChange={handleOpenChange}>
@@ -153,9 +159,9 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
           </div>
         </PopoverTrigger>
         <PopoverContent 
-          className="p-0 w-[330px] bg-popover border shadow-lg"
-          align="start" 
-          sideOffset={5}
+          className={popoverContentClasses}
+          align={isMobile ? "center" : "start"}
+          sideOffset={isMobile ? 8 : 5}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Command shouldFilter={false}>
