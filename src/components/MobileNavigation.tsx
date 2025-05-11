@@ -40,7 +40,7 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[85vh] bg-[#F0EBE7] p-0 border-t border-sidebar-border relative">
+      <DrawerContent className="h-[85vh] bg-[#F0EBE7] p-0 border-t border-sidebar-border relative" onChange={(val) => onOpenChange(!!val)}>
         {/* Bouton de fermeture X en haut à droite avec fond vert foncé */}
         <button 
           onClick={() => onOpenChange(false)}

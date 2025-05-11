@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
@@ -35,23 +36,28 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, onOpenChange, ...props }, ref) => (
-  <DrawerPortal>
-    <DrawerOverlay onClick={() => onOpenChange?.(false)} />
-    <DrawerPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background animate-in fade-in-0 slide-in-from-bottom-5 duration-300",
-        className
-      )}
-      onOpenChange={onOpenChange}
-      {...props}
-    >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-      {children}
-    </DrawerPrimitive.Content>
-  </DrawerPortal>
-))
+>(({ className, children, ...props }, ref) => {
+  // Extract the onChange prop which is the correct property according to the error message
+  const { onChange } = props;
+  
+  return (
+    <DrawerPortal>
+      {/* Pass the onClick handler to close the drawer when clicking on the overlay */}
+      <DrawerOverlay onClick={() => onChange?.(false)} />
+      <DrawerPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background animate-in fade-in-0 slide-in-from-bottom-5 duration-300",
+          className
+        )}
+        {...props}
+      >
+        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+        {children}
+      </DrawerPrimitive.Content>
+    </DrawerPortal>
+  );
+})
 DrawerContent.displayName = "DrawerContent"
 
 const DrawerHeader = ({
