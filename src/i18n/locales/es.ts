@@ -185,7 +185,6 @@ export const es = {
   paymentTerms: "Condiciones de pago",
   notesAndSignature: "Notas y firma",
   invoiceNumber: "Número de factura",
-  issueDate: "Fecha de emisión",
   clientNameLabel: "Nombre / Razón social",
   clientNamePlaceholder: "SCI Legalis",
   emailLabel: "Correo electrónico",
