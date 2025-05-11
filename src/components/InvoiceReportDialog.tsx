@@ -200,7 +200,7 @@ export function InvoiceReportDialog({
                       mode="single"
                       selected={startDate}
                       onSelect={setStartDate}
-                      initialFocus
+                      // Suppression de l'attribut initialFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -230,7 +230,7 @@ export function InvoiceReportDialog({
                       mode="single"
                       selected={endDate}
                       onSelect={setEndDate}
-                      initialFocus
+                      // Suppression de l'attribut initialFocus
                     />
                   </PopoverContent>
                 </Popover>

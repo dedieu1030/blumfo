@@ -110,7 +110,7 @@ export function InvoicePaymentConfirmDialog({
                       mode="single"
                       selected={paymentDate}
                       onSelect={(date) => date && setPaymentDate(date)}
-                      initialFocus
+                      // Suppression de l'attribut initialFocus
                     />
                   </PopoverContent>
                 </Popover>
