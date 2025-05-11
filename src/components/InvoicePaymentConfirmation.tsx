@@ -60,7 +60,7 @@ export function InvoicePaymentConfirmation({
         {success ? (
           <div className="space-y-4">
             <p className="text-center">
-              {t("paymentSuccessMessage")}
+              {invoice ? t("invoiceMarkedAsPaid", { number: invoice.invoice_number }) : t("paymentSuccessMessage")}
             </p>
             
             <div className="flex justify-center mt-6">
@@ -72,14 +72,8 @@ export function InvoicePaymentConfirmation({
         ) : (
           <div className="space-y-4">
             <p className="text-center">
-              {t("paymentFailureMessage")}
+              {error || t("paymentFailureMessage")}
             </p>
-            
-            {error && (
-              <div className="bg-red-50 p-3 rounded-md border border-red-100">
-                <p className="text-red-700">{error}</p>
-              </div>
-            )}
             
             {invoice && (
               <div className="bg-red-50 p-3 rounded-md border border-red-100">

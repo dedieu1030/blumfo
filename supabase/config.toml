@@ -18,3 +18,7 @@ verify_jwt = false
 
 [functions.generate-invoice-notifications]
 verify_jwt = false
+
+[functions.mark-invoice-paid]
+verify_jwt = true
+

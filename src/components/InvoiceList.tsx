@@ -14,6 +14,7 @@ import { InvoicePaymentConfirmation } from "./InvoicePaymentConfirmation";
 import { InvoicePaymentConfirmDialog } from "./InvoicePaymentConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Invoice {
   id: string;
@@ -50,6 +51,7 @@ export function InvoiceList({
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingResult, setProcessingResult] = useState<{success: boolean, error?: string} | null>(null);
   
   const handleCopyLink = (paymentUrl: string) => {
     navigator.clipboard.writeText(paymentUrl);
@@ -64,20 +66,58 @@ export function InvoiceList({
     setIsConfirmDialogOpen(true);
   };
   
-  const handlePaymentConfirmed = () => {
+  const handlePaymentDetailsSubmitted = async (paymentDetails: any) => {
+    if (!selectedInvoice) return;
+    
+    setIsProcessing(true);
     setIsConfirmDialogOpen(false);
-    setIsPaymentDialogOpen(true);
+    
+    try {
+      // Call the new Edge Function to mark invoice as paid
+      const { data, error } = await supabase.functions.invoke('mark-invoice-paid', {
+        body: { 
+          invoiceId: selectedInvoice.id,
+          paymentDetails: {
+            ...paymentDetails,
+            date: paymentDetails.date.toISOString()
+          }
+        }
+      });
+      
+      if (error) {
+        console.error("Error marking invoice as paid:", error);
+        setProcessingResult({
+          success: false,
+          error: error.message || t("paymentConfirmError")
+        });
+        return;
+      }
+      
+      setProcessingResult({
+        success: true
+      });
+      
+      // Open the payment confirmation dialog
+      setIsPaymentDialogOpen(true);
+    } catch (error) {
+      console.error("Error calling Edge Function:", error);
+      setProcessingResult({
+        success: false,
+        error: error instanceof Error ? error.message : t("paymentConfirmError")
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   // Function to close dialogs and refresh data - optimized version
   const handleDialogClose = () => {
     setIsPaymentDialogOpen(false);
-    setSelectedInvoice(null);
+    setProcessingResult(null);
     
-    // Only refresh data if callback is provided
-    if (onInvoiceStatusChanged) {
-      setIsProcessing(true);
-      
+    // Only refresh data if callback is provided and payment was successful
+    if (onInvoiceStatusChanged && processingResult?.success) {
+      // Wrap in a try/catch but don't use setTimeout
       try {
         onInvoiceStatusChanged();
       } catch (error) {
@@ -87,10 +127,11 @@ export function InvoiceList({
           description: t("errorRefreshingData", "Erreur lors du rafraîchissement des données. Veuillez réessayer."),
           variant: "destructive"
         });
-      } finally {
-        setIsProcessing(false);
       }
     }
+    
+    // Clean up states
+    setSelectedInvoice(null);
   };
   
   return (
@@ -243,12 +284,13 @@ export function InvoiceList({
             invoice_number: selectedInvoice.invoice_number,
             amount: parseFloat(selectedInvoice.amount.replace(/[^\d.-]/g, ''))
           }}
-          onConfirm={handlePaymentConfirmed}
+          onConfirm={handlePaymentDetailsSubmitted}
+          isProcessing={isProcessing}
         />
       )}
       
       {/* Dialogue de confirmation de réussite du paiement */}
-      {selectedInvoice && (
+      {selectedInvoice && processingResult && (
         <InvoicePaymentConfirmation
           isOpen={isPaymentDialogOpen}
           onOpenChange={setIsPaymentDialogOpen}
@@ -257,7 +299,8 @@ export function InvoiceList({
             invoice_number: selectedInvoice.invoice_number,
             amount: parseFloat(selectedInvoice.amount.replace(/[^\d.-]/g, ''))
           }}
-          success={true}
+          success={processingResult.success}
+          error={processingResult.error}
           onConfirm={handleDialogClose}
         />
       )}
