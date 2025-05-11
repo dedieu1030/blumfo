@@ -193,7 +193,7 @@ export const en = {
   paymentTerms: "Payment terms",
   notesAndSignature: "Notes and signature",
   invoiceNumber: "Invoice number",
-  issueDate: "Issue date",
+  // Remove duplicate issueDate here as it already exists in Date filters section
   clientNameLabel: "Name / Company name",
   clientNamePlaceholder: "SCI Legalis",
   emailLabel: "Email",
