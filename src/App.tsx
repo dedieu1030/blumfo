@@ -31,8 +31,8 @@ const AppContent = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1 overflow-auto md:ml-64">
-        {/* Search bar container - conditionally apply border only on mobile */}
-        <div className={`sticky top-0 z-10 bg-background px-4 py-2 flex items-center ${isMobile ? 'border-b' : ''}`}>
+        {/* Search bar container - adjusted padding to align with logo */}
+        <div className={`sticky top-0 z-10 bg-background px-4 py-8 flex items-center ${isMobile ? 'border-b' : ''}`}>
           <div className="max-w-md w-full">
             <SearchBar placeholder="Rechercher dans l'application..." />
           </div>
