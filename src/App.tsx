@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar";
 import { SearchBar } from "./components/SearchBar";
 import Dashboard from "./pages/Dashboard";
@@ -28,8 +28,42 @@ import { NotificationBell } from "./components/NotificationBell";
 import { LanguageSelector } from "./components/LanguageSelector";
 import { InvoiceDialog } from "./components/InvoiceDialog";
 import { MobileNavigation } from "./components/MobileNavigation";
+import { Header } from "./components/Header";
 
 const queryClient = new QueryClient();
+
+// Component to render page-specific headers
+const PageHeader = () => {
+  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Map of routes to their header props
+  const headerProps = {
+    "/": { title: "Tableau de bord" },
+    "/invoicing": { title: "Facturation", description: "Gérez vos paramètres de facturation" },
+    "/invoices": { title: "Mes factures", description: "Gérez toutes vos factures" },
+    "/clients": { title: "Clients", description: "Gérez vos clients" },
+    "/products": { title: "Produits & Services", description: "Gérez vos produits et services" },
+    "/templates": { title: "Modèles", description: "Gérez vos modèles de factures" },
+    "/settings": { title: "Paramètres", description: "Configurez votre compte" },
+    "/notifications": { title: "Notifications", description: "Gérez vos notifications" },
+    "/profile": { title: "Profil", description: "Consultez votre profil" },
+    "/profile/edit": { title: "Éditer le profil", description: "Modifiez vos informations" },
+  };
+  
+  // Get the current route's header props
+  const currentHeaderProps = headerProps[location.pathname] || 
+    (location.pathname.startsWith("/clients/") ? 
+      { title: "Détails du client" } : 
+      { title: "Page" });
+  
+  return (
+    <Header 
+      {...currentHeaderProps} 
+      onOpenMobileMenu={() => setIsMobileMenuOpen(true)} 
+    />
+  );
+};
 
 const AppContent = () => {
   const isMobile = useIsMobile();
@@ -40,9 +74,10 @@ const AppContent = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1 flex flex-col h-screen md:ml-64">
-        {/* Search bar container - fixed at top */}
-        <div className="sticky top-0 z-30 bg-background border-b shadow-sm">
-          <div className="px-4 py-4 flex items-center">
+        {/* Fixed search bar and header container */}
+        <div className="sticky top-0 z-30 bg-background">
+          {/* Search bar container */}
+          <div className="px-4 py-4 flex items-center border-b shadow-sm">
             {/* Flexible search bar container that fills available space */}
             <div className="flex-1 mr-4">
               <SearchBar placeholder="Rechercher dans l'application..." />
@@ -81,6 +116,9 @@ const AppContent = () => {
               )}
             </div>
           </div>
+          
+          {/* Page header container - also fixed */}
+          <PageHeader />
         </div>
 
         {/* Scrollable content area with padding to avoid content being hidden under the fixed header */}

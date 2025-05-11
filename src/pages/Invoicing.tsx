@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -181,12 +180,6 @@ export default function Invoicing() {
 
   return (
     <>
-      <Header 
-        title={t("invoicing")} 
-        description={t("invoicingDescription")}
-        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
-      />
-      
       <Card>
         <CardHeader>
           <CardTitle>{t("billingConfiguration")}</CardTitle>

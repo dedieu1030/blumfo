@@ -1,6 +1,4 @@
-
 import { useState, useEffect } from "react";
-import { Header } from "@/components/Header";
 import { InvoiceList } from "@/components/InvoiceList";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -168,12 +166,6 @@ export default function Invoices() {
 
   return (
     <>
-      <Header 
-        title="Mes factures" 
-        description="Gérez toutes vos factures"
-        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
-      />
-      
       <div className="space-y-6">
         {/* Alerte pour les factures nécessitant une vérification */}
         <InvoicePaymentAlert 
