@@ -61,6 +61,13 @@ const SheetContent = React.forwardRef<
     <SheetPrimitive.Content
       ref={ref}
       className={cn(sheetVariants({ side }), className)}
+      onOpenAutoFocus={(event) => {
+        event.preventDefault(); // Empêche le focus automatique à l'ouverture
+      }}
+      onCloseAutoFocus={(event) => {
+        // Nous laissons le comportement par défaut pour le focus à la fermeture
+        // mais cela n'appliquera pas de focus automatique sur un champ de saisie
+      }}
       {...props}
     >
       {children}
