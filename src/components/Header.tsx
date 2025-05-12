@@ -2,8 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { useIsToplevel } from "@/hooks/use-is-toplevel";
 import { useWindowSize } from "@/hooks/use-window-size";
-import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Icon } from "@/components/ui/icon";
 
 interface HeaderProps {
   title: string;
@@ -33,7 +33,7 @@ export const Header = ({
         className="mr-2" 
         onClick={() => window.history.back()}
       >
-        <ChevronLeft className="h-5 w-5 mr-1" /> {t('back')}
+        <Icon name="ArrowLeft" size={20} className="mr-1" /> {t('back')}
       </Button>
     );
   };

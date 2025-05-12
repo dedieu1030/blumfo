@@ -27,12 +27,13 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useIsMobile } from "./hooks/use-mobile";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
 import { NotificationBell } from "./components/NotificationBell";
 import { LanguageSelector } from "./components/LanguageSelector";
 import { MobileNavigation } from "./components/MobileNavigation";
 import QuoteView from './pages/QuoteView';
 import { QuickAction } from "./components/QuickAction";
+import IconsExample from "./pages/IconsExample";
+import { Icon } from "./components/ui/icon";
 
 const queryClient = new QueryClient();
 
@@ -68,7 +69,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 className="h-9 w-9 ml-0.5 border border-input"
                 onClick={() => setIsMobileMenuOpen(true)}
               >
-                <Menu className="h-4 w-4" />
+                <Icon name="Menu" size={16} />
               </Button>
             )}
           </div>
@@ -118,6 +119,7 @@ const AppRoutes = () => {
         <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
         <Route path="/stripe/callback" element={<StripeCallback />} />
         <Route path="/quote/:id" element={<QuoteView />} />
+        <Route path="/icons" element={<IconsExample />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </MainLayout>

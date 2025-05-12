@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Download, Send, Copy, QrCode, ExternalLink, Check, Calendar, Hash } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +12,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { Invoice } from "@/types/invoice"; 
+import { Icon } from "@/components/ui/icon";
 
 interface InvoiceMobileCardProps {
   invoice: Invoice;
@@ -66,7 +66,7 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
         <div className="flex justify-between items-center">
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
-              <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+              <Icon name="Hash" size={14} className="text-muted-foreground" />
               <p className="font-medium text-sm">{invoice.number || invoice.invoice_number}</p>
             </div>
             <p className="text-xs text-muted-foreground truncate max-w-[180px]">{getClientName()}</p>
@@ -81,7 +81,7 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
         <div className="flex justify-between items-center">
           <div className="text-base font-medium">{formatAmount(invoice.amount || invoice.total_amount)}</div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
+            <Icon name="Calendar" size={14} />
             {invoice.date || invoice.issue_date}
           </div>
         </div>
@@ -109,12 +109,12 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
         >
           {expanded ? (
             <>
-              <ChevronUp className="h-3.5 w-3.5 mr-1" />
+              <Icon name="ArrowUp" size={14} className="mr-1" />
               {t("showLess")}
             </>
           ) : (
             <>
-              <ChevronDown className="h-3.5 w-3.5 mr-1" />
+              <Icon name="ArrowDown" size={14} className="mr-1" />
               {t("showMore")}
             </>
           )}
@@ -128,29 +128,29 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuItem onClick={() => {}}>
-              <Download className="h-4 w-4 mr-2" />
+              <Icon name="DownloadAlt" size={16} className="mr-2" />
               <span>{t("downloadInvoice")}</span>
             </DropdownMenuItem>
             
             <DropdownMenuItem onClick={() => {}}>
-              <Send className="h-4 w-4 mr-2" />
+              <Icon name="Send" size={16} className="mr-2" />
               <span>{t("sendByEmail")}</span>
             </DropdownMenuItem>
             
             {(invoice.paymentUrl) && (
               <>
                 <DropdownMenuItem onClick={() => onCopyLink(invoice.paymentUrl || '')}>
-                  <Copy className="h-4 w-4 mr-2" />
+                  <Icon name="Copy" size={16} className="mr-2" />
                   <span>{t("copyPaymentLink")}</span>
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem onClick={() => window.open(invoice.paymentUrl, '_blank')}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
+                  <Icon name="ExternalLink" size={16} className="mr-2" />
                   <span>{t("openPaymentLink")}</span>
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem onClick={() => {}}>
-                  <QrCode className="h-4 w-4 mr-2" />
+                  <Icon name="QrCode" size={16} className="mr-2" />
                   <span>{t("showQrCode")}</span>
                 </DropdownMenuItem>
               </>
@@ -161,7 +161,7 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
                 onClick={() => onConfirmPayment(invoice)}
                 className="text-success"
               >
-                <Check className="h-4 w-4 mr-2" />
+                <Icon name="Check" size={16} className="mr-2" />
                 <span>{t("markAsPaid")}</span>
               </DropdownMenuItem>
             )}

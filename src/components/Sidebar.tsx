@@ -1,19 +1,10 @@
 
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { 
-  BarChart2, 
-  FileText, 
-  Users, 
-  Settings, 
-  CreditCard,
-  Package,
-  LayoutTemplate,
-  FilePlus
-} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Icon } from "@/components/ui/icon";
 
 interface SidebarProps {
   className?: string;
@@ -29,14 +20,14 @@ export function Sidebar({ className }: SidebarProps) {
   };
   
   const navigationItems = [
-    { icon: BarChart2, name: t('dashboard'), path: "/" },
-    { icon: CreditCard, name: t('invoicing'), path: "/invoicing" },
-    { icon: FileText, name: t('invoices'), path: "/invoices" },
-    { icon: FilePlus, name: "Devis", path: "/quotes" },
-    { icon: LayoutTemplate, name: t('templates'), path: "/templates" },
-    { icon: Users, name: t('clients'), path: "/clients" },
-    { icon: Package, name: t('products'), path: "/products" },
-    { icon: Settings, name: t('settings'), path: "/settings" }
+    { icon: "ChartPie", name: t('dashboard'), path: "/" },
+    { icon: "Card", name: t('invoicing'), path: "/invoicing" },
+    { icon: "Document", name: t('invoices'), path: "/invoices" },
+    { icon: "DocumentAdd", name: "Devis", path: "/quotes" },
+    { icon: "LayoutAlt", name: t('templates'), path: "/templates" },
+    { icon: "Users", name: t('clients'), path: "/clients" },
+    { icon: "Box", name: t('products'), path: "/products" },
+    { icon: "Cog", name: t('settings'), path: "/settings" }
   ];
 
   // Obtention des initiales de l'utilisateur pour l'avatar
@@ -65,7 +56,11 @@ export function Sidebar({ className }: SidebarProps) {
                 : "text-gray-700 hover:text-gray-900 hover:bg-white/20"
             }`}
           >
-            <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-[#003427]" : ""}`} />
+            <Icon 
+              name={item.icon as any} 
+              size={20} 
+              className={`mr-3 ${isActive(item.path) ? "text-[#003427]" : ""}`} 
+            />
             {item.name}
           </Link>
         ))}
