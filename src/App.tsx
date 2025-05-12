@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { SearchBar } from "./components/SearchBar";
 import Dashboard from "./pages/Dashboard";
 import Invoicing from "./pages/Invoicing";
 import Invoices from "./pages/Invoices";
+import Quotes from "./pages/Quotes";
 import Clients from "./pages/Clients";
 import ClientDetails from "./pages/ClientDetails";
 import ProductsServices from "./pages/ProductsServices";
@@ -25,19 +27,18 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useIsMobile } from "./hooks/use-mobile";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FilePlus, Menu, Plus } from "lucide-react";
+import { Menu } from "lucide-react";
 import { NotificationBell } from "./components/NotificationBell";
 import { LanguageSelector } from "./components/LanguageSelector";
-import { InvoiceDialog } from "./components/InvoiceDialog";
 import { MobileNavigation } from "./components/MobileNavigation";
 import QuoteView from './pages/QuoteView';
+import { QuickAction } from "./components/QuickAction";
 
 const queryClient = new QueryClient();
 
 // Composant de mise en page principale pour les pages authentifiées
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
-  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -53,19 +54,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           
           {/* Tightly grouped action buttons without excessive margins on mobile */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <Button 
-              onClick={() => setInvoiceDialogOpen(true)}
-              size={isMobile ? "sm" : "default"}
-              className="bg-violet hover:bg-violet/90 whitespace-nowrap"
-            >
-              {isMobile ? (
-                <FilePlus className="h-4 w-4" />
-              ) : (
-                <>
-                  <Plus className="mr-1 h-4 w-4" /> Nouvelle facture
-                </>
-              )}
-            </Button>
+            <QuickAction />
             
             {!isMobile && <LanguageSelector />}
             
@@ -88,12 +77,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           {children}
         </div>
       </div>
-      
-      {/* Invoice Dialog */}
-      <InvoiceDialog 
-        open={invoiceDialogOpen}
-        onOpenChange={setInvoiceDialogOpen}
-      />
       
       {/* Mobile Navigation */}
       <MobileNavigation 
@@ -124,6 +107,7 @@ const AppRoutes = () => {
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/invoicing" element={<ProtectedRoute><Invoicing /></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+        <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
         <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
         <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
         <Route path="/products" element={<ProtectedRoute><ProductsServices /></ProtectedRoute>} />

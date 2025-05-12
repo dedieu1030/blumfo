@@ -1,212 +1,147 @@
 
-import { useState } from "react";
-import { Header } from "@/components/Header";
 import { DashboardStats } from "@/components/DashboardStats";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Header } from "@/components/Header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InvoiceList } from "@/components/InvoiceList";
-import { MobileNavigation } from "@/components/MobileNavigation";
-import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 import { Invoice } from "@/types/invoice";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { QuickAction } from "@/components/QuickAction";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, FileText, FilePlus } from "lucide-react";
+import { QuoteList } from "@/components/QuoteList";
 
-// Mock data for demonstration
-const recentInvoices: Invoice[] = [
-  {
-    id: "1",
-    number: "INV-2023-001",
-    invoice_number: "INV-2023-001",
-    client: "Client A",
-    amount: "€1,200.00",
-    date: "2023-05-15",
-    dueDate: "2023-06-15", 
-    status: "paid"
-  },
-  {
-    id: "2",
-    number: "INV-2023-002",
-    invoice_number: "INV-2023-002",
-    client: "Client B",
-    amount: "€850.00",
-    date: "2023-05-20",
-    dueDate: "2023-06-20",
-    status: "pending"
-  },
-  {
-    id: "3", 
-    number: "INV-2023-003",
-    invoice_number: "INV-2023-003",
-    client: "Client C",
-    amount: "€1,500.00", 
-    date: "2023-05-22", 
-    dueDate: "2023-06-22",
-    status: "overdue"
-  },
-  {
-    id: "6", 
-    number: "INV-2023-006",
-    invoice_number: "INV-2023-006",
-    client: "Client F",
-    amount: "€980.00", 
-    date: "2023-05-28", 
-    dueDate: "2023-06-28",
-    status: "overdue"
-  }
-];
-
-const draftInvoices: Invoice[] = [
-  {
-    id: "4",
-    number: "DRAFT-001",
-    invoice_number: "DRAFT-001",
-    client: "Client D",
-    amount: "€750.00",
-    date: "2023-05-25",
-    dueDate: "2023-06-25",
-    status: "draft"
-  },
-  {
-    id: "5",
-    number: "DRAFT-002",
-    invoice_number: "DRAFT-002",
-    client: "Client E",
-    amount: "€1,200.00",
-    date: "2023-05-27",
-    dueDate: "2023-06-27",
-    status: "draft"
-  }
-];
-
-export function Dashboard() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { t } = useTranslation();
-
-  // Try to fetch invoices from Supabase if connected
-  const { data: fetchedInvoices, isLoading: isLoadingInvoices } = useQuery({
-    queryKey: ["dashboard-invoices"],
-    queryFn: async () => {
-      try {
-        console.log("Fetching invoices for dashboard");
-        const { data } = await supabase.functions.invoke('list-invoices');
-        console.log("Fetched invoices:", data?.invoices);
-        return data?.invoices || [];
-      } catch (error) {
-        console.error("Error fetching invoices for dashboard:", error);
-        return [];
-      }
-    },
-    meta: {
-      onError: (error: any) => {
-        console.log("Using mock data due to error:", error);
-      }
-    }
+const Dashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalInvoices: 0,
+    totalPaid: 0,
+    totalPending: 0,
+    totalOverdue: 0,
   });
+  const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
 
-  // Fetch quotes from Supabase
-  const { data: recentQuotes, isLoading: isLoadingQuotes } = useQuery({
-    queryKey: ["dashboard-quotes"],
-    queryFn: async () => {
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
       try {
-        console.log("Fetching quotes");
-        const { data, error } = await supabase
-          .from('devis')
-          .select(`
-            id,
-            quote_number,
-            status,
-            issue_date,
-            validity_date,
-            total_amount,
-            clients:client_id(client_name)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(5);
-          
-        if (error) {
-          console.error("Error fetching quotes:", error);
-          return [];
+        // Fetch stats totals
+        const { data: invoicesData, error: invoicesError } = await supabase
+          .from("invoices")
+          .select("status");
+
+        if (invoicesError) {
+          throw invoicesError;
         }
-        
-        console.log("Fetched quotes:", data);
-        return data.map(quote => ({
-          id: quote.id,
-          number: quote.quote_number,
-          invoice_number: quote.quote_number, // Pour compatibilité avec InvoiceList
-          client: quote.clients?.client_name || 'Client inconnu',
-          amount: `€${quote.total_amount.toFixed(2)}`,
-          date: quote.issue_date,
-          dueDate: quote.validity_date,
-          status: quote.status
-        }));
-      } catch (error) {
-        console.error("Error in quotes query:", error);
-        return [];
-      }
-    }
-  });
 
-  // Use fetched invoices if available, otherwise use mock data
-  const allInvoices = fetchedInvoices?.length > 0 ? fetchedInvoices : [...recentInvoices, ...draftInvoices];
-  
-  // Filter recent and overdue invoices
-  const recentFilteredInvoices = allInvoices.filter(invoice => invoice.status !== "draft").slice(0, 5);
-  const overdueInvoices = allInvoices.filter(invoice => invoice.status === "overdue");
+        const invoiceStats = {
+          totalInvoices: invoicesData.length,
+          totalPaid: invoicesData.filter((inv) => inv.status === "paid").length,
+          totalPending: invoicesData.filter((inv) => inv.status === "pending").length,
+          totalOverdue: invoicesData.filter((inv) => inv.status === "overdue").length,
+        };
+
+        setStats(invoiceStats);
+
+        // Fetch recent invoices
+        const { data: recentData, error: recentError } = await supabase
+          .from("invoices")
+          .select("*, client:client_id(*)")
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (recentError) {
+          throw recentError;
+        }
+
+        // Transform data to match Invoice type
+        const recentInvoicesData = recentData.map((invoice) => ({
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          client_name: invoice.client?.client_name || "Client inconnu",
+          issue_date: invoice.issue_date,
+          due_date: invoice.due_date,
+          total_amount: invoice.total_amount,
+          status: invoice.status as "paid" | "pending" | "overdue" | "draft",
+          client: invoice.client,
+        }));
+
+        setRecentInvoices(recentInvoicesData);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return (
-    <>
-      <Header 
-        title={t('dashboard')} 
-        description={t('dashboardDescription')}
-        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+    <div>
+      <Header
+        title="Dashboard"
+        description="Bienvenue sur votre tableau de bord"
+        onOpenMobileMenu={() => {}}
+        actions={<QuickAction />}
       />
       
-      <div className="space-y-8">
-        <DashboardStats overdueInvoices={overdueInvoices} />
-        
-        <InvoiceList 
-          title={t('recentInvoices')}
-          invoices={recentFilteredInvoices} 
-          showViewAll
-        />
+      <DashboardStats
+        totalInvoices={stats.totalInvoices}
+        totalPaid={stats.totalPaid}
+        totalPending={stats.totalPending}
+        totalOverdue={stats.totalOverdue}
+        loading={loading}
+      />
 
-        {recentQuotes && recentQuotes.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Devis récents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <InvoiceList 
-                title="" 
-                invoices={recentQuotes}
-                linkPrefix="/quotes"
-              />
-            </CardContent>
-          </Card>
-        )}
-        
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <Card>
-          <CardHeader>
-            <CardTitle>{t('resumeDraft')}</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">Factures récentes</CardTitle>
+              <CardDescription>Les 5 dernières factures créées</CardDescription>
+            </div>
+            <Link to="/invoices">
+              <Button variant="ghost" size="sm" className="gap-1">
+                <FileText className="h-4 w-4" /> Toutes les factures
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
           </CardHeader>
           <CardContent>
-            {draftInvoices.length > 0 ? (
-              <InvoiceList 
-                title="" 
-                invoices={draftInvoices}
-              />
-            ) : (
-              <p className="text-muted-foreground">{t('noDrafts')}</p>
-            )}
+            <InvoiceList 
+              invoices={recentInvoices}
+              loading={loading}
+              limit={5}
+              showActions={false}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">Devis récents</CardTitle>
+              <CardDescription>Les 5 derniers devis créés</CardDescription>
+            </div>
+            <Link to="/quotes">
+              <Button variant="ghost" size="sm" className="gap-1">
+                <FilePlus className="h-4 w-4" /> Tous les devis
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <QuoteList 
+              limit={5}
+              showActions={false}
+            />
           </CardContent>
         </Card>
       </div>
-      
-      <MobileNavigation 
-        isOpen={isMobileMenuOpen}
-        onOpenChange={setIsMobileMenuOpen}
-      />
-    </>
+    </div>
   );
-}
+};
 
 export default Dashboard;

@@ -9,7 +9,7 @@ import {
   CreditCard,
   Package,
   LayoutTemplate,
-  UserCircle
+  FilePlus
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
@@ -32,6 +32,7 @@ export function Sidebar({ className }: SidebarProps) {
     { icon: BarChart2, name: t('dashboard'), path: "/" },
     { icon: CreditCard, name: t('invoicing'), path: "/invoicing" },
     { icon: FileText, name: t('invoices'), path: "/invoices" },
+    { icon: FilePlus, name: "Devis", path: "/quotes" },
     { icon: LayoutTemplate, name: t('templates'), path: "/templates" },
     { icon: Users, name: t('clients'), path: "/clients" },
     { icon: Package, name: t('products'), path: "/products" },
