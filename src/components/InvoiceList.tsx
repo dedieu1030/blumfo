@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -17,8 +16,6 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InvoiceMobileCard } from "./InvoiceMobileCard";
-
-import React from 'react';
 import { Invoice } from '@/types/invoice';
 
 export interface InvoiceListProps {

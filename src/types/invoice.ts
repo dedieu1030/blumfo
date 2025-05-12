@@ -1,3 +1,4 @@
+
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
@@ -151,7 +152,7 @@ export interface StripeCustomer {
   updatedAt: string;
 }
 
-// Mise à jour de l'interface Invoice pour inclure tous les champs nécessaires
+// Interface Invoice mise à jour pour résoudre les problèmes de typage
 export interface Invoice {
   id: string;
   number: string;
@@ -197,7 +198,7 @@ export interface CurrencyInfo {
 
 export type Currency = 'USD' | 'EUR' | 'CAD' | 'GBP' | 'AUD' | 'JPY' | 'CHF';
 
-// Mise à jour de l'interface SignatureData pour corriger le nom de propriété
+// Interface SignatureData mise à jour avec le nom correct de propriété
 export interface SignatureData {
   type: 'drawn' | 'initials';
   dataUrl?: string;  // Correction de dataURL à dataUrl
