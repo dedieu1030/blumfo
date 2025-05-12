@@ -1,10 +1,10 @@
 
 import React from "react";
-import * as PlumpLine from "@streamlinehq/streamlinehq/plump-line";
+import { plumpLine } from "@streamlinehq/streamlinehq";
 import { Icon } from "@/components/ui/icon";
 
 const IconsExample = () => {
-  const iconNames = Object.keys(PlumpLine);
+  const iconNames = Object.keys(plumpLine);
 
   return (
     <div className="container mx-auto py-8">
