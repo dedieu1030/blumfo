@@ -1,8 +1,7 @@
-
 // This file handles PDF generation from invoice templates
 
 import { formatMoney } from './stripe';
-import { DiscountInfo } from '@/types/invoice';
+import { DiscountInfo, InvoiceData, SignatureData } from '@/types/invoice';
 
 // Template preview image URLs
 const TEMPLATE_PREVIATES = {
@@ -24,6 +23,42 @@ const FALLBACK_PREVIEWS = {
   elegant: "https://via.placeholder.com/600x800/fafafa/333?text=Elegant+Template",
   colorful: "https://via.placeholder.com/600x800/f0f0ff/333?text=Colorful+Template",
   "poppins-orange": "https://via.placeholder.com/600x800/fff5f0/333?text=Poppins+Orange"
+};
+
+/**
+ * Generates a preview of the invoice for display to the user
+ * @param invoiceData Invoice data to include in the preview
+ * @param templateId ID of the template to use
+ * @returns Object with success status, HTML content, and preview URL
+ */
+export const generateInvoicePreview = async (
+  invoiceData: InvoiceData, 
+  templateId: string
+): Promise<{ 
+  success: boolean; 
+  htmlContent: string; 
+  previewUrl?: string;
+  error?: string; 
+}> => {
+  try {
+    // Generate HTML content for the invoice
+    const htmlContent = generateInvoiceHTML(invoiceData, templateId);
+    
+    // In a real implementation, this might generate a PDF and return a URL to it
+    // For this implementation, we'll just return the HTML content and a fallback preview URL
+    return {
+      success: true,
+      htmlContent,
+      previewUrl: FALLBACK_PREVIEWS[templateId as keyof typeof FALLBACK_PREVIEWS] || FALLBACK_PREVIEWS.classic
+    };
+  } catch (error) {
+    console.error("Error generating invoice preview:", error);
+    return {
+      success: false,
+      htmlContent: "",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
 };
 
 /**
