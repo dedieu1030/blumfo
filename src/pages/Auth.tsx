@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useUser, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,10 +9,8 @@ import { toast } from 'sonner';
 
 export default function Auth() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { isLoaded, isSignedIn, user } = useUser();
   const { getToken } = useAuth();
-  const isVerificationPage = location.pathname.includes('verify-email-address');
   
   // Redirection si déjà connecté
   useEffect(() => {
@@ -90,44 +88,36 @@ export default function Auth() {
               </h1>
             </CardTitle>
             <CardDescription>
-              {isVerificationPage 
-                ? "Vérifiez votre adresse email" 
-                : "Connectez-vous pour accéder à votre compte"}
+              Connectez-vous pour accéder à votre compte
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isVerificationPage ? (
-              <div className="border rounded-lg p-4">
-                {/* Clerk gère automatiquement ce composant */}
-              </div>
-            ) : (
-              <Tabs defaultValue="signin" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="signin">Connexion</TabsTrigger>
-                  <TabsTrigger value="signup">Inscription</TabsTrigger>
-                </TabsList>
-                <TabsContent value="signin">
-                  <div className="border rounded-lg p-4">
-                    <SignIn 
-                      path="/auth" 
-                      routing="path"
-                      signUpUrl="/auth"
-                      fallbackRedirectUrl="/"
-                    />
-                  </div>
-                </TabsContent>
-                <TabsContent value="signup">
-                  <div className="border rounded-lg p-4">
-                    <SignUp 
-                      path="/auth"
-                      routing="path" 
-                      signInUrl="/auth"
-                      fallbackRedirectUrl="/"
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
-            )}
+            <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="signin">Connexion</TabsTrigger>
+                <TabsTrigger value="signup">Inscription</TabsTrigger>
+              </TabsList>
+              <TabsContent value="signin">
+                <div className="border rounded-lg p-4">
+                  <SignIn 
+                    routing="path" 
+                    path="/auth"
+                    signUpUrl="/auth"
+                    afterSignInUrl="/"
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="signup">
+                <div className="border rounded-lg p-4">
+                  <SignUp 
+                    routing="path" 
+                    path="/auth" 
+                    signInUrl="/auth"
+                    afterSignUpUrl="/"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
