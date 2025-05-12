@@ -1,12 +1,9 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import * as streamlineIcons from "@streamlinehq/streamlinehq";
+import { plumpLine } from "@streamlinehq/streamlinehq";
 
-// Nous utilisons spécifiquement la collection Plump Line
-const PlumpLineIcons = streamlineIcons.plumpLine;
-
-export type IconName = keyof typeof PlumpLineIcons;
+export type IconName = keyof typeof plumpLine;
 
 export interface IconProps extends React.SVGAttributes<SVGElement> {
   name: IconName;
@@ -15,10 +12,10 @@ export interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export function Icon({ name, size = 24, className, ...props }: IconProps) {
   // Vérifier si l'icône existe dans la collection Streamline Plump Line
-  const IconComponent = PlumpLineIcons[name];
+  const IconComponent = plumpLine[name as keyof typeof plumpLine];
 
   if (!IconComponent) {
-    console.error(`Icône "${name}" non trouvée`);
+    console.error(`Icône "${String(name)}" non trouvée`);
     return null;
   }
 
