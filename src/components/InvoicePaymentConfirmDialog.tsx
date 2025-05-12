@@ -132,7 +132,7 @@ export function InvoicePaymentConfirmDialog({
                           setPaymentDate(date);
                         }
                       }}
-                      initialFocus
+                      // Removed the initialFocus prop here
                     />
                   </PopoverContent>
                 </Popover>
