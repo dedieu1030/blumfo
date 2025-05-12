@@ -21,8 +21,10 @@ import { InvoicePaymentLink } from "@/components/InvoicePaymentLink";
 import { PaymentMethodSelector } from "@/components/PaymentMethodSelector";
 import { PaymentTermsSelector } from "@/components/PaymentTermsSelector";
 import { ClientSelector, Client } from "@/components/ClientSelector";
-import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile, PaymentTermTemplate } from "@/types/invoice";
+import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile, PaymentTermTemplate, DiscountInfo } from "@/types/invoice";
 import { fetchProducts, formatPrice, Product } from "@/services/productService";
+import { DiscountSelector } from "@/components/DiscountSelector";
+import { CustomInvoiceText } from "@/components/CustomInvoiceText";
 
 // Define invoice template types
 const invoiceTemplates = [
