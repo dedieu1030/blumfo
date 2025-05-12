@@ -1,4 +1,3 @@
-
 export interface CompanyProfile {
   id?: string;
   name: string;
@@ -79,16 +78,16 @@ export interface Invoice {
   currency?: string;
 }
 
-// Interface ServiceLine améliorée pour inclure les champs utilisés dans l'application
+// ServiceLine interface modified to accept both string and number types for flexibility
 export interface ServiceLine {
   id: string;
   description: string;
-  quantity: number | string;
-  unitPrice: number | string;
+  quantity: string | number;
+  unitPrice: string | number;
   taxRate?: number;
-  total?: number | string;
+  total?: string | number;
   totalPrice?: number;
-  tva?: string; // Champ tva ajouté car utilisé dans l'application
+  tva?: string | number; // Champ tva ajouté car utilisé dans l'application
   discount?: DiscountInfo; // Champ discount ajouté car utilisé dans l'application
 }
 
