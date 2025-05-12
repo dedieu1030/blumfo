@@ -29,11 +29,11 @@ export interface PaymentTermTemplate {
   delay: string;
   termsText: string;
   isDefault: boolean;
-  customDate?: string; // Ajout du champ customDate manquant
+  customDate?: string; // Champ pour la date personnalisée
 }
 
 export interface PaymentMethodDetails {
-  type: 'card' | 'transfer';
+  type: 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
   enabled: boolean;
   details: string;
 }
@@ -62,7 +62,7 @@ export interface CurrencyInfo {
   decimalPlaces: number;
 }
 
-// Nouvelles interfaces pour les types manquants
+// Interface Invoice améliorée
 export interface Invoice {
   id: string;
   number: string;
@@ -79,20 +79,27 @@ export interface Invoice {
   currency?: string;
 }
 
+// Interface ServiceLine améliorée pour inclure les champs utilisés dans l'application
 export interface ServiceLine {
   id: string;
   description: string;
-  quantity: number;
-  unitPrice: number;
+  quantity: number | string;
+  unitPrice: number | string;
   taxRate?: number;
-  total?: number;
+  total?: number | string;
+  totalPrice?: number;
+  tva?: string; // Champ tva ajouté car utilisé dans l'application
+  discount?: DiscountInfo; // Champ discount ajouté car utilisé dans l'application
 }
 
+// Interface DiscountInfo améliorée pour inclure les champs supplémentaires utilisés
 export interface DiscountInfo {
   type: 'percentage' | 'fixed';
   value: number;
   label?: string;
   appliedTo?: 'total' | 'subtotal';
+  amount?: number; // Montant calculé de la réduction
+  description?: string; // Description de la réduction
 }
 
 export interface SignatureData {
@@ -103,16 +110,21 @@ export interface SignatureData {
   timestamp?: string;
 }
 
+// Interface InvoiceData améliorée
 export interface InvoiceData {
   id?: string;
   number?: string;
+  invoiceNumber?: string; // Ajouté car utilisé dans plusieurs composants
   issueDate: Date | string;
   dueDate?: Date | string;
+  invoiceDate?: string; // Ajouté car utilisé dans plusieurs composants
   clientName: string;
   clientEmail?: string;
   clientAddress?: string;
   clientVatId?: string;
+  clientPhone?: string;
   items: ServiceLine[];
+  serviceLines?: ServiceLine[]; // Alias pour items, utilisé dans certains composants
   taxRate?: number;
   paymentTerms?: string;
   notes?: string;
@@ -121,12 +133,22 @@ export interface InvoiceData {
   subtotal?: number;
   taxAmount?: number;
   total?: number;
+  totalAmount?: number; // Alias pour total, utilisé dans certains composants
   status?: string;
   issuerInfo?: CompanyProfile;
   paymentMethods?: PaymentMethodDetails[];
   signatures?: SignatureData[];
+  signature?: SignatureData; // Utilisé pour une signature unique
+  signatureDate?: string; // Date de signature
   stripeInvoiceId?: string;
   paymentUrl?: string;
+  templateId?: string; // ID du template de facture
+  paymentTermsId?: string; // ID du template de conditions de paiement
+  customPaymentTerms?: string; // Conditions de paiement personnalisées
+  paymentDelay?: string; // Délai de paiement
+  introText?: string; // Texte d'introduction
+  conclusionText?: string; // Texte de conclusion
+  footerText?: string; // Texte de pied de page
 }
 
 export interface Currency {
@@ -135,13 +157,8 @@ export interface Currency {
   symbol: string;
 }
 
-export interface PaymentMethod {
-  id: string;
-  name: string;
-  type: string;
-  enabled: boolean;
-  details: string;
-}
+// Définissons PaymentMethod comme un type string pour être compatible avec le code existant
+export type PaymentMethod = 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
 
 export interface ReminderTrigger {
   id: string;
@@ -155,4 +172,5 @@ export interface ReminderSchedule {
   name: string;
   triggers: ReminderTrigger[];
   isDefault: boolean;
+  enabled?: boolean; // Ajout du champ enabled qui est utilisé dans l'application
 }
