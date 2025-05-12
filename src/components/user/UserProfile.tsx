@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { UserCircle, Mail, Phone, Globe, Clock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 
 export function UserProfile() {
   const { profile, loading } = useUserProfile();
+  const { isSignedIn } = useClerkAuth();
   const navigate = useNavigate();
   
   if (loading) {
@@ -31,7 +33,7 @@ export function UserProfile() {
     );
   }
   
-  if (!profile) {
+  if (!isSignedIn || !profile) {
     return (
       <Card>
         <CardHeader>

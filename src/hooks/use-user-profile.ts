@@ -3,21 +3,23 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/user';
 import { toast } from 'sonner';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { useClerkSupabase } from './use-clerk-supabase';
 
 export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const { userId, isSignedIn } = useClerkAuth();
+  const { isAuthenticated, supabaseToken } = useClerkSupabase();
 
   useEffect(() => {
     async function fetchProfile() {
       try {
         setLoading(true);
         
-        // Vérifier si l'utilisateur est connecté
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
+        // Vérifier si l'utilisateur est connecté via Clerk
+        if (!isSignedIn || !userId || !isAuthenticated) {
           setLoading(false);
           return;
         }
@@ -26,12 +28,41 @@ export function useUserProfile() {
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', userId)
           .single();
           
         if (error) throw error;
         
-        setProfile(data as UserProfile);
+        if (data) {
+          setProfile(data as UserProfile);
+        } else {
+          // Créer un nouveau profil si aucun n'existe
+          const { user } = await supabase.auth.getUser();
+          const userEmail = user?.email || '';
+          
+          const newProfile: Partial<UserProfile> = {
+            id: userId,
+            full_name: user?.user_metadata?.full_name || userId,
+            email: userEmail,
+            language: 'fr',
+            timezone: 'Europe/Paris',
+            notification_settings: {
+              email: true,
+              push: false,
+              sms: false
+            }
+          };
+          
+          const { data: createdProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert(newProfile)
+            .select()
+            .single();
+            
+          if (createError) throw createError;
+          
+          setProfile(createdProfile as UserProfile);
+        }
       } catch (err: any) {
         console.error('Erreur lors du chargement du profil:', err);
         setError(err);
@@ -40,30 +71,19 @@ export function useUserProfile() {
       }
     }
     
-    fetchProfile();
-    
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) {
-          fetchProfile();
-        } else {
-          setProfile(null);
-        }
-      }
-    );
-    
-    return () => subscription.unsubscribe();
-  }, []);
+    if (isAuthenticated && supabaseToken) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+    }
+  }, [userId, isSignedIn, isAuthenticated, supabaseToken]);
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     try {
       setLoading(true);
       
       // Vérifier si l'utilisateur est connecté
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
+      if (!isSignedIn || !userId) {
         toast.error('Vous devez être connecté pour mettre à jour votre profil');
         return { success: false };
       }
@@ -72,7 +92,7 @@ export function useUserProfile() {
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', session.user.id)
+        .eq('id', userId)
         .select()
         .single();
         
