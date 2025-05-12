@@ -7,7 +7,7 @@ const Index = () => {
 
   useEffect(() => {
     // Redirect to the Dashboard page
-    navigate('/');
+    navigate('/dashboard');
   }, [navigate]);
 
   return null; // This won't render as we're redirecting

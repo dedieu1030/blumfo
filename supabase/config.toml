@@ -22,3 +22,9 @@ verify_jwt = false
 [functions.mark-invoice-paid]
 verify_jwt = true
 
+[functions.quote-signature]
+verify_jwt = false
+
+[functions.get-quote]
+verify_jwt = false
+

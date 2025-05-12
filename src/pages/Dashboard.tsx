@@ -82,7 +82,7 @@ export function Dashboard() {
   const { t } = useTranslation();
 
   // Try to fetch invoices from Supabase if connected
-  const { data: fetchedInvoices, isLoading } = useQuery({
+  const { data: fetchedInvoices, isLoading: isLoadingInvoices } = useQuery({
     queryKey: ["dashboard-invoices"],
     queryFn: async () => {
       try {
@@ -98,6 +98,49 @@ export function Dashboard() {
     meta: {
       onError: (error: any) => {
         console.log("Using mock data due to error:", error);
+      }
+    }
+  });
+
+  // Fetch quotes from Supabase
+  const { data: recentQuotes, isLoading: isLoadingQuotes } = useQuery({
+    queryKey: ["dashboard-quotes"],
+    queryFn: async () => {
+      try {
+        console.log("Fetching quotes");
+        const { data, error } = await supabase
+          .from('devis')
+          .select(`
+            id,
+            quote_number,
+            status,
+            issue_date,
+            validity_date,
+            total_amount,
+            clients:client_id(client_name)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5);
+          
+        if (error) {
+          console.error("Error fetching quotes:", error);
+          return [];
+        }
+        
+        console.log("Fetched quotes:", data);
+        return data.map(quote => ({
+          id: quote.id,
+          number: quote.quote_number,
+          invoice_number: quote.quote_number, // Pour compatibilité avec InvoiceList
+          client: quote.clients?.client_name || 'Client inconnu',
+          amount: `€${quote.total_amount.toFixed(2)}`,
+          date: quote.issue_date,
+          dueDate: quote.validity_date,
+          status: quote.status
+        }));
+      } catch (error) {
+        console.error("Error in quotes query:", error);
+        return [];
       }
     }
   });
@@ -125,6 +168,21 @@ export function Dashboard() {
           invoices={recentFilteredInvoices} 
           showViewAll
         />
+
+        {recentQuotes && recentQuotes.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Devis récents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <InvoiceList 
+                title="" 
+                invoices={recentQuotes}
+                linkPrefix="/quotes"
+              />
+            </CardContent>
+          </Card>
+        )}
         
         <Card>
           <CardHeader>

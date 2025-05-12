@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +30,7 @@ import { NotificationBell } from "./components/NotificationBell";
 import { LanguageSelector } from "./components/LanguageSelector";
 import { InvoiceDialog } from "./components/InvoiceDialog";
 import { MobileNavigation } from "./components/MobileNavigation";
+import QuoteView from './pages/QuoteView';
 
 const queryClient = new QueryClient();
 
@@ -133,6 +133,7 @@ const AppRoutes = () => {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
         <Route path="/stripe/callback" element={<StripeCallback />} />
+        <Route path="/quote/:id" element={<QuoteView />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </MainLayout>

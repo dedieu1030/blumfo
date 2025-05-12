@@ -203,6 +203,173 @@ export type Database = {
         }
         Relationships: []
       }
+      devis: {
+        Row: {
+          client_id: string | null
+          company_id: string | null
+          created_at: string
+          customizations: Json | null
+          execution_date: string | null
+          id: string
+          issue_date: string
+          notes: string | null
+          public_link: string | null
+          quote_number: string | null
+          status: string
+          subtotal: number
+          tax_amount: number
+          template_id: string | null
+          total_amount: number
+          updated_at: string
+          validity_date: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          customizations?: Json | null
+          execution_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          public_link?: string | null
+          quote_number?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          template_id?: string | null
+          total_amount?: number
+          updated_at?: string
+          validity_date?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          customizations?: Json | null
+          execution_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          public_link?: string | null
+          quote_number?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          template_id?: string | null
+          total_amount?: number
+          updated_at?: string
+          validity_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devis_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          quantity: number
+          quote_id: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          quantity?: number
+          quote_id: string
+          total_price?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          quote_id?: string
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devis_signatures: {
+        Row: {
+          checkbox_confirmed: boolean
+          created_at: string
+          id: string
+          quote_id: string
+          signature_data: Json | null
+          signature_url: string | null
+          signed_at: string
+          signed_ip: string | null
+          signed_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          checkbox_confirmed?: boolean
+          created_at?: string
+          id?: string
+          quote_id: string
+          signature_data?: Json | null
+          signature_url?: string | null
+          signed_at?: string
+          signed_ip?: string | null
+          signed_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          checkbox_confirmed?: boolean
+          created_at?: string
+          id?: string
+          quote_id?: string
+          signature_data?: Json | null
+          signature_url?: string | null
+          signed_at?: string
+          signed_ip?: string | null
+          signed_name?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_signatures_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           created_at: string | null
