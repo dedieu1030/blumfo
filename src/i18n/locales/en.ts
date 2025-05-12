@@ -9,7 +9,6 @@ export const en = {
   templates: "Templates",
   settings: "Settings",
   notifications: "Notifications",
-  profile: "Profile",
   
   // Dashboard
   dashboardDescription: "Overview of your invoicing activity",
@@ -239,26 +238,4 @@ export const en = {
   paymentFailed: "Payment failed",
   paymentSuccessMessage: "Thank you for your payment. Your invoice has been successfully paid.",
   paymentFailureMessage: "We couldn't process your payment.",
-  
-  // Profile
-  fullName: "Full Name",
-  email: "Email",
-  phone: "Phone",
-  timezone: "Timezone",
-  yourFullName: "Your full name",
-  yourEmail: "Your email address",
-  yourPhone: "Your phone number",
-  yourLanguage: "Your preferred language",
-  yourTimezone: "Your timezone",
-  notificationSettings: "Notification Settings",
-  emailNotifications: "Email notifications",
-  pushNotifications: "Push notifications",
-  smsNotifications: "SMS notifications",
-  profileUpdated: "Profile Updated",
-  profileUpdatedSuccessfully: "Your profile has been updated successfully",
-  fullNameAndEmailRequired: "Full name and email are required",
-  profileUpdateFailed: "Failed to update profile",
-  logout: "Logout",
-  logoutSuccess: "You have been successfully logged out",
-  logoutError: "Error during logout",
 };
