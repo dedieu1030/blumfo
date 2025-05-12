@@ -342,6 +342,7 @@ export type Database = {
           invoice_number: string
           issue_date: string
           notes: string | null
+          payment_link: string | null
           payment_terms: string | null
           status: string
           stripe_hosted_invoice_url: string | null
@@ -363,6 +364,7 @@ export type Database = {
           invoice_number: string
           issue_date?: string
           notes?: string | null
+          payment_link?: string | null
           payment_terms?: string | null
           status?: string
           stripe_hosted_invoice_url?: string | null
@@ -384,6 +386,7 @@ export type Database = {
           invoice_number?: string
           issue_date?: string
           notes?: string | null
+          payment_link?: string | null
           payment_terms?: string | null
           status?: string
           stripe_hosted_invoice_url?: string | null
@@ -471,6 +474,7 @@ export type Database = {
           invoice_id: string | null
           payment_date: string | null
           payment_method: string | null
+          payment_reference: string | null
           status: string
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
@@ -488,6 +492,7 @@ export type Database = {
           invoice_id?: string | null
           payment_date?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -505,6 +510,7 @@ export type Database = {
           invoice_id?: string | null
           payment_date?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null

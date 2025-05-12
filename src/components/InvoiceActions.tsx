@@ -1,22 +1,26 @@
 
 import React, { useState } from 'react';
 import { Button } from "./ui/button";
-import { Download, Send, Eye, Save, Loader2, CreditCard, ExternalLink } from "lucide-react";
+import { Download, Send, Eye, Save, Loader2, CreditCard, ExternalLink, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateAndDownloadInvoicePdf } from '@/services/invoiceApiClient';
 import { InvoiceData } from '@/types/invoice';
 import { createPaymentLink, sendInvoice } from '@/services/stripeApiClient';
 import { InvoiceReminder } from './InvoiceReminder';
 import { useTranslation } from "react-i18next";
+import { InvoiceMarkAsPaidDialog } from './InvoiceMarkAsPaidDialog';
+import { InvoicePaymentResult } from './InvoicePaymentResult';
 
 interface InvoiceActionsProps {
   invoiceData: InvoiceData;
   templateId: string;
   stripeInvoiceId?: string;
   clientEmail?: string;
+  status?: 'paid' | 'pending' | 'overdue' | 'draft';
   onPreview?: () => void;
   onSave?: () => void;
   onSend?: () => void;
+  onStatusChange?: () => void;
   className?: string;
 }
 
@@ -25,9 +29,11 @@ export function InvoiceActions({
   templateId,
   stripeInvoiceId,
   clientEmail,
+  status = 'pending',
   onPreview, 
   onSave,
   onSend,
+  onStatusChange,
   className = ""
 }: InvoiceActionsProps) {
   const { toast } = useToast();
@@ -36,6 +42,11 @@ export function InvoiceActions({
   const [isSending, setIsSending] = useState(false);
   const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  
+  const [markAsPaidOpen, setMarkAsPaidOpen] = useState(false);
+  const [paymentResultOpen, setPaymentResultOpen] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
   
   const handleDownloadPdf = async () => {
     if (!invoiceData) {
@@ -181,89 +192,141 @@ export function InvoiceActions({
     }
   };
   
+  const handleMarkAsPaid = () => {
+    setMarkAsPaidOpen(true);
+  };
+  
+  const handlePaymentSuccess = () => {
+    setPaymentSuccess(true);
+    setPaymentError(undefined);
+    setPaymentResultOpen(true);
+    
+    if (onStatusChange) {
+      onStatusChange();
+    }
+  };
+  
   return (
-    <div className={`flex flex-wrap gap-2 ${className}`}>
-      {onPreview && (
-        <Button variant="outline" onClick={onPreview}>
-          <Eye className="mr-2 h-4 w-4" />
-          {t("preview")}
-        </Button>
-      )}
-      
-      {onSave && (
-        <Button variant="outline" onClick={onSave}>
-          <Save className="mr-2 h-4 w-4" />
-          {t("save")}
-        </Button>
-      )}
-      
-      <Button 
-        variant="outline" 
-        onClick={handleDownloadPdf}
-        disabled={isDownloading}
-      >
-        {isDownloading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Download className="mr-2 h-4 w-4" />
+    <>
+      <div className={`flex flex-wrap gap-2 ${className}`}>
+        {onPreview && (
+          <Button variant="outline" onClick={onPreview}>
+            <Eye className="mr-2 h-4 w-4" />
+            {t("preview", "Aperçu")}
+          </Button>
         )}
-        {isDownloading ? t("generatingPdf") : t("downloadPdf")}
-      </Button>
-      
-      {stripeInvoiceId && (
-        <>
+        
+        {onSave && (
+          <Button variant="outline" onClick={onSave}>
+            <Save className="mr-2 h-4 w-4" />
+            {t("save", "Enregistrer")}
+          </Button>
+        )}
+        
+        <Button 
+          variant="outline" 
+          onClick={handleDownloadPdf}
+          disabled={isDownloading}
+        >
+          {isDownloading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
+          {isDownloading ? t("generatingPdf", "Génération PDF...") : t("downloadPdf", "Télécharger PDF")}
+        </Button>
+        
+        {stripeInvoiceId && status !== 'paid' && (
           <Button 
             variant="outline" 
-            onClick={handleSendInvoice}
-            disabled={isSending}
+            onClick={handleMarkAsPaid}
+            className="bg-success/20 hover:bg-success/30 text-success border-success/30"
           >
-            {isSending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="mr-2 h-4 w-4" />
-            )}
-            {isSending ? t("sending") : t("sendByEmailButton")}
+            <CheckCircle className="mr-2 h-4 w-4" />
+            {t("markAsPaid", "Marquer comme payée")}
           </Button>
-          
-          {/* Ajout du bouton de rappel */}
-          <InvoiceReminder 
-            invoiceId={invoiceData.invoiceNumber}
-            stripeInvoiceId={stripeInvoiceId}
-            clientEmail={clientEmail}
-          />
-          
-          {!paymentUrl ? (
+        )}
+        
+        {stripeInvoiceId && (
+          <>
             <Button 
               variant="outline" 
-              onClick={handleCreatePaymentLink}
-              disabled={isCreatingPaymentLink}
+              onClick={handleSendInvoice}
+              disabled={isSending}
             >
-              {isCreatingPaymentLink ? (
+              {isSending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <CreditCard className="mr-2 h-4 w-4" />
+                <Send className="mr-2 h-4 w-4" />
               )}
-              {isCreatingPaymentLink ? t("creatingPaymentLink") : t("paymentLink")}
+              {isSending ? t("sending", "Envoi...") : t("sendByEmailButton", "Envoyer par email")}
             </Button>
-          ) : (
-            <Button 
-              className="bg-violet hover:bg-violet/90" 
-              onClick={openPaymentLink}
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              {t("openPaymentLinkButton")}
-            </Button>
-          )}
-        </>
-      )}
+            
+            {/* Ajout du bouton de rappel */}
+            <InvoiceReminder 
+              invoiceId={invoiceData.invoiceNumber}
+              stripeInvoiceId={stripeInvoiceId}
+              clientEmail={clientEmail}
+            />
+            
+            {!paymentUrl ? (
+              <Button 
+                variant="outline" 
+                onClick={handleCreatePaymentLink}
+                disabled={isCreatingPaymentLink}
+              >
+                {isCreatingPaymentLink ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="mr-2 h-4 w-4" />
+                )}
+                {isCreatingPaymentLink ? t("creatingPaymentLink", "Création du lien...") : t("paymentLink", "Lien de paiement")}
+              </Button>
+            ) : (
+              <Button 
+                className="bg-violet hover:bg-violet/90" 
+                onClick={openPaymentLink}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                {t("openPaymentLinkButton", "Ouvrir le lien de paiement")}
+              </Button>
+            )}
+          </>
+        )}
+        
+        {onSend && !stripeInvoiceId && (
+          <Button className="bg-violet hover:bg-violet/90" onClick={onSend}>
+            <Send className="mr-2 h-4 w-4" />
+            {t("generateAndSend", "Générer et envoyer")}
+          </Button>
+        )}
+      </div>
       
-      {onSend && !stripeInvoiceId && (
-        <Button className="bg-violet hover:bg-violet/90" onClick={onSend}>
-          <Send className="mr-2 h-4 w-4" />
-          {t("generateAndSend")}
-        </Button>
-      )}
-    </div>
+      {/* Dialogue pour marquer la facture comme payée */}
+      <InvoiceMarkAsPaidDialog
+        open={markAsPaidOpen}
+        onOpenChange={setMarkAsPaidOpen}
+        invoice={{
+          id: stripeInvoiceId || invoiceData.invoiceNumber,
+          invoice_number: invoiceData.invoiceNumber,
+          amount: invoiceData.total
+        }}
+        onSuccess={handlePaymentSuccess}
+      />
+      
+      {/* Dialogue pour afficher le résultat du paiement */}
+      <InvoicePaymentResult
+        success={paymentSuccess}
+        error={paymentError}
+        invoice={{
+          id: stripeInvoiceId || invoiceData.invoiceNumber,
+          invoice_number: invoiceData.invoiceNumber,
+          amount: invoiceData.total
+        }}
+        isOpen={paymentResultOpen}
+        onOpenChange={setPaymentResultOpen}
+      />
+    </>
   );
 }
 

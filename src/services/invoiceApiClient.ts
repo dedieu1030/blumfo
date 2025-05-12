@@ -1,114 +1,108 @@
+import { supabase } from "@/integrations/supabase/client";
 
-/**
- * Client pour interagir avec l'API de génération de PDF
- */
-
-// URL de l'API - à remplacer par votre URL réelle
-// Par exemple pour Supabase: https://your-project-ref.functions.supabase.co/generate-invoice-pdf
-const API_URL = import.meta.env.VITE_PDF_SERVICE_URL || '';
-
-// Types pour les requêtes et réponses
-export interface GeneratePdfRequest {
-  invoiceData: any; 
-  templateId: string;
-  html?: string;
-  accessToken?: string;
+// Interface pour les détails du paiement
+export interface PaymentDetails {
+  date?: Date;
+  method?: string;
+  reference?: string;
 }
 
-export interface GeneratePdfResponse {
+/**
+ * Marque une facture comme payée dans le système
+ * @param invoiceId ID de la facture à marquer comme payée
+ * @param paymentDetails Détails optionnels du paiement (date, méthode, référence)
+ */
+export async function markInvoiceAsPaid(invoiceId: string, paymentDetails?: PaymentDetails): Promise<{
   success: boolean;
-  pdfUrl?: string;
+  invoice?: any;
+  payment?: any;
   error?: string;
-}
-
-/**
- * Appelle l'API pour générer un PDF d'une facture
- */
-export async function generateInvoicePdf(
-  invoiceData: any,
-  templateId: string,
-  accessToken?: string
-): Promise<GeneratePdfResponse> {
+  warning?: string;
+}> {
   try {
-    // Vérifier si l'URL de l'API est configurée
-    if (!API_URL) {
-      console.warn('PDF API URL not configured. Using local generation. Set VITE_PDF_SERVICE_URL in your environment for production.');
-      // Utiliser la génération HTML locale et simuler une URL PDF
-      return {
-        success: true,
-        pdfUrl: `data:application/pdf;base64,${btoa(JSON.stringify(invoiceData))}`
-      };
-    }
-    
-    // Préparation de la requête
-    const request: GeneratePdfRequest = {
-      invoiceData,
-      templateId,
-      accessToken
-    };
-
-    // Appel à l'API
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-      },
-      body: JSON.stringify(request)
+    // Appeler la fonction Edge
+    const { data, error } = await supabase.functions.invoke('mark-invoice-paid', {
+      body: { 
+        invoiceId, 
+        paymentDetails 
+      }
     });
 
-    // Traitement de la réponse
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
+    if (error) {
+      console.error('Erreur lors du marquage de la facture comme payée:', error);
+      return {
+        success: false,
+        error: error.message || 'Échec du marquage de la facture comme payée'
+      };
     }
 
-    const result = await response.json();
-    return result as GeneratePdfResponse;
+    return {
+      success: data.success,
+      invoice: data.invoice,
+      payment: data.payment,
+      warning: data.warning,
+      error: data.error
+    };
   } catch (error) {
-    console.error('Error calling PDF API:', error);
+    console.error('Exception lors du marquage de la facture comme payée:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error calling PDF API'
+      error: error instanceof Error ? error.message : 'Erreur inconnue lors du marquage de la facture comme payée'
     };
   }
 }
 
-/**
- * Télécharge un PDF depuis une URL
- */
-export function downloadPdf(pdfUrl: string, fileName: string = 'invoice.pdf'): void {
-  // Création d'un lien invisible pour le téléchargement
-  const link = document.createElement('a');
-  link.href = pdfUrl;
-  link.download = fileName;
-  
-  // Ajout au DOM, clic, puis suppression
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-/**
- * Génère et télécharge un PDF de facture
- */
-export async function generateAndDownloadInvoicePdf(
+export const generateAndDownloadInvoicePdf = async (
   invoiceData: any,
   templateId: string,
-  accessToken?: string
-): Promise<boolean> {
+  authToken?: string
+): Promise<boolean> => {
   try {
-    const result = await generateInvoicePdf(invoiceData, templateId, accessToken);
-    
-    if (result.success && result.pdfUrl) {
-      // Téléchargement automatique du PDF
-      downloadPdf(result.pdfUrl, `facture_${invoiceData.invoiceNumber}.pdf`);
-      return true;
-    } else {
-      console.error('Failed to generate PDF:', result.error);
-      return false;
-    }
+    // Generate the PDF blob
+    const pdfBlob = await generateInvoicePdf(invoiceData, templateId, authToken);
+
+    // Create a download link
+    const url = window.URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoice-${invoiceData.invoiceNumber}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    return true;
   } catch (error) {
     console.error('Error generating and downloading PDF:', error);
     return false;
   }
-}
+};
+
+const generateInvoicePdf = async (
+  invoiceData: any,
+  templateId: string,
+  authToken?: string
+): Promise<Blob> => {
+  const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://your-production-url.com';
+  const endpoint = `${baseUrl}/api/generate-pdf`;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+      },
+      body: JSON.stringify({ invoiceData, templateId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.blob();
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw error;
+  }
+};

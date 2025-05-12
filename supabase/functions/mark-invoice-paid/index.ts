@@ -61,21 +61,7 @@ serve(async (req) => {
     }
 
     // Get invoice data from request body
-    let requestBody;
-    try {
-      requestBody = await req.json()
-    } catch (jsonError) {
-      console.error("Mark invoice paid: Invalid JSON in request body", jsonError)
-      return new Response(
-        JSON.stringify({ error: 'Invalid request format', details: 'Request body must be valid JSON' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-    
-    const { invoiceId, paymentDetails } = requestBody
+    const { invoiceId, paymentDetails } = await req.json()
     
     console.log(`Mark invoice paid: Processing invoice ${invoiceId}`, paymentDetails)
     
@@ -114,10 +100,11 @@ serve(async (req) => {
         // Create a payment record for the Stripe invoice
         try {
           const paymentData = {
-            invoice_id: stripeInvoice.invoice_id || invoiceId,
+            invoice_id: invoiceId,
             amount: stripeInvoice.amount_total,
-            payment_date: paidDate,
+            payment_date: paymentDetails?.date || paidDate,
             payment_method: paymentDetails?.method || 'manual',
+            payment_reference: paymentDetails?.reference || null,
             status: 'completed',
             client_id: stripeInvoice.client_id
           };
@@ -178,12 +165,6 @@ serve(async (req) => {
             }
           )
         }
-      } else if (stripeInvoiceError) {
-        console.error("Mark invoice paid: Error updating stripe invoice:", stripeInvoiceError)
-        // Only throw if this is not a "no rows returned" error
-        if (stripeInvoiceError.code !== 'PGRST116') {
-          throw new Error(`Error updating stripe invoice: ${stripeInvoiceError.message}`);
-        }
       }
     } catch (stripeError) {
       console.error("Mark invoice paid: Error updating stripe invoice:", stripeError)
@@ -229,8 +210,9 @@ serve(async (req) => {
         const paymentData = {
           invoice_id: invoiceId,
           amount: invoiceRecord.total_amount,
-          payment_date: paidDate,
+          payment_date: paymentDetails?.date || paidDate,
           payment_method: paymentDetails?.method || 'manual',
+          payment_reference: paymentDetails?.reference || null,
           status: 'completed',
           client_id: invoiceRecord.client_id,
           company_id: invoiceRecord.company_id
