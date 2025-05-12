@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/context/NotificationsContext";
@@ -14,7 +15,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Icon } from "@/components/ui/icon";
 
 export const NotificationBell = () => {
   const { notifications, unreadCount, markAsRead } = useNotifications();
@@ -43,11 +43,7 @@ export const NotificationBell = () => {
           size="icon" 
           className={cn("relative", isMobile && "border border-input h-9 w-9")}
         >
-          <Icon 
-            name="interface-alert-bell-2" 
-            isStreamline={true} 
-            size={20} 
-          />
+          <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge
               className="absolute top-0 right-0 h-[18px] min-w-[18px] flex items-center justify-center rounded-full p-0 text-[10px] leading-none"

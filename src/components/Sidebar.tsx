@@ -1,11 +1,19 @@
 
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { Settings } from "lucide-react";
+import { 
+  BarChart2, 
+  FileText, 
+  Users, 
+  Settings, 
+  CreditCard,
+  Package,
+  LayoutTemplate,
+  FilePlus
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { SidebarMenuItems } from "./sidebar-sections/SidebarMenuItems";
 
 interface SidebarProps {
   className?: string;
@@ -19,6 +27,17 @@ export function Sidebar({ className }: SidebarProps) {
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+  
+  const navigationItems = [
+    { icon: BarChart2, name: t('dashboard'), path: "/" },
+    { icon: CreditCard, name: t('invoicing'), path: "/invoicing" },
+    { icon: FileText, name: t('invoices'), path: "/invoices" },
+    { icon: FilePlus, name: "Devis", path: "/quotes" },
+    { icon: LayoutTemplate, name: t('templates'), path: "/templates" },
+    { icon: Users, name: t('clients'), path: "/clients" },
+    { icon: Package, name: t('products'), path: "/products" },
+    { icon: Settings, name: t('settings'), path: "/settings" }
+  ];
 
   // Obtention des initiales de l'utilisateur pour l'avatar
   const initials = user?.full_name 
@@ -35,7 +54,22 @@ export function Sidebar({ className }: SidebarProps) {
         </h1>
       </div>
 
-      <SidebarMenuItems />
+      <div className="flex-1 px-4 py-6 space-y-1">
+        {navigationItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+              isActive(item.path)
+                ? "bg-white/50 text-[#003427]"
+                : "text-gray-700 hover:text-gray-900 hover:bg-white/20"
+            }`}
+          >
+            <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-[#003427]" : ""}`} />
+            {item.name}
+          </Link>
+        ))}
+      </div>
       
       <div className="p-4 border-t border-gray-200">
         <Link 

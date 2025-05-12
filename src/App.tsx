@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,7 +33,6 @@ import { LanguageSelector } from "./components/LanguageSelector";
 import { MobileNavigation } from "./components/MobileNavigation";
 import QuoteView from './pages/QuoteView';
 import { QuickAction } from "./components/QuickAction";
-import IconsExample from "./pages/IconsExample";
 
 const queryClient = new QueryClient();
 
@@ -118,11 +118,6 @@ const AppRoutes = () => {
         <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
         <Route path="/stripe/callback" element={<StripeCallback />} />
         <Route path="/quote/:id" element={<QuoteView />} />
-        <Route path="/icons" element={
-          <ProtectedRoute>
-            <IconsExample />
-          </ProtectedRoute>
-        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </MainLayout>

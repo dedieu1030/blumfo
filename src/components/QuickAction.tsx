@@ -6,11 +6,11 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { FilePlus, FileText, Plus } from "lucide-react";
 import { useState } from "react";
 import { InvoiceDialog } from "./InvoiceDialog";
 import { QuoteDialog } from "./QuoteDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Icon } from "@/components/ui/icon";
 
 export const QuickAction = () => {
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
@@ -58,39 +58,20 @@ export const QuickAction = () => {
             className="bg-violet hover:bg-violet/90 whitespace-nowrap"
           >
             {isMobile ? (
-              <Icon 
-                name="interface-essential-add" 
-                isStreamline={true} 
-                size={16} 
-              />
+              <Plus className="h-4 w-4" />
             ) : (
               <>
-                <Icon 
-                  name="interface-essential-add" 
-                  isStreamline={true} 
-                  size={16}
-                  className="mr-1" 
-                /> Créer
+                <Plus className="mr-1 h-4 w-4" /> Créer
               </>
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleOpenInvoiceDialog}>
-            <Icon 
-              name="files-document-file-text-1" 
-              isStreamline={true} 
-              size={16}
-              className="mr-2" 
-            /> Nouvelle facture
+            <FileText className="mr-2 h-4 w-4" /> Nouvelle facture
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleOpenQuoteDialog}>
-            <Icon 
-              name="files-document-file-add-1" 
-              isStreamline={true} 
-              size={16} 
-              className="mr-2"
-            /> Nouveau devis
+            <FilePlus className="mr-2 h-4 w-4" /> Nouveau devis
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
