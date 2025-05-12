@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { InvoiceStatus } from "./InvoiceStatus";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp, Download, Send, Copy, QrCode, ExternalLink, Check, Calendar, Hash } from "lucide-react";
 import { 
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
-import { Invoice } from "@/types/invoice"; // Import the Invoice type from types file
+import { Invoice } from "@/types/invoice"; 
 
 interface InvoiceMobileCardProps {
   invoice: Invoice;
@@ -45,6 +44,11 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
     const numAmount = parseFloat(amount.replace(/[^\d.,]/g, '').replace(',', '.'));
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(numAmount);
   };
+
+  // Helper pour obtenir la classe CSS appropriée pour le badge de statut
+  const getStatusBadgeVariant = (status: string): "pending" | "paid" | "overdue" | "draft" => {
+    return status as "pending" | "paid" | "overdue" | "draft";
+  };
   
   return (
     <Card className={`mb-3 relative overflow-hidden ${invoice.status === "overdue" ? "border-red-200" : ""}`}>
@@ -60,7 +64,7 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
             </div>
             <p className="text-xs text-muted-foreground truncate max-w-[180px]">{getClientName()}</p>
           </div>
-          <Badge variant={invoice.status as "pending" | "paid" | "overdue" | "draft"} className="capitalize">
+          <Badge variant={getStatusBadgeVariant(invoice.status)} className="capitalize">
             {t(invoice.status)}
           </Badge>
         </div>

@@ -1,4 +1,3 @@
-
 import { DashboardStats } from "@/components/DashboardStats";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,25 +25,30 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
+        console.log("Fetching dashboard data...");
         // Fetch stats totals
         const { data: invoicesData, error: invoicesError } = await supabase
           .from("invoices")
           .select("status");
 
         if (invoicesError) {
+          console.error("Error fetching invoice status:", invoicesError);
           throw invoicesError;
         }
 
         // Update overdue invoices
         const { data: overdueData, error: overdueError } = await supabase
           .from("invoices")
-          .select("*, client:client_id(*)")
+          .select("*, client:clients(*)")
           .eq("status", "overdue")
           .order("due_date", { ascending: false });
           
         if (overdueError) {
+          console.error("Error fetching overdue invoices:", overdueError);
           throw overdueError;
         }
+
+        console.log("Overdue invoices data:", overdueData);
 
         // Transform data for overdue invoices
         const transformedOverdueInvoices: Invoice[] = overdueData.map((invoice) => ({
@@ -67,13 +71,16 @@ const Dashboard = () => {
         // Fetch recent invoices
         const { data: recentData, error: recentError } = await supabase
           .from("invoices")
-          .select("*, client:client_id(*)")
+          .select("*, client:clients(*)")
           .order("created_at", { ascending: false })
           .limit(5);
 
         if (recentError) {
+          console.error("Error fetching recent invoices:", recentError);
           throw recentError;
         }
+
+        console.log("Recent invoices data:", recentData);
 
         // Transform data to match Invoice type
         const transformedInvoices: Invoice[] = recentData.map((invoice) => ({

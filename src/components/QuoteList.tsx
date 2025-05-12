@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -34,12 +35,13 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
   const fetchQuotes = async () => {
     try {
       setLoading(true);
+      console.log("Fetching quotes...");
       let query = supabase
         .from("devis")
         .select(`
           *,
-          client:client_id (id, client_name, email),
-          company:company_id (id, company_name)
+          client:clients (id, client_name, email),
+          company:companies (id, company_name)
         `)
         .order("created_at", { ascending: false });
 
@@ -50,9 +52,11 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
       const { data, error } = await query;
 
       if (error) {
+        console.error("Error in Supabase query:", error);
         throw error;
       }
 
+      console.log("Quotes data received:", data);
       setQuotes(data as Quote[]);
     } catch (error) {
       console.error("Error fetching quotes:", error);
@@ -272,3 +276,4 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
     </>
   );
 };
+
