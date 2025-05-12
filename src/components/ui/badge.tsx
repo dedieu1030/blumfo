@@ -20,6 +20,11 @@ const badgeVariants = cva(
         success: "border-transparent bg-green-100 text-green-800 hover:bg-green-200",
         info: "border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200",
         warning: "border-transparent bg-amber-100 text-amber-800 hover:bg-amber-200",
+        // Nouveaux variants pour les statuts des factures
+        pending: "border-transparent bg-amber-100 text-amber-800 hover:bg-amber-200",
+        paid: "border-transparent bg-green-100 text-green-800 hover:bg-green-200",
+        overdue: "border-transparent bg-red-100 text-red-800 hover:bg-red-200",
+        draft: "border-transparent bg-slate-100 text-slate-800 hover:bg-slate-200",
       },
     },
     defaultVariants: {
