@@ -156,14 +156,14 @@ export interface Invoice {
   id: string;
   number: string;
   invoice_number: string;
-  client: string | object;
-  client_name?: string;  // Ajout pour compatibilité
+  client: string | { client_name: string; [key: string]: any };
+  client_name?: string;  // For compatibility
   amount: string;
   date: string;
   dueDate: string;
-  due_date?: string;    // Ajout pour compatibilité
-  issue_date?: string;  // Ajout pour compatibilité
-  total_amount?: number; // Ajout pour compatibilité
+  due_date?: string;    // For compatibility
+  issue_date?: string;  // For compatibility
+  total_amount?: number; // For compatibility
   status: "paid" | "pending" | "overdue" | "draft";
   paymentUrl?: string;
   stripeInvoiceId?: string;

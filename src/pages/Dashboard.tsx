@@ -54,7 +54,7 @@ const Dashboard = () => {
           issue_date: invoice.issue_date,
           due_date: invoice.due_date,
           total_amount: invoice.total_amount,
-          status: invoice.status
+          status: invoice.status as "paid" | "pending" | "overdue" | "draft"
         }));
 
         setOverdueInvoices(transformedOverdueInvoices);
@@ -83,7 +83,7 @@ const Dashboard = () => {
           issue_date: invoice.issue_date,
           due_date: invoice.due_date,
           total_amount: invoice.total_amount,
-          status: invoice.status
+          status: invoice.status as "paid" | "pending" | "overdue" | "draft"
         }));
 
         setRecentInvoices(transformedInvoices);

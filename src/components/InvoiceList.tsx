@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,14 @@ export function InvoiceList({
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingResult, setProcessingResult] = useState<{success: boolean, error?: string} | null>(null);
+  
+  // Helper function to format client name for display
+  const getClientName = (client: string | { client_name: string, [key: string]: any }): string => {
+    if (typeof client === 'string') {
+      return client;
+    }
+    return client.client_name || "Client inconnu";
+  };
   
   const handleCopyLink = (paymentUrl: string) => {
     navigator.clipboard.writeText(paymentUrl);
@@ -197,7 +206,7 @@ export function InvoiceList({
                   className={invoice.status === "overdue" ? "bg-amber-50" : ""}
                 >
                   <TableCell className="font-medium">{invoice.number}</TableCell>
-                  <TableCell>{invoice.client}</TableCell>
+                  <TableCell>{getClientName(invoice.client)}</TableCell>
                   <TableCell>{invoice.date}</TableCell>
                   <TableCell>{invoice.amount}</TableCell>
                   <TableCell>
