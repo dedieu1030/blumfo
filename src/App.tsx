@@ -4,10 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthProvider";
 import { Sidebar } from "./components/Sidebar";
 import { SearchBar } from "./components/SearchBar";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Invoicing from "./pages/Invoicing";
 import Invoices from "./pages/Invoices";
@@ -21,7 +19,6 @@ import NotFound from "./pages/NotFound";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
-import Auth from "./pages/Auth";
 import { NotificationsProvider } from "./context/NotificationsContext";
 import { useIsMobile } from "./hooks/use-mobile";
 import { useState } from "react";
@@ -31,11 +28,10 @@ import { NotificationBell } from "./components/NotificationBell";
 import { LanguageSelector } from "./components/LanguageSelector";
 import { InvoiceDialog } from "./components/InvoiceDialog";
 import { MobileNavigation } from "./components/MobileNavigation";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
 
 const queryClient = new QueryClient();
 
-const AuthenticatedApp = () => {
+const AppContent = () => {
   const isMobile = useIsMobile();
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -118,37 +114,16 @@ const AuthenticatedApp = () => {
   );
 };
 
-const AppContent = () => {
-  return (
-    <Routes>
-      <Route path="/auth/*" element={
-        <SignedOut>
-          <Auth />
-        </SignedOut>
-      } />
-      <Route path="/*" element={
-        <SignedIn>
-          <ProtectedRoute>
-            <AuthenticatedApp />
-          </ProtectedRoute>
-        </SignedIn>
-      } />
-    </Routes>
-  );
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AuthProvider>
-        <NotificationsProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </NotificationsProvider>
-      </AuthProvider>
+      <NotificationsProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </NotificationsProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
