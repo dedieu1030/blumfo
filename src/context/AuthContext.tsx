@@ -37,7 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Utiliser le JWT pour s'authentifier avec Supabase
-      const { data, error: signInError } = await supabase.auth.signInWithJwt({
+      // Correction: signInWithJwt -> signInWithJWT (méthode correcte)
+      const { data, error: signInError } = await supabase.auth.signInWithJWT({
         jwt: token,
       });
       
