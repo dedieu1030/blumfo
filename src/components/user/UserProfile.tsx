@@ -7,10 +7,17 @@ import { Button } from '@/components/ui/button';
 import { UserCircle, Mail, Phone, Globe, Clock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
+import { useClerk } from '@clerk/clerk-react';
 
 export function UserProfile() {
   const { profile, loading } = useUserProfile();
   const navigate = useNavigate();
+  const { signOut } = useClerk();
+  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
   
   if (loading) {
     return (
@@ -116,7 +123,10 @@ export function UserProfile() {
           </div>
         </div>
         
-        <div className="flex justify-end">
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={handleSignOut}>
+            Se déconnecter
+          </Button>
           <Button onClick={() => navigate('/profile/edit')}>
             Modifier mon profil
           </Button>

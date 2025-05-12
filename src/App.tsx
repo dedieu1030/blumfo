@@ -20,6 +20,9 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import { NotificationsProvider } from "./context/NotificationsContext";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import Auth from "./pages/Auth";
 import { useIsMobile } from "./hooks/use-mobile";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +31,7 @@ import { NotificationBell } from "./components/NotificationBell";
 import { LanguageSelector } from "./components/LanguageSelector";
 import { InvoiceDialog } from "./components/InvoiceDialog";
 import { MobileNavigation } from "./components/MobileNavigation";
+import { ClerkLoaded } from "@clerk/clerk-react";
 
 const queryClient = new QueryClient();
 
@@ -82,18 +86,70 @@ const AppContent = () => {
         </div>
         <div className="container mx-auto px-4 py-8">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/invoicing" element={<Invoicing />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/clients/:id" element={<ClientDetails />} />
-            <Route path="/products" element={<ProductsServices />} />
-            <Route path="/templates" element={<Templates />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/edit" element={<ProfileEdit />} />
-            <Route path="/stripe/callback" element={<StripeCallback />} />
+            {/* Route publique */}
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* Routes protégées */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/invoicing" element={
+              <ProtectedRoute>
+                <Invoicing />
+              </ProtectedRoute>
+            } />
+            <Route path="/invoices" element={
+              <ProtectedRoute>
+                <Invoices />
+              </ProtectedRoute>
+            } />
+            <Route path="/clients" element={
+              <ProtectedRoute>
+                <Clients />
+              </ProtectedRoute>
+            } />
+            <Route path="/clients/:id" element={
+              <ProtectedRoute>
+                <ClientDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/products" element={
+              <ProtectedRoute>
+                <ProductsServices />
+              </ProtectedRoute>
+            } />
+            <Route path="/templates" element={
+              <ProtectedRoute>
+                <Templates />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            } />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile/edit" element={
+              <ProtectedRoute>
+                <ProfileEdit />
+              </ProtectedRoute>
+            } />
+            <Route path="/stripe/callback" element={
+              <ProtectedRoute>
+                <StripeCallback />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
@@ -119,11 +175,15 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <NotificationsProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </NotificationsProvider>
+      <ClerkLoaded>
+        <AuthProvider>
+          <NotificationsProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </NotificationsProvider>
+        </AuthProvider>
+      </ClerkLoaded>
     </TooltipProvider>
   </QueryClientProvider>
 );
