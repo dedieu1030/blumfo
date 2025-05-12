@@ -37,12 +37,13 @@ export function useUserProfile() {
           setProfile(data as UserProfile);
         } else {
           // Créer un nouveau profil si aucun n'existe
-          const { user } = await supabase.auth.getUser();
-          const userEmail = user?.email || '';
+          const { data: userData } = await supabase.auth.getUser();
+          const userEmail = userData?.user?.email || '';
           
-          const newProfile: Partial<UserProfile> = {
+          // Définir les champs requis explicitement
+          const newProfile = {
             id: userId,
-            full_name: user?.user_metadata?.full_name || userId,
+            full_name: userData?.user?.user_metadata?.full_name || userId,
             email: userEmail,
             language: 'fr',
             timezone: 'Europe/Paris',
@@ -50,7 +51,9 @@ export function useUserProfile() {
               email: true,
               push: false,
               sms: false
-            }
+            },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           };
           
           const { data: createdProfile, error: createError } = await supabase
