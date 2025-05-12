@@ -1,4 +1,3 @@
-
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
@@ -24,11 +23,15 @@ export interface InvoiceData {
   paymentTermsId?: string;
   customPaymentTerms?: string;
   
-  // Nouvelles propriétés pour les réductions et textes personnalisés
+  // Propriétés pour les réductions et textes personnalisés
   discount?: DiscountInfo;
   introText?: string;
   conclusionText?: string;
   footerText?: string;
+
+  // Nouvelles propriétés pour les signatures
+  signature?: SignatureData;
+  signatureDate?: string;
 }
 
 export interface ServiceLine {
@@ -187,3 +190,12 @@ export interface CurrencyInfo {
 }
 
 export type Currency = 'USD' | 'EUR' | 'CAD' | 'GBP' | 'AUD' | 'JPY' | 'CHF';
+
+// Nouvelle interface pour les informations de signature
+export interface SignatureData {
+  type: 'drawn' | 'initials';
+  dataUrl?: string;
+  initials?: string;
+  name?: string;
+  timestamp?: string;
+}

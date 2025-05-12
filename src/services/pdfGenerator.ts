@@ -58,6 +58,26 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
   const introText = invoiceData.introText || '';
   const conclusionText = invoiceData.conclusionText || '';
   const footerText = invoiceData.footerText || '';
+
+  // Préparer la signature pour affichage
+  let signatureHtml = '';
+  if (invoiceData.signature) {
+    if (invoiceData.signature.type === 'drawn' && invoiceData.signature.dataUrl) {
+      signatureHtml = `
+        <div class="signature-container" style="margin-top: 30px;">
+          <img src="${invoiceData.signature.dataUrl}" alt="Signature" style="max-height: 60px; max-width: 200px;" />
+          ${invoiceData.signature.name ? `<div style="font-size: 12px; color: #666;">${invoiceData.signature.name}</div>` : ''}
+        </div>
+      `;
+    } else if (invoiceData.signature.type === 'initials' && invoiceData.signature.initials) {
+      signatureHtml = `
+        <div class="signature-container" style="margin-top: 30px;">
+          <div style="font-weight: bold; font-size: 24px; font-family: cursive;">${invoiceData.signature.initials}</div>
+          ${invoiceData.signature.name ? `<div style="font-size: 12px; color: #666;">${invoiceData.signature.name}</div>` : ''}
+        </div>
+      `;
+    }
+  }
   
   // Start building HTML based on template
   let html = '';
@@ -83,7 +103,7 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
   `;
   
   // This would be more complex in a real implementation with proper HTML templates
-  // Here's a simplified version for demo purposes
+  // Ajout de la signature aux templates
   switch(template) {
     case 'poppins-orange':
       html = `
@@ -351,13 +371,9 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             </div>
           ` : ''}
           
-          <div class="signature">
-            <div></div>
-            <div>
-              <p class="name">Votre Entreprise</p>
-              <p>Administrator</p>
-            </div>
-          </div>
+        <div class="signature">
+          ${signatureHtml}
+        </div>
 
           <div class="footer-bar">
             <div class="footer-arrow"></div>
@@ -457,6 +473,9 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           </div>
         </div>
         
+        <div style="margin: 30px 0; text-align: right;">
+          ${signatureHtml}
+        </div>
         <div style="margin: 40px 0; border-top: 1px solid #eee; padding-top: 20px;">
           <h2 style="color: #5046e5; font-size: 18px;">Modalités de paiement</h2>
           <p>Méthode de paiement: ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
@@ -544,6 +563,9 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           </div>
         </div>
         
+        <div style="margin: 30px 0; text-align: right;">
+          ${signatureHtml}
+        </div>
         <div style="margin: 40px 0; font-style: italic;">
           <p>Modalités de paiement: ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
             invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
@@ -631,6 +653,9 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           </div>
         </div>
         
+        <div style="margin: 30px 0; text-align: right;">
+          ${signatureHtml}
+        </div>
         <div style="margin: 40px 0; background-color: #f0f4ff; padding: 20px; border-radius: 5px;">
           <h2 style="color: #4a6cf7; font-size: 18px; margin-top: 0;">Modalités de paiement</h2>
           <p>Méthode: ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
@@ -643,174 +668,4 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
       
     // Classic (default) template
     default:
-      html = `
-      <style>
-        ${commonStyles}
-      </style>
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-          <div>
-            <h1 style="font-size: 24px; margin-bottom: 0;">FACTURE</h1>
-            <p>N° ${invoiceData.invoiceNumber}</p>
-          </div>
-          <div style="text-align: right;">
-            <p style="font-weight: bold;">Votre Entreprise</p>
-            <p>123 Rue de Paris</p>
-            <p>75001 Paris, France</p>
-          </div>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-          <div>
-            <h2 style="font-size: 16px;">Facturer à:</h2>
-            <p style="font-weight: bold;">${invoiceData.clientName}</p>
-            <p>${invoiceData.clientAddress}</p>
-            <p>${invoiceData.clientEmail}</p>
-          </div>
-          <div style="text-align: right;">
-            <p><strong>Date d'émission:</strong> ${invoiceDate}</p>
-            <p><strong>Échéance:</strong> ${formattedDueDate}</p>
-          </div>
-        </div>
-        
-        ${introText ? `<div style="margin-bottom: 20px;">${introText}</div>` : ''}
-        
-        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-          <thead>
-            <tr style="background-color: #f2f2f2;">
-              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Description</th>
-              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Quantité</th>
-              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Prix unitaire</th>
-              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">TVA</th>
-              ${invoiceData.serviceLines.some((line: any) => line.discount && line.discount.value > 0) ? 
-                '<th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Remise</th>' : ''}
-              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${invoiceData.serviceLines.map((line: any) => {
-              const hasLineDiscount = line.discount && line.discount.value > 0;
-              const lineDiscountText = hasLineDiscount ? 
-                (line.discount.type === 'percentage' ? `${line.discount.value}%` : `${formatMoney(line.discount.value)}`) : '';
-              
-              return `
-              <tr>
-                <td style="padding: 10px; border: 1px solid #ddd;">${line.description}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">${line.quantity}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">${formatMoney(parseFloat(line.unitPrice))}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">${line.tva}%</td>
-                ${invoiceData.serviceLines.some((l: any) => l.discount && l.discount.value > 0) ? 
-                  `<td style="padding: 10px; border: 1px solid #ddd;">${lineDiscountText}</td>` : ''}
-                <td style="padding: 10px; border: 1px solid #ddd;">${formatMoney(parseFloat(line.total))}</td>
-              </tr>
-            `}).join('')}
-          </tbody>
-        </table>
-        
-        ${conclusionText ? `<div style="margin: 20px 0;">${conclusionText}</div>` : ''}
-        
-        <div style="margin-left: auto; width: 250px;">
-          <div style="display: flex; justify-content: space-between; padding: 5px 0;">
-            <p>Sous-total:</p>
-            <p>${formatMoney(invoiceData.subtotal)}</p>
-          </div>
-          ${hasGlobalDiscount ? `
-            <div style="display: flex; justify-content: space-between; padding: 5px 0; color: #e53e3e;">
-              <p>Remise${invoiceData.discount.description ? ` (${invoiceData.discount.description})` : ''}:</p>
-              <p>-${formatMoney(globalDiscountAmount)}</p>
-            </div>` : ''}
-          <div style="display: flex; justify-content: space-between; padding: 5px 0;">
-            <p>TVA:</p>
-            <p>${formatMoney(invoiceData.taxTotal)}</p>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold;">
-            <p>Total:</p>
-            <p>${formatMoney(invoiceData.total)}</p>
-          </div>
-        </div>
-        
-        <div style="margin: 30px 0; border-top: 1px solid #ddd; padding-top: 20px;">
-          <p><strong>Modalités de paiement:</strong> ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
-            invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
-          ${invoiceData.notes ? `<p><strong>Notes:</strong> ${invoiceData.notes}</p>` : ''}
-        </div>
-        
-        ${footerText ? `<div style="margin-top: 30px; text-align: center; font-size: 12px; color: #777;">${footerText}</div>` : ''}
-      </div>
-      `;
-  }
-  
-  return html;
-};
-
-/**
- * Generates a PDF from invoice data using the selected template
- * @param invoiceData Invoice data to include in the PDF
- * @param templateId ID of the template to use
- * @returns URL to the generated PDF
- */
-export const generateInvoicePDF = async (invoiceData: any, templateId: string) => {
-  try {
-    console.log(`Generating PDF using template: ${templateId}`, invoiceData);
-    
-    // In production, this would use a library like jsPDF or html2pdf
-    // to generate an actual PDF from the invoice template
-    
-    // Generate the HTML content first (we would convert this to PDF in production)
-    const htmlContent = generateInvoiceHTML(invoiceData, templateId);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock response - in production this would return a URL to the generated PDF
-    // or the PDF data itself as a Blob/Base64
-    return {
-      success: true,
-      pdfUrl: `https://example.com/invoices/preview_${Math.random().toString(36).substring(7)}.pdf`,
-      htmlContent, // In production, this would be the PDF data
-    };
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    return {
-      success: false,
-      error: 'Failed to generate PDF',
-    };
-  }
-};
-
-/**
- * Generates a preview URL of how the invoice would look with the given template
- * @param invoiceData Invoice data to preview
- * @param templateId ID of the template to use
- * @returns URL to the preview image
- */
-export const generateInvoicePreview = async (invoiceData: any, templateId: string) => {
-  try {
-    console.log(`Generating preview using template: ${templateId}`);
-    
-    // Generate the HTML content
-    const htmlContent = generateInvoiceHTML(invoiceData, templateId);
-    
-    // In a real implementation, we would render this HTML to an image
-    // For now, we're just returning the HTML
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 700));
-    
-    // Try to use the local template preview image, fall back to placeholder if not found
-    const templatePreviewUrl = TEMPLATE_PREVIATES[templateId as keyof typeof TEMPLATE_PREVIATES] || 
-                               FALLBACK_PREVIEWS[templateId as keyof typeof FALLBACK_PREVIEWS];
-    
-    return {
-      success: true,
-      previewUrl: templatePreviewUrl,
-      htmlContent, // Return the HTML content for the preview modal
-    };
-  } catch (error) {
-    console.error('Error generating preview:', error);
-    return {
-      success: false,
-      error: 'Failed to generate preview',
-    };
-  }
-};
+      html
