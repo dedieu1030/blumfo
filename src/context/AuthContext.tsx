@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile } from '@/types/user';
 import { supabase } from '@/integrations/supabase/client';
@@ -121,41 +120,45 @@ export function SignInComponent() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
           {error}
         </div>
       )}
-      <form onSubmit={handleSignIn} className="space-y-4">
+      <form onSubmit={handleSignIn} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+          <label htmlFor="email" className="block text-sm font-medium mb-2">Email</label>
           <input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-4 py-3 rounded-lg border border-input bg-background"
             disabled={loading}
+            placeholder="votre@email.com"
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">Mot de passe</label>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="password" className="block text-sm font-medium">Mot de passe</label>
+            <a href="#" className="text-xs text-violet hover:underline">Mot de passe oublié ?</a>
+          </div>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-4 py-3 rounded-lg border border-input bg-background"
             disabled={loading}
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-violet hover:bg-violet/90 text-white font-medium py-2 px-4 rounded-md"
+          className="w-full bg-violet hover:bg-violet/90 text-white font-medium py-3 px-4 rounded-lg transition-colors"
         >
           {loading ? 'Connexion en cours...' : 'Se connecter'}
         </button>
@@ -203,44 +206,46 @@ export function SignUpComponent() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
           {error}
         </div>
       )}
       {successMessage && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-md text-sm">
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
           {successMessage}
         </div>
       )}
-      <form onSubmit={handleSignUp} className="space-y-4">
+      <form onSubmit={handleSignUp} className="space-y-5">
         <div>
-          <label htmlFor="fullName" className="block text-sm font-medium mb-1">Nom complet</label>
+          <label htmlFor="fullName" className="block text-sm font-medium mb-2">Nom complet</label>
           <input
             id="fullName"
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-4 py-3 rounded-lg border border-input bg-background"
             disabled={loading}
+            placeholder="Jean Dupont"
           />
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+          <label htmlFor="email" className="block text-sm font-medium mb-2">Email</label>
           <input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-4 py-3 rounded-lg border border-input bg-background"
             disabled={loading}
+            placeholder="votre@email.com"
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">Mot de passe</label>
+          <label htmlFor="password" className="block text-sm font-medium mb-2">Mot de passe</label>
           <input
             id="password"
             type="password"
@@ -248,14 +253,17 @@ export function SignUpComponent() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-4 py-3 rounded-lg border border-input bg-background"
             disabled={loading}
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Minimum 6 caractères
+          </p>
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-violet hover:bg-violet/90 text-white font-medium py-2 px-4 rounded-md"
+          className="w-full bg-violet hover:bg-violet/90 text-white font-medium py-3 px-4 rounded-lg transition-colors"
         >
           {loading ? 'Inscription en cours...' : 'S\'inscrire'}
         </button>
