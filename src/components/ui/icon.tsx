@@ -6,26 +6,25 @@ import * as LucideIcons from "lucide-react";
 // Define available icon names from Lucide
 export type IconName = keyof typeof LucideIcons;
 
-export interface IconProps extends Omit<React.SVGAttributes<SVGElement>, 'name'> {
+export interface IconProps extends React.HTMLAttributes<HTMLDivElement> {
   name: IconName;
   size?: number;
+  color?: string;
 }
 
-export function Icon({ name, size = 24, className, ...props }: IconProps) {
+export function Icon({ name, size = 24, color, className, ...props }: IconProps) {
   // Check if the icon exists in the Lucide collection
-  const LucideIcon = LucideIcons[name];
+  const IconComponent = LucideIcons[name];
 
-  if (!LucideIcon) {
+  if (!IconComponent) {
     console.error(`Icon "${String(name)}" not found`);
     return null;
   }
 
-  return (
-    <LucideIcon 
-      width={size} 
-      height={size}
-      className={cn("shrink-0", className)}
-      {...props}
-    />
-  );
+  return React.createElement(IconComponent, {
+    size,
+    color,
+    className: cn("shrink-0", className),
+    ...props
+  });
 }
