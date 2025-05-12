@@ -35,7 +35,7 @@ export interface PaymentTermTemplate {
 export interface PaymentMethodDetails {
   type: 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
   enabled: boolean;
-  details: string;
+  details: string; // Assurons-nous que ce champ est obligatoire
 }
 
 export interface InvoiceNumberingConfig {
@@ -49,7 +49,7 @@ export interface InvoiceNumberingConfig {
   digits: number;
   nextNumber: number;
   pattern: string;
-  resetPeriod: "never" | "monthly" | "annually";
+  resetPeriod: "never" | "monthly" | "annually"; // Changed from "yearly" to "annually" to match usage
   lastReset: string;
   resetAnnually: boolean;
 }
@@ -160,11 +160,19 @@ export interface Currency {
 // Définissons PaymentMethod comme un type string pour être compatible avec le code existant
 export type PaymentMethod = 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
 
+// Mise à jour de l'interface ReminderTrigger pour correspondre à l'utilisation dans le code
 export interface ReminderTrigger {
   id: string;
-  days: number;
-  emailTemplate: string;
-  active: boolean;
+  scheduleId?: string;
+  // Remplacer days et emailTemplate par les propriétés réellement utilisées
+  triggerType: 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
+  triggerValue: number;
+  emailSubject: string;
+  emailBody: string;
+  // Garder active pour la rétrocompatibilité
+  active?: boolean;
+  days?: number; // Pour la compatibilité avec l'ancien code
+  emailTemplate?: string; // Pour la compatibilité avec l'ancien code
 }
 
 export interface ReminderSchedule {

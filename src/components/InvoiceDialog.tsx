@@ -133,7 +133,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
   
   // Payment Methods state
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodDetails[]>([
-    { type: "card", enabled: true }
+    { type: "card", enabled: true, details: "" }
   ]);
   const [defaultPaymentMethods, setDefaultPaymentMethods] = useState<PaymentMethodDetails[]>([]);
 
