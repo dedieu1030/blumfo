@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -22,7 +21,8 @@ export default {
 			fontFamily: {
 				'space': ['"Space Grotesk"', 'Inter', 'sans-serif'],
 				'playfair': ['"Playfair Display"', 'serif'],
-				'sans': ['Inter', 'sans-serif']
+				'sans': ['Inter', 'sans-serif'],
+				'signature': ['cursive', 'sans-serif'] // Ajout de la police signature
 			},
 			colors: {
 				border: 'hsl(var(--border))',

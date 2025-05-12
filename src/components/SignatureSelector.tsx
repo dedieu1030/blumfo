@@ -17,13 +17,18 @@ export function SignatureSelector({ onSelect, userId }: SignatureSelectorProps) 
   // Charger les signatures sauvegardées
   useEffect(() => {
     const loadSavedSignatures = () => {
-      // Dans un cas réel, vous récupéreriez les signatures depuis l'API/Supabase
-      // Pour cet exemple, nous allons utiliser localStorage
       try {
         const saved = localStorage.getItem('savedSignatures');
         if (saved) {
           const parsedSignatures = JSON.parse(saved) as SignatureData[];
-          setSavedSignatures(parsedSignatures);
+          // Trier par date, les plus récentes en premier
+          const sortedSignatures = parsedSignatures.sort((a, b) => {
+            const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return dateB - dateA;
+          });
+          setSavedSignatures(sortedSignatures);
+          console.log("Signatures chargées:", sortedSignatures.length);
         }
       } catch (error) {
         console.error('Error loading saved signatures:', error);
@@ -43,7 +48,7 @@ export function SignatureSelector({ onSelect, userId }: SignatureSelectorProps) 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" type="button">
+        <Button variant="outline" type="button" className="w-full">
           Utiliser une signature sauvegardée
         </Button>
       </DialogTrigger>
@@ -57,12 +62,12 @@ export function SignatureSelector({ onSelect, userId }: SignatureSelectorProps) 
             savedSignatures.map((sig, index) => (
               <div 
                 key={index} 
-                className="border rounded-md p-4 cursor-pointer hover:bg-gray-50"
+                className="border rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all"
                 onClick={() => handleSelect(sig)}
               >
                 <SignatureDisplay signatureData={sig} />
                 <div className="text-xs text-muted-foreground mt-2">
-                  {new Date(sig.timestamp || '').toLocaleDateString()}
+                  {sig.timestamp ? new Date(sig.timestamp).toLocaleDateString() : 'Date inconnue'}
                 </div>
               </div>
             ))

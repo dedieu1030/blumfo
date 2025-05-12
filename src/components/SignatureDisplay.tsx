@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { SignatureData } from "@/types/invoice";
+import { cn } from "@/lib/utils";
 
 interface SignatureDisplayProps {
   signatureData?: SignatureData;
@@ -13,11 +14,11 @@ export function SignatureDisplay({ signatureData, className = "", style = {} }: 
   
   if (signatureData.type === 'drawn' && signatureData.dataUrl) {
     return (
-      <div className={className} style={style}>
+      <div className={cn("flex flex-col items-center", className)} style={style}>
         <img 
           src={signatureData.dataUrl} 
           alt="Signature" 
-          style={{ maxHeight: '60px', maxWidth: '200px' }} 
+          className="max-h-[60px] max-w-[200px] object-contain"
         />
         {signatureData.name && (
           <div className="text-sm text-muted-foreground mt-1">{signatureData.name}</div>
@@ -28,7 +29,7 @@ export function SignatureDisplay({ signatureData, className = "", style = {} }: 
   
   if (signatureData.type === 'initials' && signatureData.initials) {
     return (
-      <div className={className} style={style}>
+      <div className={cn("flex flex-col items-center", className)} style={style}>
         <div className="font-bold text-2xl font-signature">{signatureData.initials}</div>
         {signatureData.name && (
           <div className="text-sm text-muted-foreground mt-1">{signatureData.name}</div>

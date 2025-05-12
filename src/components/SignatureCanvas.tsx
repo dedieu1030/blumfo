@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import SignaturePad from 'signature_pad';
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignatureData } from "@/types/invoice";
+import { toast } from "sonner";
 
 interface SignatureCanvasProps {
   onSignatureChange: (signatureData: SignatureData | undefined) => void;
@@ -19,7 +21,7 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
   const [initials, setInitials] = useState(signatureData?.initials || '');
   const [name, setName] = useState(signatureData?.name || userName);
   
-  // Initialiser SignaturePad lorsque le canvas est chargé
+  // Configuration et initialisation de SignaturePad
   useEffect(() => {
     if (canvasRef.current && signatureType === 'drawn') {
       const canvas = canvasRef.current;
@@ -29,16 +31,32 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
       canvas.width = parentWidth;
       canvas.height = 200;
       
-      // Créer l'instance SignaturePad
+      // Créer l'instance SignaturePad avec des options améliorées
       signaturePadRef.current = new SignaturePad(canvas, {
         backgroundColor: 'rgb(255, 255, 255)',
-        penColor: 'rgb(0, 0, 0)'
+        penColor: 'rgb(0, 0, 0)',
+        minWidth: 0.5,
+        maxWidth: 2.5, // Augmente l'épaisseur maximale du trait
+        velocityFilterWeight: 0.7 // Rend le trait plus fluide
       });
       
       // Restaurer la signature existante si disponible
       if (signatureData?.dataUrl && signatureType === 'drawn') {
-        signaturePadRef.current.fromDataURL(signatureData.dataUrl);
+        try {
+          signaturePadRef.current.fromDataURL(signatureData.dataUrl);
+          console.log("Signature restaurée avec succès");
+        } catch (error) {
+          console.error("Erreur lors de la restauration de la signature:", error);
+        }
       }
+
+      // Logs pour déboguer
+      console.log("Canvas initialisé", {
+        width: canvas.width,
+        height: canvas.height,
+        signatureType,
+        isEmpty: signaturePadRef.current?.isEmpty()
+      });
     }
     
     return () => {
@@ -62,7 +80,13 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
         canvas.height = 200;
         
         signaturePadRef.current.clear();
-        signaturePadRef.current.fromData(data);
+        
+        // Ne restaure les données que si elles existent
+        if (data.length > 0) {
+          signaturePadRef.current.fromData(data);
+        }
+
+        console.log("Canvas redimensionné", { width: canvas.width, height: canvas.height });
       }
     };
     
@@ -74,29 +98,56 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
   const saveSignature = () => {
     if (signatureType === 'drawn' && signaturePadRef.current) {
       if (signaturePadRef.current.isEmpty()) {
+        toast.error("Veuillez dessiner une signature avant de sauvegarder");
         onSignatureChange(undefined);
         return;
       }
       
-      const dataUrl = signaturePadRef.current.toDataURL('image/png');
-      const timestamp = new Date().toISOString();
-      
-      onSignatureChange({
-        type: 'drawn',
-        dataUrl,
-        name,
-        timestamp
-      });
+      try {
+        const dataUrl = signaturePadRef.current.toDataURL('image/png');
+        const timestamp = new Date().toISOString();
+        
+        // Créer l'objet de données de signature
+        const newSignatureData = {
+          type: 'drawn' as const,
+          dataUrl,
+          name,
+          timestamp
+        };
+        
+        // Enregistrer dans localStorage pour réutilisation future
+        const savedSignatures = JSON.parse(localStorage.getItem('savedSignatures') || '[]');
+        savedSignatures.push(newSignatureData);
+        localStorage.setItem('savedSignatures', JSON.stringify(savedSignatures));
+        
+        // Notifier le composant parent
+        onSignatureChange(newSignatureData);
+        toast.success("Signature sauvegardée");
+      } catch (error) {
+        console.error("Erreur lors de la sauvegarde de la signature:", error);
+        toast.error("Erreur lors de la sauvegarde de la signature");
+      }
     } else if (signatureType === 'initials' && initials.trim()) {
       const timestamp = new Date().toISOString();
       
-      onSignatureChange({
-        type: 'initials',
+      // Créer l'objet de données pour les initiales
+      const newSignatureData = {
+        type: 'initials' as const,
         initials: initials.trim(),
         name,
         timestamp
-      });
+      };
+      
+      // Enregistrer dans localStorage pour réutilisation future
+      const savedSignatures = JSON.parse(localStorage.getItem('savedSignatures') || '[]');
+      savedSignatures.push(newSignatureData);
+      localStorage.setItem('savedSignatures', JSON.stringify(savedSignatures));
+      
+      // Notifier le composant parent
+      onSignatureChange(newSignatureData);
+      toast.success("Initiales sauvegardées");
     } else {
+      toast.error("Aucune signature ou initiales à sauvegarder");
       onSignatureChange(undefined);
     }
   };
@@ -105,10 +156,12 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
   const clearSignature = () => {
     if (signatureType === 'drawn' && signaturePadRef.current) {
       signaturePadRef.current.clear();
+      console.log("Signature effacée");
     } else if (signatureType === 'initials') {
       setInitials('');
     }
     onSignatureChange(undefined);
+    toast.info("Signature effacée");
   };
   
   // Fonction pour gérer le changement de type de signature
@@ -125,9 +178,10 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
     }
   };
   
+  // Sauvegarde automatique quand initials ou name changent
   useEffect(() => {
-    // Sauvegarde automatique quand initials ou name changent
-    if (signatureType === 'initials' && initials.trim()) {
+    if (signatureType === 'initials' && initials.trim() && name.trim()) {
+      console.log("Sauvegarde automatique des initiales:", initials);
       saveSignature();
     }
   }, [initials, name]);
@@ -144,8 +198,13 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
           <div className="border rounded-md bg-white">
             <canvas 
               ref={canvasRef} 
-              className="w-full touch-none" 
-              style={{ height: '200px' }}
+              className="w-full touch-action-none" 
+              style={{ 
+                height: '200px', 
+                border: '1px solid #e2e8f0',
+                borderRadius: '0.375rem',
+                cursor: 'crosshair'
+              }}
             />
           </div>
           
@@ -203,6 +262,10 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
           {signatureData.timestamp && ` le ${new Date(signatureData.timestamp).toLocaleString()}`}
         </div>
       )}
+
+      <div className="text-xs text-muted-foreground italic">
+        Dessinez votre signature à l'aide de la souris ou du doigt sur l'écran tactile
+      </div>
     </div>
   );
 }
