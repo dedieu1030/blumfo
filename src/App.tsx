@@ -86,8 +86,9 @@ const AppContent = () => {
         </div>
         <div className="container mx-auto px-4 py-8">
           <Routes>
-            {/* Route publique */}
+            {/* Routes publiques */}
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/*" element={<Auth />} /> {/* Gère les sous-routes d'authentification */}
             
             {/* Routes protégées */}
             <Route path="/" element={
