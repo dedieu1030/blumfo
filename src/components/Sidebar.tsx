@@ -62,15 +62,15 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
       
       <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center">
+        <Link to="/profile" className="flex items-center">
           <div className="w-8 h-8 bg-[#003427] rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm">MD</span>
           </div>
           <div className="ml-3">
-            <div className="text-sm font-medium text-gray-800">Me Dupont</div>
-            <div className="text-xs text-gray-600">Cabinet Dupont</div>
+            <div className="text-sm font-medium text-gray-800">Mon profil</div>
+            <div className="text-xs text-gray-600">Paramètres du compte</div>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );

@@ -74,15 +74,15 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
           </div>
           
           <div className="p-4 border-t border-border">
-            <div className="flex items-center">
+            <Link to="/profile" className="flex items-center" onClick={() => onOpenChange(false)}>
               <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-primary-foreground font-medium">MD</span>
               </div>
               <div className="ml-3">
-                <div className="text-sm font-medium">Me Dupont</div>
-                <div className="text-xs text-muted-foreground">Cabinet Dupont</div>
+                <div className="text-sm font-medium">Mon profil</div>
+                <div className="text-xs text-muted-foreground">Paramètres du compte</div>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </DrawerContent>

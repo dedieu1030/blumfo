@@ -1,17 +1,16 @@
 
 import React from 'react';
-import { UserProfile as IUserProfile } from '@/types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { Button } from '@/components/ui/button';
-import { UserCircle, Mail, Phone, Globe, Clock } from 'lucide-react';
+import { UserCircle, Mail, Phone, Globe, Clock, LogOut } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { useAuth } from '@/context/AuthContext';
 
 export function UserProfile() {
   const { profile, loading } = useUserProfile();
-  const { isSignedIn } = useClerkAuth();
+  const { isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
   
   if (loading) {
@@ -33,7 +32,7 @@ export function UserProfile() {
     );
   }
   
-  if (!isSignedIn || !profile) {
+  if (!isAuthenticated || !profile) {
     return (
       <Card>
         <CardHeader>
@@ -48,6 +47,11 @@ export function UserProfile() {
       </Card>
     );
   }
+  
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
+  };
   
   return (
     <Card>
@@ -118,9 +122,13 @@ export function UserProfile() {
           </div>
         </div>
         
-        <div className="flex justify-end">
-          <Button onClick={() => navigate('/profile/edit')}>
+        <div className="flex justify-between">
+          <Button onClick={() => navigate('/profile/edit')} variant="outline">
             Modifier mon profil
+          </Button>
+          <Button onClick={handleLogout} variant="destructive">
+            <LogOut className="h-4 w-4 mr-2" />
+            Se déconnecter
           </Button>
         </div>
       </CardContent>
