@@ -137,14 +137,14 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
               <span>{t("sendByEmail")}</span>
             </DropdownMenuItem>
             
-            {(invoice.paymentUrl || invoice.payment_link) && (
+            {(invoice.paymentUrl) && (
               <>
-                <DropdownMenuItem onClick={() => onCopyLink(invoice.paymentUrl || invoice.payment_link || '')}>
+                <DropdownMenuItem onClick={() => onCopyLink(invoice.paymentUrl || '')}>
                   <Copy className="h-4 w-4 mr-2" />
                   <span>{t("copyPaymentLink")}</span>
                 </DropdownMenuItem>
                 
-                <DropdownMenuItem onClick={() => window.open(invoice.paymentUrl || invoice.payment_link, '_blank')}>
+                <DropdownMenuItem onClick={() => window.open(invoice.paymentUrl, '_blank')}>
                   <ExternalLink className="h-4 w-4 mr-2" />
                   <span>{t("openPaymentLink")}</span>
                 </DropdownMenuItem>
