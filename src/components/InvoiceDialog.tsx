@@ -140,6 +140,10 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
   // Company profile state
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
 
+  // État pour le dialogue de signature
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [signatureData, setSignatureData] = useState<SignatureData | undefined>(undefined);
+
   // Generate a default invoice number on component mount
   useEffect(() => {
     // Format: INV-YYYYMMDD-XX (where XX is a random number)
@@ -576,6 +580,10 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         footerText: footerText || undefined
       };
       
+      // Prepare invoice data with signature
+      invoiceData.signature = signatureData;
+      invoiceData.signatureDate = new Date().toISOString();
+      
       // Create Stripe checkout session
       const stripeSession = await createStripeCheckoutSession(invoiceData);
       
@@ -912,9 +920,54 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           <div className="space-y-6 py-4">
             <div className="space-y-2">
               <Label htmlFor="signature">Signature</Label>
-              <div className="border rounded-md bg-gray-50 h-32 flex items-center justify-center">
-                <p className="text-muted-foreground">Cliquez pour signer</p>
+              <div 
+                className="border rounded-md bg-gray-50 p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setSignatureDialogOpen(true)}
+              >
+                {signatureData ? (
+                  <SignatureDisplay signatureData={signatureData} />
+                ) : (
+                  <div className="h-24 flex items-center justify-center">
+                    <p className="text-muted-foreground">Cliquez pour signer</p>
+                  </div>
+                )}
               </div>
+              
+              {/* Dialogue de signature */}
+              <Dialog open={signatureDialogOpen} onOpenChange={setSignatureDialogOpen}>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Votre signature</DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="flex space-x-4 mb-4">
+                    <div className="w-full">
+                      <SignatureCanvas 
+                        onSignatureChange={(sig) => {
+                          setSignatureData(sig);
+                          if (sig) {
+                            setSignatureDialogOpen(false);
+                          }
+                        }}
+                        signatureData={signatureData}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <SignatureSelector onSelect={(sig) => {
+                      setSignatureData(sig);
+                      setSignatureDialogOpen(false);
+                    }} />
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setSignatureDialogOpen(false)}>
+                      Annuler
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
             <div className="space-y-2">
               <Label htmlFor="notes">Notes et conditions</Label>
