@@ -80,7 +80,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 6; // Augmenté de 5 à 6 pour ajouter l'étape des textes personnalisés
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -111,6 +111,12 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
   const [subtotal, setSubtotal] = useState(0);
   const [taxTotal, setTaxTotal] = useState(0);
   const [total, setTotal] = useState(0);
+
+  // Nouvelles propriétés pour les réductions et textes personnalisés
+  const [globalDiscount, setGlobalDiscount] = useState<DiscountInfo | undefined>(undefined);
+  const [introText, setIntroText] = useState("");
+  const [conclusionText, setConclusionText] = useState("");
+  const [footerText, setFooterText] = useState("");
 
   // Payment Terms state
   const [paymentDelay, setPaymentDelay] = useState("15");
@@ -188,13 +194,16 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     }
   }, []);
 
-  // Handle service line updates with tax properly
-  const updateServiceLine = (id: string, field: keyof ServiceLine | 'tva', value: string) => {
+  // Handle service line updates with tax and discounts properly
+  const updateServiceLine = (id: string, field: keyof ServiceLine | 'tva' | 'discount', value: any) => {
     setServiceLines(serviceLines.map(line => {
       if (line.id === id) {
         if (field === 'tva') {
           // Special handling for tva field which isn't in the ServiceLine type directly
           return { ...line, tva: value };
+        } else if (field === 'discount') {
+          // Special handling for discount field
+          return { ...line, discount: value };
         } else {
           return { ...line, [field]: value };
         }
@@ -203,7 +212,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     }));
   };
 
-  // Calculate totals when service lines change
+  // Calculate totals when service lines or global discount changes
   useEffect(() => {
     let calculatedSubtotal = 0;
     let calculatedTaxTotal = 0;
@@ -213,22 +222,69 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       const lineUnitPrice = parseFloat(line.unitPrice) || 0;
       const lineTva = parseFloat((line as any).tva || '0') || 0;
       
-      const lineTotal = lineQuantity * lineUnitPrice;
+      // Calculate line total after applying line discount
+      let lineTotal = lineQuantity * lineUnitPrice;
+      
+      if (line.discount && line.discount.value > 0) {
+        if (line.discount.type === 'percentage') {
+          const discountAmount = lineTotal * (line.discount.value / 100);
+          lineTotal -= discountAmount;
+          // Store discount amount for display
+          line.discount.amount = Number(discountAmount.toFixed(2));
+        } else { // fixed amount
+          lineTotal = Math.max(0, lineTotal - line.discount.value);
+          // Store discount amount
+          line.discount.amount = line.discount.value;
+        }
+      }
+      
       const lineTaxAmount = lineTotal * (lineTva / 100);
       
       calculatedSubtotal += lineTotal;
       calculatedTaxTotal += lineTaxAmount;
     });
     
+    // Calculate total after applying global discount
+    let calculatedTotal = calculatedSubtotal + calculatedTaxTotal;
+    
+    if (globalDiscount && globalDiscount.value > 0) {
+      if (globalDiscount.type === 'percentage') {
+        const discountAmount = calculatedSubtotal * (globalDiscount.value / 100);
+        calculatedTotal -= discountAmount;
+        // Store discount amount for display
+        setGlobalDiscount({
+          ...globalDiscount,
+          amount: Number(discountAmount.toFixed(2))
+        });
+      } else { // fixed amount
+        calculatedTotal = Math.max(0, calculatedTotal - globalDiscount.value);
+        // Store discount amount
+        setGlobalDiscount({
+          ...globalDiscount,
+          amount: globalDiscount.value
+        });
+      }
+    }
+    
     setSubtotal(calculatedSubtotal);
     setTaxTotal(calculatedTaxTotal);
-    setTotal(calculatedSubtotal + calculatedTaxTotal);
+    setTotal(calculatedTotal);
     
     // Update the total in service lines
     const updatedServiceLines = serviceLines.map(line => {
       const quantity = parseFloat(line.quantity) || 0;
       const unitPrice = parseFloat(line.unitPrice) || 0;
-      const totalPrice = quantity * unitPrice;
+      let totalPrice = quantity * unitPrice;
+      
+      // Apply line discount
+      if (line.discount && line.discount.value > 0) {
+        if (line.discount.type === 'percentage') {
+          totalPrice *= (1 - line.discount.value / 100);
+        } else { // fixed amount
+          totalPrice = Math.max(0, totalPrice - line.discount.value);
+        }
+      }
+      
       return {
         ...line,
         total: totalPrice.toFixed(2),
@@ -239,7 +295,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     if (JSON.stringify(updatedServiceLines) !== JSON.stringify(serviceLines)) {
       setServiceLines(updatedServiceLines);
     }
-  }, [serviceLines]);
+  }, [serviceLines, globalDiscount]);
 
   // Add a new service line
   const addServiceLine = () => {
@@ -387,7 +443,12 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         notes,
         templateId: selectedTemplate,
         paymentTermsId: selectedTermTemplateId,
-        customPaymentTerms: useCustomTerms ? customTerms : ""
+        customPaymentTerms: useCustomTerms ? customTerms : "",
+        // Add new properties for discounts and custom texts
+        discount: globalDiscount,
+        introText: introText || undefined,
+        conclusionText: conclusionText || undefined,
+        footerText: footerText || undefined
       };
       
       const result = await generateInvoicePreview(invoiceData, selectedTemplate);
@@ -502,7 +563,12 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         notes,
         templateId: selectedTemplate,
         paymentTermsId: selectedTermTemplateId,
-        customPaymentTerms: useCustomTerms ? customTerms : ""
+        customPaymentTerms: useCustomTerms ? customTerms : "",
+        // Add new properties for discounts and custom texts
+        discount: globalDiscount,
+        introText: introText || undefined,
+        conclusionText: conclusionText || undefined,
+        footerText: footerText || undefined
       };
       
       // Create Stripe checkout session
@@ -626,17 +692,17 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         return (
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-12 gap-4 font-medium text-sm mb-2 hidden md:grid">
-              <div className="col-span-5">Description</div>
+              <div className="col-span-4">Description</div>
               <div className="col-span-2">Quantité</div>
               <div className="col-span-2">Prix unitaire (€)</div>
               <div className="col-span-1">TVA (%)</div>
-              <div className="col-span-1">Total (€)</div>
-              <div className="col-span-1"></div>
+              <div className="col-span-2">Réduction</div>
+              <div className="col-span-1">Total</div>
             </div>
             
             {serviceLines.map((line, index) => (
               <div key={line.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 pt-4 border-t first:border-t-0">
-                <div className="md:col-span-5 space-y-2">
+                <div className="md:col-span-4 space-y-2">
                   <Label htmlFor={`description-${index}`} className="md:hidden">Description</Label>
                   <Textarea 
                     id={`description-${index}`}
@@ -673,20 +739,30 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                     placeholder="20" 
                   />
                 </div>
-                <div className="md:col-span-1 space-y-2">
-                  <Label htmlFor={`total-${index}`} className="md:hidden">Total (€)</Label>
-                  <Input 
-                    id={`total-${index}`}
-                    value={line.total}
-                    disabled
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor={`discount-${index}`} className="md:hidden">Réduction</Label>
+                  <DiscountSelector
+                    discount={line.discount}
+                    onDiscountChange={(discount) => updateServiceLine(line.id, "discount", discount)}
+                    baseAmount={parseFloat(line.quantity) * parseFloat(line.unitPrice)}
+                    compact={true}
                   />
                 </div>
-                <div className="md:col-span-1 flex items-center justify-end">
+                <div className="md:col-span-1 space-y-2 flex flex-row items-center">
+                  <div className="flex-1">
+                    <Label htmlFor={`total-${index}`} className="md:hidden">Total (€)</Label>
+                    <Input 
+                      id={`total-${index}`}
+                      value={line.total}
+                      disabled
+                    />
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => removeServiceLine(line.id)}
                     disabled={serviceLines.length <= 1}
+                    className="md:ml-2"
                   >
                     <Trash className="h-4 w-4 text-red-500" />
                   </Button>
@@ -709,7 +785,19 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
               </Button>
             </div>
             
-            <div className="border-t pt-4 space-y-2">
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex justify-end">
+                <div className="md:w-1/2 lg:w-1/3">
+                  <Label>Remise globale</Label>
+                  <DiscountSelector
+                    discount={globalDiscount}
+                    onDiscountChange={setGlobalDiscount}
+                    baseAmount={subtotal}
+                    label="Remise sur le total"
+                  />
+                </div>
+              </div>
+              
               <div className="flex justify-between">
                 <span className="font-medium">Sous-total</span>
                 <span>{subtotal.toFixed(2)} €</span>
@@ -718,6 +806,12 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                 <span className="font-medium">TVA</span>
                 <span>{taxTotal.toFixed(2)} €</span>
               </div>
+              {globalDiscount && globalDiscount.value > 0 && globalDiscount.amount && (
+                <div className="flex justify-between text-red-500">
+                  <span className="font-medium">Remise{globalDiscount.description ? ` (${globalDiscount.description})` : ''}</span>
+                  <span>-{globalDiscount.amount.toFixed(2)} €</span>
+                </div>
+              )}
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
                 <span>{total.toFixed(2)} €</span>
@@ -788,6 +882,27 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         );
       
       case 5:
+        return (
+          <div className="space-y-6 py-4">
+            <div className="space-y-4">
+              <h2 className="text-lg font-medium">Textes personnalisés</h2>
+              <p className="text-sm text-muted-foreground">
+                Personnalisez votre facture avec des textes d'introduction, de conclusion et de pied de page.
+              </p>
+              
+              <CustomInvoiceText
+                introText={introText}
+                onIntroTextChange={setIntroText}
+                conclusionText={conclusionText}
+                onConclusionTextChange={setConclusionText}
+                footerText={footerText}
+                onFooterTextChange={setFooterText}
+              />
+            </div>
+          </div>
+        );
+      
+      case 6: // Previously case 5
         return (
           <div className="space-y-6 py-4">
             <div className="space-y-2">
@@ -875,7 +990,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         bankAccount: "",
         bankName: "",
         accountHolder: "",
-        taxRate: 20,
+        taxRate: 20, // Ensure this is a number
         termsAndConditions: "",
         thankYouMessage: "",
         defaultCurrency: "EUR"
@@ -893,7 +1008,12 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       notes,
       templateId: selectedTemplate,
       paymentTermsId: selectedTermTemplateId,
-      customPaymentTerms: useCustomTerms ? customTerms : ""
+      customPaymentTerms: useCustomTerms ? customTerms : "",
+      // Add new properties for discounts and custom texts
+      discount: globalDiscount,
+      introText: introText || undefined,
+      conclusionText: conclusionText || undefined,
+      footerText: footerText || undefined
     };
     
     return (
@@ -974,6 +1094,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     "Informations client",
     "Services et tarification",
     "Conditions de paiement",
+    "Textes personnalisés",
     "Notes et signature"
   ];
 

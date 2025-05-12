@@ -23,6 +23,12 @@ export interface InvoiceData {
   templateId?: string;
   paymentTermsId?: string;
   customPaymentTerms?: string;
+  
+  // Nouvelles propriétés pour les réductions et textes personnalisés
+  discount?: DiscountInfo;
+  introText?: string;
+  conclusionText?: string;
+  footerText?: string;
 }
 
 export interface ServiceLine {
@@ -33,6 +39,17 @@ export interface ServiceLine {
   totalPrice: number;
   tva?: string; // TVA percentage
   total?: string; // Formatted total
+  
+  // Nouvelle propriété pour les réductions par ligne
+  discount?: DiscountInfo;
+}
+
+// Nouvelle interface pour les informations de réduction
+export interface DiscountInfo {
+  type: 'percentage' | 'fixed';
+  value: number;
+  description?: string;
+  amount?: number; // Montant calculé de la réduction
 }
 
 export interface CompanyProfile {

@@ -17,6 +17,10 @@ interface InvoiceCreateParams {
     quantity: number
     unit_amount: number
     tax_rates?: string[]
+    discount?: {
+      type: 'percentage' | 'fixed'
+      value: number
+    }
   }>
   metadata?: Record<string, string>
   dueDate?: number // Unix timestamp
@@ -24,6 +28,13 @@ interface InvoiceCreateParams {
   memo?: string
   currency?: string
   taxRates?: string[]
+  discount?: {
+    type: 'percentage' | 'fixed'
+    value: number
+  }
+  introText?: string
+  conclusionText?: string
+  footerText?: string
 }
 
 serve(async (req) => {
@@ -106,14 +117,26 @@ serve(async (req) => {
       throw new Error('No customer ID provided or could not create customer')
     }
 
-    // Create invoice items
+    // Create invoice items with discounts
     const invoiceItems = []
     for (const item of requestData.items) {
+      // Apply line item discount if provided
+      let unit_amount = item.unit_amount;
+      
+      if (item.discount && item.discount.value > 0) {
+        if (item.discount.type === 'percentage') {
+          unit_amount = unit_amount * (1 - item.discount.value / 100);
+        } else if (item.discount.type === 'fixed') {
+          // For fixed discount, we divide by quantity to get the per-unit discount
+          unit_amount = Math.max(0, unit_amount - (item.discount.value / item.quantity));
+        }
+      }
+      
       const invoiceItem = await stripe.invoiceItems.create({
         customer: customerId,
         description: item.description,
         quantity: item.quantity,
-        unit_amount: item.unit_amount,
+        unit_amount: Math.round(unit_amount), // Stripe requires amounts in cents (integers)
         currency: requestData.currency || 'eur',
         tax_rates: item.tax_rates || requestData.taxRates,
       })
@@ -127,7 +150,25 @@ serve(async (req) => {
       collection_method: 'send_invoice',
       due_date: requestData.dueDate,
       footer: requestData.footer,
-      metadata: requestData.metadata,
+      metadata: {
+        ...requestData.metadata,
+        ...(requestData.introText && { intro_text: requestData.introText.substring(0, 500) }),
+        ...(requestData.conclusionText && { conclusion_text: requestData.conclusionText.substring(0, 500) }),
+        ...(requestData.footerText && { footer_text: requestData.footerText.substring(0, 300) }),
+      },
+    }
+
+    // Apply global discount if provided
+    if (requestData.discount && requestData.discount.value > 0) {
+      if (requestData.discount.type === 'percentage') {
+        invoiceOptions.discount = {
+          coupon: await createPercentageCoupon(stripe, requestData.discount.value)
+        };
+      } else if (requestData.discount.type === 'fixed') {
+        invoiceOptions.discount = {
+          coupon: await createFixedAmountCoupon(stripe, requestData.discount.value, requestData.currency || 'eur')
+        };
+      }
     }
 
     const invoice = await stripe.invoices.create(invoiceOptions)
@@ -151,7 +192,13 @@ serve(async (req) => {
         status: finalizedInvoice.status,
         payment_link: paymentLink,
         due_date: finalizedInvoice.due_date ? new Date(finalizedInvoice.due_date * 1000).toISOString() : null,
-        metadata: requestData.metadata,
+        metadata: {
+          ...requestData.metadata,
+          ...(requestData.discount && { discount: requestData.discount }),
+          ...(requestData.introText && { introText: requestData.introText }),
+          ...(requestData.conclusionText && { conclusionText: requestData.conclusionText }),
+          ...(requestData.footerText && { footerText: requestData.footerText }),
+        },
       })
       .select()
       .single()
@@ -186,3 +233,22 @@ serve(async (req) => {
     )
   }
 })
+
+// Function to create a percentage discount coupon
+async function createPercentageCoupon(stripe: Stripe, percent: number): Promise<string> {
+  const coupon = await stripe.coupons.create({
+    percent_off: Math.min(100, Math.max(0, percent)),
+    duration: 'once',
+  });
+  return coupon.id;
+}
+
+// Function to create a fixed amount discount coupon
+async function createFixedAmountCoupon(stripe: Stripe, amount: number, currency: string): Promise<string> {
+  const coupon = await stripe.coupons.create({
+    amount_off: Math.round(amount * 100), // Convert to cents
+    currency: currency,
+    duration: 'once',
+  });
+  return coupon.id;
+}

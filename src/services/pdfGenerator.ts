@@ -1,6 +1,7 @@
 // This file handles PDF generation from invoice templates
 
 import { formatMoney } from './stripe';
+import { DiscountInfo } from '@/types/invoice';
 
 // Template preview image URLs
 const TEMPLATE_PREVIATES = {
@@ -45,6 +46,18 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
     dueDate.setDate(dueDate.getDate() + delayDays);
   }
   const formattedDueDate = dueDate.toLocaleDateString('fr-FR');
+
+  // Process discount information
+  const hasGlobalDiscount = invoiceData.discount && invoiceData.discount.value > 0;
+  const globalDiscountAmount = hasGlobalDiscount ? 
+    (invoiceData.discount.type === 'percentage' 
+      ? invoiceData.subtotal * (invoiceData.discount.value / 100)
+      : invoiceData.discount.value) : 0;
+  
+  // Get custom text content
+  const introText = invoiceData.introText || '';
+  const conclusionText = invoiceData.conclusionText || '';
+  const footerText = invoiceData.footerText || '';
   
   // Start building HTML based on template
   let html = '';
@@ -128,6 +141,18 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           .invoice-no {
             margin-top: 10px;
           }
+          .intro-text {
+            margin-bottom: 30px;
+            font-style: italic;
+            color: #444;
+            line-height: 1.5;
+          }
+          .conclusion-text {
+            margin-top: 30px;
+            font-style: italic;
+            color: #444;
+            line-height: 1.5;
+          }
           table {
             width: 100%;
             border-collapse: collapse;
@@ -146,6 +171,10 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           }
           tr:nth-child(even) td {
             background: #f2f2f2;
+          }
+          .discount-line {
+            color: #ff5722;
+            font-weight: 500;
           }
           .summary {
             margin-top: 30px;
@@ -195,6 +224,12 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             background: #ff914d;
             height: 30px;
             position: relative;
+          }
+          .footer-text {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
           }
           .footer-arrow {
             position: absolute;
@@ -249,6 +284,8 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             </div>
           </div>
 
+          ${introText ? `<div class="intro-text">${introText}</div>` : ''}
+
           <table>
             <thead>
               <tr>
@@ -256,25 +293,40 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
                 <th>Qty</th>
                 <th>Price</th>
                 <th>TVA</th>
+                ${invoiceData.serviceLines.some((line: any) => line.discount && line.discount.value > 0) ? 
+                  '<th>Discount</th>' : ''}
                 <th>Total</th>
               </tr>
             </thead>
             <tbody>
-              ${invoiceData.serviceLines.map((line: any) => `
+              ${invoiceData.serviceLines.map((line: any) => {
+                const hasLineDiscount = line.discount && line.discount.value > 0;
+                const lineDiscountText = hasLineDiscount ? 
+                  (line.discount.type === 'percentage' ? `${line.discount.value}%` : `${formatMoney(line.discount.value)}`) : '';
+                
+                return `
                 <tr>
                   <td>${line.description}</td>
                   <td>${line.quantity}</td>
                   <td>${formatMoney(parseFloat(line.unitPrice))}</td>
                   <td>${line.tva}%</td>
+                  ${invoiceData.serviceLines.some((l: any) => l.discount && l.discount.value > 0) ? 
+                    `<td>${lineDiscountText}</td>` : ''}
                   <td>${formatMoney(parseFloat(line.total))}</td>
                 </tr>
-              `).join('')}
+              `}).join('')}
             </tbody>
           </table>
+
+          ${conclusionText ? `<div class="conclusion-text">${conclusionText}</div>` : ''}
 
           <div class="summary">
             <div class="summary-box">
               <p>Sous-total : ${formatMoney(invoiceData.subtotal)}</p>
+              ${hasGlobalDiscount ? `
+                <p class="discount-line">Réduction : -${formatMoney(globalDiscountAmount)} 
+                  ${invoiceData.discount.description ? `(${invoiceData.discount.description})` : ''}
+                </p>` : ''}
               <p>TVA : ${formatMoney(invoiceData.taxTotal)}</p>
               <div class="total-box">Total : ${formatMoney(invoiceData.total)}</div>
             </div>
@@ -310,6 +362,8 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           <div class="footer-bar">
             <div class="footer-arrow"></div>
           </div>
+          
+          ${footerText ? `<div class="footer-text">${footerText}</div>` : ''}
         </div>
       </body>
       </html>
@@ -347,6 +401,8 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           </div>
         </div>
         
+        ${introText ? `<div style="margin-bottom: 20px; font-style: italic; color: #555;">${introText}</div>` : ''}
+        
         <table style="width: 100%; border-collapse: collapse; margin: 30px 0;">
           <thead>
             <tr style="background-color: #f4f4f8; text-align: left;">
@@ -354,27 +410,43 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
               <th style="padding: 12px; border-bottom: 2px solid #5046e5;">Quantité</th>
               <th style="padding: 12px; border-bottom: 2px solid #5046e5;">Prix unitaire</th>
               <th style="padding: 12px; border-bottom: 2px solid #5046e5;">TVA</th>
+              ${invoiceData.serviceLines.some((line: any) => line.discount && line.discount.value > 0) ? 
+                '<th style="padding: 12px; border-bottom: 2px solid #5046e5;">Remise</th>' : ''}
               <th style="padding: 12px; border-bottom: 2px solid #5046e5;">Total</th>
             </tr>
           </thead>
           <tbody>
-            ${invoiceData.serviceLines.map((line: any) => `
+            ${invoiceData.serviceLines.map((line: any) => {
+              const hasLineDiscount = line.discount && line.discount.value > 0;
+              const lineDiscountText = hasLineDiscount ? 
+                (line.discount.type === 'percentage' ? `${line.discount.value}%` : `${formatMoney(line.discount.value)}`) : '';
+              
+              return `
               <tr>
                 <td style="padding: 12px; border-bottom: 1px solid #eee;">${line.description}</td>
                 <td style="padding: 12px; border-bottom: 1px solid #eee;">${line.quantity}</td>
                 <td style="padding: 12px; border-bottom: 1px solid #eee;">${formatMoney(parseFloat(line.unitPrice))}</td>
                 <td style="padding: 12px; border-bottom: 1px solid #eee;">${line.tva}%</td>
+                ${invoiceData.serviceLines.some((l: any) => l.discount && l.discount.value > 0) ? 
+                  `<td style="padding: 12px; border-bottom: 1px solid #eee;">${lineDiscountText}</td>` : ''}
                 <td style="padding: 12px; border-bottom: 1px solid #eee;">${formatMoney(parseFloat(line.total))}</td>
               </tr>
-            `).join('')}
+            `}).join('')}
           </tbody>
         </table>
+        
+        ${conclusionText ? `<div style="margin: 20px 0; font-style: italic; color: #555;">${conclusionText}</div>` : ''}
         
         <div style="margin-left: auto; width: 300px;">
           <div style="display: flex; justify-content: space-between; padding: 10px 0;">
             <p>Sous-total:</p>
             <p>${formatMoney(invoiceData.subtotal)}</p>
           </div>
+          ${hasGlobalDiscount ? `
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; color: #e53e3e;">
+              <p>Remise${invoiceData.discount.description ? ` (${invoiceData.discount.description})` : ''}:</p>
+              <p>-${formatMoney(globalDiscountAmount)}</p>
+            </div>` : ''}
           <div style="display: flex; justify-content: space-between; padding: 10px 0;">
             <p>TVA:</p>
             <p>${formatMoney(invoiceData.taxTotal)}</p>
@@ -391,6 +463,8 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
           ${invoiceData.notes ? `<p>Notes: ${invoiceData.notes}</p>` : ''}
         </div>
+        
+        ${footerText ? `<div style="margin-top: 40px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 15px;">${footerText}</div>` : ''}
       </div>
       `;
       break;
@@ -436,15 +510,22 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             </tr>
           </thead>
           <tbody>
-            ${invoiceData.serviceLines.map((line: any) => `
+            ${invoiceData.serviceLines.map((line: any) => {
+              const hasLineDiscount = line.discount && line.discount.value > 0;
+              const lineDiscountText = hasLineDiscount ? 
+                (line.discount.type === 'percentage' ? `${line.discount.value}%` : `${formatMoney(line.discount.value)}`) : '';
+              
+              return `
               <tr style="border-bottom: 1px solid #ccc;">
                 <td style="padding: 12px;">${line.description}</td>
                 <td style="padding: 12px;">${line.quantity}</td>
                 <td style="padding: 12px;">${formatMoney(parseFloat(line.unitPrice))}</td>
                 <td style="padding: 12px;">${line.tva}%</td>
+                ${invoiceData.serviceLines.some((l: any) => l.discount && l.discount.value > 0) ? 
+                  `<td style="padding: 12px;">${lineDiscountText}</td>` : ''}
                 <td style="padding: 12px;">${formatMoney(parseFloat(line.total))}</td>
               </tr>
-            `).join('')}
+            `}).join('')}
           </tbody>
         </table>
         
@@ -516,15 +597,22 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             </tr>
           </thead>
           <tbody>
-            ${invoiceData.serviceLines.map((line: any, index: number) => `
+            ${invoiceData.serviceLines.map((line: any, index: number) => {
+              const hasLineDiscount = line.discount && line.discount.value > 0;
+              const lineDiscountText = hasLineDiscount ? 
+                (line.discount.type === 'percentage' ? `${line.discount.value}%` : `${formatMoney(line.discount.value)}`) : '';
+              
+              return `
               <tr style="background-color: ${index % 2 === 0 ? '#f9fbff' : 'white'};">
                 <td style="padding: 15px; border-bottom: 1px solid #eee;">${line.description}</td>
                 <td style="padding: 15px; border-bottom: 1px solid #eee;">${line.quantity}</td>
                 <td style="padding: 15px; border-bottom: 1px solid #eee;">${formatMoney(parseFloat(line.unitPrice))}</td>
                 <td style="padding: 15px; border-bottom: 1px solid #eee;">${line.tva}%</td>
+                ${invoiceData.serviceLines.some((l: any) => l.discount && l.discount.value > 0) ? 
+                  `<td style="padding: 15px; border-bottom: 1px solid #eee;">${lineDiscountText}</td>` : ''}
                 <td style="padding: 15px; border-bottom: 1px solid #eee;">${formatMoney(parseFloat(line.total))}</td>
               </tr>
-            `).join('')}
+            `}).join('')}
           </tbody>
         </table>
         
@@ -585,6 +673,8 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
           </div>
         </div>
         
+        ${introText ? `<div style="margin-bottom: 20px;">${introText}</div>` : ''}
+        
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
           <thead>
             <tr style="background-color: #f2f2f2;">
@@ -592,27 +682,43 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Quantité</th>
               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Prix unitaire</th>
               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">TVA</th>
+              ${invoiceData.serviceLines.some((line: any) => line.discount && line.discount.value > 0) ? 
+                '<th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Remise</th>' : ''}
               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Total</th>
             </tr>
           </thead>
           <tbody>
-            ${invoiceData.serviceLines.map((line: any) => `
+            ${invoiceData.serviceLines.map((line: any) => {
+              const hasLineDiscount = line.discount && line.discount.value > 0;
+              const lineDiscountText = hasLineDiscount ? 
+                (line.discount.type === 'percentage' ? `${line.discount.value}%` : `${formatMoney(line.discount.value)}`) : '';
+              
+              return `
               <tr>
                 <td style="padding: 10px; border: 1px solid #ddd;">${line.description}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">${line.quantity}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">${formatMoney(parseFloat(line.unitPrice))}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">${line.tva}%</td>
+                ${invoiceData.serviceLines.some((l: any) => l.discount && l.discount.value > 0) ? 
+                  `<td style="padding: 10px; border: 1px solid #ddd;">${lineDiscountText}</td>` : ''}
                 <td style="padding: 10px; border: 1px solid #ddd;">${formatMoney(parseFloat(line.total))}</td>
               </tr>
-            `).join('')}
+            `}).join('')}
           </tbody>
         </table>
+        
+        ${conclusionText ? `<div style="margin: 20px 0;">${conclusionText}</div>` : ''}
         
         <div style="margin-left: auto; width: 250px;">
           <div style="display: flex; justify-content: space-between; padding: 5px 0;">
             <p>Sous-total:</p>
             <p>${formatMoney(invoiceData.subtotal)}</p>
           </div>
+          ${hasGlobalDiscount ? `
+            <div style="display: flex; justify-content: space-between; padding: 5px 0; color: #e53e3e;">
+              <p>Remise${invoiceData.discount.description ? ` (${invoiceData.discount.description})` : ''}:</p>
+              <p>-${formatMoney(globalDiscountAmount)}</p>
+            </div>` : ''}
           <div style="display: flex; justify-content: space-between; padding: 5px 0;">
             <p>TVA:</p>
             <p>${formatMoney(invoiceData.taxTotal)}</p>
@@ -628,6 +734,8 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
             invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
           ${invoiceData.notes ? `<p><strong>Notes:</strong> ${invoiceData.notes}</p>` : ''}
         </div>
+        
+        ${footerText ? `<div style="margin-top: 30px; text-align: center; font-size: 12px; color: #777;">${footerText}</div>` : ''}
       </div>
       `;
   }

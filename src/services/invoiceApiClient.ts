@@ -107,3 +107,65 @@ const generateInvoicePdf = async (
     throw error;
   }
 };
+
+// Nouvelle fonction pour créer une facture avec Stripe
+export async function createStripeCheckoutSession(invoiceData: any): Promise<{
+  success: boolean;
+  url?: string;
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase.functions.invoke('create-invoice', {
+      body: {
+        customerEmail: invoiceData.clientEmail,
+        customerName: invoiceData.clientName,
+        items: invoiceData.serviceLines.map((line: any) => ({
+          description: line.description,
+          quantity: parseFloat(line.quantity) || 1,
+          unit_amount: parseFloat(line.unitPrice) * 100 || 0, // Convert to cents
+          tax_rates: [line.tva ? `txr_${line.tva.replace('.', '_')}` : 'txr_20'],
+          discount: line.discount
+        })),
+        dueDate: invoiceData.dueDate ? Math.floor(new Date(invoiceData.dueDate).getTime() / 1000) : undefined,
+        currency: (invoiceData.issuerInfo?.defaultCurrency || 'eur').toLowerCase(),
+        metadata: {
+          invoice_number: invoiceData.invoiceNumber,
+          client_name: invoiceData.clientName,
+          client_email: invoiceData.clientEmail,
+          client_address: invoiceData.clientAddress,
+        },
+        // Nouvelles propriétés
+        discount: invoiceData.discount,
+        introText: invoiceData.introText,
+        conclusionText: invoiceData.conclusionText,
+        footerText: invoiceData.footerText,
+      }
+    });
+
+    if (error) {
+      console.error('Error creating Stripe invoice:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to create payment session'
+      };
+    }
+
+    if (!data?.paymentLink) {
+      return {
+        success: false,
+        error: 'No payment link returned from server'
+      };
+    }
+
+    return {
+      success: true,
+      url: data.paymentLink
+    };
+  } catch (error) {
+    console.error('Exception creating Stripe invoice:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error creating payment session'
+    };
+  }
+}
