@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,19 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
-
-interface Invoice {
-  id: string;
-  number: string;
-  invoice_number: string;
-  client: string;
-  amount: string;
-  date: string;
-  dueDate: string;
-  status: "paid" | "pending" | "overdue" | "draft";
-  paymentUrl?: string;
-  stripeInvoiceId?: string;
-}
+import { Invoice } from "@/types/invoice"; // Import the Invoice type from types file
 
 interface InvoiceMobileCardProps {
   invoice: Invoice;
@@ -37,13 +24,21 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
   const { t } = useTranslation();
   const { toast } = useToast();
   
+  // Helper function to get client name safely
+  const getClientName = () => {
+    if (typeof invoice.client === 'string') {
+      return invoice.client;
+    }
+    return invoice.client?.client_name || invoice.client_name || "Client inconnu";
+  };
+  
   return (
     <Card className={`mb-3 ${invoice.status === "overdue" ? "bg-amber-50" : ""}`}>
       <CardHeader className="p-4 pb-0">
         <div className="flex justify-between items-center">
           <div>
             <h3 className="font-medium text-sm">{invoice.number}</h3>
-            <p className="text-xs text-muted-foreground truncate max-w-[180px]">{invoice.client}</p>
+            <p className="text-xs text-muted-foreground truncate max-w-[180px]">{getClientName()}</p>
           </div>
           <InvoiceStatus status={invoice.status} />
         </div>
