@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,21 +59,10 @@ export function InvoicePaymentConfirmDialog({
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
   const [paymentMethod, setPaymentMethod] = useState<string>('bankTransfer');
   const [paymentReference, setPaymentReference] = useState<string>('');
-  const isMounted = useRef(true);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const calendarRef = useRef<HTMLDivElement>(null);
-  
-  // Track if component is mounted to prevent state updates after unmount
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
   
   // Reset form when the dialog opens
   useEffect(() => {
-    if (isOpen && isMounted.current) {
+    if (isOpen) {
       setPaymentDate(new Date());
       setPaymentMethod('bankTransfer');
       setPaymentReference('');
@@ -81,7 +70,7 @@ export function InvoicePaymentConfirmDialog({
   }, [isOpen]);
   
   const handleConfirm = () => {
-    if (isMounted.current && !isProcessing) {
+    if (!isProcessing) {
       onConfirm({
         date: paymentDate,
         method: paymentMethod,
@@ -94,7 +83,7 @@ export function InvoicePaymentConfirmDialog({
     <AlertDialog 
       open={isOpen} 
       onOpenChange={(open) => {
-        if (isMounted.current && !isProcessing) {
+        if (!isProcessing) {
           onOpenChange(open);
         }
       }}
@@ -129,25 +118,22 @@ export function InvoicePaymentConfirmDialog({
                         !paymentDate && "text-muted-foreground"
                       )}
                       disabled={isProcessing}
-                      ref={buttonRef}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {paymentDate ? format(paymentDate, "PPP", { locale: fr }) : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <div ref={calendarRef}>
-                      <Calendar
-                        mode="single"
-                        selected={paymentDate}
-                        onSelect={(date) => {
-                          if (date && isMounted.current) {
-                            setPaymentDate(date);
-                          }
-                        }}
-                        initialFocus
-                      />
-                    </div>
+                    <Calendar
+                      mode="single"
+                      selected={paymentDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setPaymentDate(date);
+                        }
+                      }}
+                      initialFocus
+                    />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -156,11 +142,7 @@ export function InvoicePaymentConfirmDialog({
                 <Label htmlFor="payment-method">{t("paymentMethod")}</Label>
                 <Select 
                   value={paymentMethod} 
-                  onValueChange={(value) => {
-                    if (isMounted.current) {
-                      setPaymentMethod(value);
-                    }
-                  }}
+                  onValueChange={setPaymentMethod}
                   disabled={isProcessing}
                 >
                   <SelectTrigger id="payment-method" className="w-full">
@@ -184,11 +166,7 @@ export function InvoicePaymentConfirmDialog({
                   id="payment-reference"
                   placeholder={t("referenceExample")}
                   value={paymentReference}
-                  onChange={(e) => {
-                    if (isMounted.current) {
-                      setPaymentReference(e.target.value);
-                    }
-                  }}
+                  onChange={(e) => setPaymentReference(e.target.value)}
                   disabled={isProcessing}
                 />
                 <p className="text-xs text-muted-foreground">

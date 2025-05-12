@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle } from "lucide-react";
@@ -31,78 +31,25 @@ export function InvoicePaymentConfirmation({
   const { t } = useTranslation();
   const { toast } = useToast();
   const dialogTitleId = "payment-confirmation-title";
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const isMounted = useRef(true);
-  const hasAttemptedFocus = useRef(false);
-  
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-  
-  // Focus the button when the dialog is opened
-  useEffect(() => {
-    if (isOpen && buttonRef.current && !hasAttemptedFocus.current) {
-      // Set focus attempt flag to prevent multiple attempts
-      hasAttemptedFocus.current = true;
-      
-      // Small timeout to ensure the dialog is fully rendered
-      const focusTimer = setTimeout(() => {
-        if (buttonRef.current && isMounted.current) {
-          try {
-            buttonRef.current.focus();
-            console.log('Focus set on confirmation button');
-          } catch (e) {
-            console.error('Error setting focus:', e);
-          }
-        }
-      }, 150);
-      
-      return () => clearTimeout(focusTimer);
-    }
-    
-    // Reset focus attempt flag when dialog closes
-    if (!isOpen) {
-      hasAttemptedFocus.current = false;
-    }
-  }, [isOpen]);
   
   const handleClose = () => {
-    if (!isMounted.current) {
-      console.log('Component unmounted, ignoring close action');
-      return;
-    }
-    
-    console.log('Handling close action');
-    
+    // Simplified closing mechanism without timeouts
     if (onOpenChange) {
       onOpenChange(false);
     }
     
-    // Add delay to ensure dialog fully closes before calling onConfirm
-    const closeTimer = setTimeout(() => {
-      if (!isMounted.current) {
-        console.log('Component unmounted during close timeout, ignoring confirm action');
-        return;
-      }
-      
-      console.log('Executing confirm action after close');
-      if (onConfirm) {
-        onConfirm();
-      }
-      
-      // Notify success
-      if (success) {
-        toast({
-          title: t("paymentConfirmed"),
-          description: t("invoiceMarkedAsPaid", { number: invoice?.invoice_number || '' }),
-          variant: "default",
-        });
-      }
-    }, 150);
+    if (onConfirm) {
+      onConfirm();
+    }
     
-    return () => clearTimeout(closeTimer);
+    // Show toast notification after successful payment if needed
+    if (success) {
+      toast({
+        title: t("paymentConfirmed"),
+        description: t("invoiceMarkedAsPaid", { number: invoice?.invoice_number || '' }),
+        variant: "default",
+      });
+    }
   };
   
   const content = (
@@ -133,7 +80,6 @@ export function InvoicePaymentConfirmation({
             <div className="flex justify-center mt-6">
               <Button 
                 onClick={handleClose}
-                ref={buttonRef}
                 autoFocus
                 className="focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
@@ -158,7 +104,6 @@ export function InvoicePaymentConfirmation({
             <div className="flex justify-center mt-6">
               <Button 
                 onClick={handleClose}
-                ref={buttonRef}
                 autoFocus
                 className="focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
@@ -173,22 +118,20 @@ export function InvoicePaymentConfirmation({
   
   if (isOpen !== undefined && onOpenChange) {
     return (
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        console.log('Dialog open state changing to:', open);
-        if (!open && isMounted.current) {
-          handleClose();
-        } else {
-          onOpenChange(open);
-        }
-      }}>
+      <Dialog 
+        open={isOpen} 
+        onOpenChange={(open) => {
+          console.log('Dialog open state changing to:', open);
+          if (!open) {
+            handleClose();
+          } else {
+            onOpenChange(open);
+          }
+        }}
+      >
         <DialogContent 
           className="p-0 border-none bg-transparent shadow-none max-w-md" 
           aria-labelledby={dialogTitleId}
-          onCloseAutoFocus={(e) => {
-            // Prevent default focus behavior which can cause issues
-            e.preventDefault();
-            console.log('Dialog closing, preventing default focus behavior');
-          }}
         >
           <DialogTitle className="sr-only" id={dialogTitleId}>
             {success ? t("paymentConfirmed") : t("paymentFailed")}
