@@ -1,19 +1,25 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from '@/context/AuthProvider';
 
 export default function Auth() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const from = (location.state?.from?.pathname) || '/';
+  const searchParams = new URLSearchParams(location.search);
+  const tab = searchParams.get('tab') || 'signin';
 
-  const handleRedirect = () => {
-    // Rediriger l'utilisateur après l'authentification réussie
-    navigate(from, { replace: true });
-  };
+  // Rediriger si l'utilisateur est déjà authentifié
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -29,7 +35,7 @@ export default function Auth() {
           </p>
         </div>
         
-        <Tabs defaultValue="signin">
+        <Tabs defaultValue={tab}>
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="signin">Connexion</TabsTrigger>
             <TabsTrigger value="signup">Inscription</TabsTrigger>
@@ -48,7 +54,6 @@ export default function Auth() {
                   formFieldInput: "rounded-md border border-input",
                 }
               }} 
-              redirectUrl={from}
               signUpUrl="/auth?tab=signup"
             />
           </TabsContent>
@@ -66,7 +71,6 @@ export default function Auth() {
                   formFieldInput: "rounded-md border border-input",
                 }
               }}
-              redirectUrl={from}
               signInUrl="/auth?tab=signin"
             />
           </TabsContent>
