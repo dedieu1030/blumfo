@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,13 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ClientSelector } from "@/components/ClientSelector";
-import { CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, Loader2, Plus, Trash2, PackageOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Quote } from "@/types/quote";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { fetchProducts, Product } from "@/services/productService";
 
 interface QuoteFormValues {
   client_id: string | null;
@@ -45,6 +48,11 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
   ]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Nouvelles états pour la sélection de produits
+  const [isProductCatalogOpen, setIsProductCatalogOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const form = useForm<QuoteFormValues>({
     defaultValues: {
@@ -56,6 +64,25 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
       items: [{ description: "", quantity: 1, unit_price: 0, total_price: 0 }]
     }
   });
+
+  // Chargement des produits au montage du composant
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoadingProducts(true);
+      try {
+        const productsList = await fetchProducts();
+        setProducts(productsList);
+      } catch (error) {
+        console.error("Erreur lors du chargement des produits:", error);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+
+    if (open) {
+      loadProducts();
+    }
+  }, [open]);
 
   // Fetch quote data if editing
   useEffect(() => {
@@ -157,6 +184,25 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
       newItems.splice(index, 1);
       setItems(newItems);
     }
+  };
+  
+  // Nouvelle fonction pour ajouter un produit du catalogue
+  const handleAddProductFromCatalog = (product: Product) => {
+    // Conversion cents to dollars/euros for display
+    const unitPrice = product.price_cents / 100;
+    
+    setItems([
+      ...items,
+      {
+        description: product.name + (product.description ? ` - ${product.description}` : ''),
+        quantity: 1,
+        unit_price: unitPrice,
+        total_price: unitPrice // Quantity is 1 by default
+      }
+    ]);
+    
+    setIsProductCatalogOpen(false);
+    toast.success("Produit ajouté au devis");
   };
 
   const onSubmit = async (data: QuoteFormValues) => {
@@ -433,9 +479,14 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Articles</h3>
-                <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                  <Plus className="h-4 w-4 mr-1" /> Ajouter un article
-                </Button>
+                <div className="space-x-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsProductCatalogOpen(true)}>
+                    <PackageOpen className="h-4 w-4 mr-1" /> Sélectionner du catalogue
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                    <Plus className="h-4 w-4 mr-1" /> Ajouter un article
+                  </Button>
+                </div>
               </div>
 
               {items.map((item, index) => (
@@ -565,6 +616,51 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
           </form>
         </Form>
       </DialogContent>
+      
+      {/* Catalogue de produits modal */}
+      <Sheet 
+        open={isProductCatalogOpen} 
+        onOpenChange={setIsProductCatalogOpen}
+      >
+        <SheetContent side="right" className="w-full md:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Catalogue de produits</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {isLoadingProducts ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Aucun produit disponible
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {products.map(product => (
+                  <div 
+                    key={product.id} 
+                    className="p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                    onClick={() => handleAddProductFromCatalog(product)}
+                  >
+                    <div className="font-medium">{product.name}</div>
+                    {product.description && (
+                      <div className="text-sm text-muted-foreground line-clamp-2">{product.description}</div>
+                    )}
+                    <div className="mt-2 flex justify-between items-center">
+                      <div className="font-medium text-sm">{(product.price_cents / 100).toFixed(2)} €</div>
+                      <Button size="sm" variant="secondary">
+                        <Plus className="h-4 w-4 mr-1" /> Ajouter
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </Dialog>
   );
 };
+
