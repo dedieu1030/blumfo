@@ -8,8 +8,7 @@ import {
   Settings, 
   CreditCard,
   Package,
-  LayoutTemplate,
-  User
+  LayoutTemplate
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -63,19 +62,7 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
       
       <div className="p-4 border-t border-gray-200">
-        <Link 
-          to="/profile" 
-          className={`flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors mb-2 ${
-            isActive("/profile")
-              ? "bg-white/50 text-[#003427]"
-              : "text-gray-700 hover:text-gray-900 hover:bg-white/20"
-          }`}
-        >
-          <User className={`h-5 w-5 mr-3 ${isActive("/profile") ? "text-[#003427]" : ""}`} />
-          {t('profile', 'Profil')}
-        </Link>
-        
-        <Link to="/profile" className="flex items-center cursor-pointer">
+        <div className="flex items-center">
           <div className="w-8 h-8 bg-[#003427] rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm">MD</span>
           </div>
@@ -83,7 +70,7 @@ export function Sidebar({ className }: SidebarProps) {
             <div className="text-sm font-medium text-gray-800">Me Dupont</div>
             <div className="text-xs text-gray-600">Cabinet Dupont</div>
           </div>
-        </Link>
+        </div>
       </div>
     </div>
   );
