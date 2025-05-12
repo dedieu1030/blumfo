@@ -20,15 +20,27 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
   const [signatureType, setSignatureType] = useState<'drawn' | 'initials'>(signatureData?.type || 'drawn');
   const [initials, setInitials] = useState(signatureData?.initials || '');
   const [name, setName] = useState(signatureData?.name || userName);
+  const [canvasReady, setCanvasReady] = useState(false);
+  const [canvasInitialized, setCanvasInitialized] = useState(0); // Compteur pour forcer la réinitialisation
   
-  // Fonction pour initialiser le canvas avec la signature
+  // Fonction améliorée pour initialiser le canvas avec la signature
   const initializeCanvas = () => {
-    if (!canvasRef.current || signatureType !== 'drawn') return;
+    console.log("Tentative d'initialisation du canvas", {
+      canvasExists: !!canvasRef.current,
+      signatureType,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!canvasRef.current || signatureType !== 'drawn') {
+      console.log("Initialisation du canvas annulée - conditions non remplies");
+      return;
+    }
     
     const canvas = canvasRef.current;
     
     // Nettoyer l'ancienne instance si elle existe
     if (signaturePadRef.current) {
+      console.log("Nettoyage de l'instance précédente de SignaturePad");
       signaturePadRef.current.off();
       signaturePadRef.current = null;
     }
@@ -38,65 +50,125 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
     canvas.width = parentWidth;
     canvas.height = 200;
     
-    // Créer l'instance SignaturePad avec des options améliorées
-    signaturePadRef.current = new SignaturePad(canvas, {
-      backgroundColor: 'rgb(255, 255, 255)',
-      penColor: 'rgb(0, 0, 0)',
-      minWidth: 0.5,
-      maxWidth: 2.5,
-      velocityFilterWeight: 0.7
-    });
-    
-    // Restaurer la signature existante si disponible
-    if (signatureData?.dataUrl && signatureType === 'drawn') {
-      try {
-        signaturePadRef.current.fromDataURL(signatureData.dataUrl);
-        console.log("Signature restaurée avec succès");
-      } catch (error) {
-        console.error("Erreur lors de la restauration de la signature:", error);
-      }
+    // Effacer le contexte manuellement
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-
-    console.log("Canvas initialisé", {
-      width: canvas.width,
-      height: canvas.height,
-      signatureType,
-      isEmpty: signaturePadRef.current?.isEmpty()
-    });
+    
+    // Créer l'instance SignaturePad avec des options améliorées
+    try {
+      console.log("Création d'une nouvelle instance SignaturePad");
+      signaturePadRef.current = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)',
+        penColor: 'rgb(0, 0, 0)',
+        minWidth: 0.5,
+        maxWidth: 2.5,
+        velocityFilterWeight: 0.7
+      });
+      
+      // Restaurer la signature existante si disponible
+      if (signatureData?.dataUrl && signatureType === 'drawn') {
+        try {
+          signaturePadRef.current.fromDataURL(signatureData.dataUrl);
+          console.log("Signature restaurée avec succès");
+        } catch (error) {
+          console.error("Erreur lors de la restauration de la signature:", error);
+        }
+      }
+      
+      setCanvasReady(true);
+      
+      console.log("Canvas initialisé avec succès", {
+        width: canvas.width,
+        height: canvas.height,
+        isEmpty: signaturePadRef.current.isEmpty(),
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'initialisation de SignaturePad:", error);
+      setCanvasReady(false);
+    }
   };
   
-  // Configuration et initialisation de SignaturePad
+  // Configuration et initialisation de SignaturePad au chargement initial
   useEffect(() => {
-    initializeCanvas();
+    console.log("Effet de montage du composant");
+    
+    // Retarder légèrement l'initialisation pour s'assurer que le DOM est prêt
+    const timerId = setTimeout(() => {
+      initializeCanvas();
+    }, 100);
     
     return () => {
-      // Nettoyer
+      // Nettoyer le timer et l'instance SignaturePad
+      clearTimeout(timerId);
       if (signaturePadRef.current) {
+        console.log("Nettoyage de SignaturePad lors du démontage");
         signaturePadRef.current.off();
         signaturePadRef.current = null;
       }
+      setCanvasReady(false);
     };
-  }, [canvasRef, signatureType]);
+  }, []); // Exécuté uniquement au montage/démontage du composant
+  
+  // Réinitialiser le canvas lors du changement de type de signature ou de l'incrémentation du compteur
+  useEffect(() => {
+    console.log("Effet de changement de type ou de compteur", { signatureType, canvasInitialized });
+    
+    if (signatureType === 'drawn') {
+      // Retarder légèrement l'initialisation pour s'assurer que le DOM est prêt
+      const timerId = setTimeout(() => {
+        console.log("Réinitialisation du canvas après changement de type ou compteur");
+        initializeCanvas();
+      }, 100);
+      
+      return () => {
+        clearTimeout(timerId);
+      };
+    } else {
+      setCanvasReady(false);
+    }
+  }, [signatureType, canvasInitialized]);
   
   // Fonction pour redimensionner le canvas si la fenêtre change de taille
   useEffect(() => {
     const handleResize = () => {
+      console.log("Événement de redimensionnement détecté");
+      
       if (canvasRef.current && signaturePadRef.current && signatureType === 'drawn') {
         const canvas = canvasRef.current;
-        const data = signaturePadRef.current.toData();
+        let data;
         
-        const parentWidth = canvas.parentElement?.clientWidth || 300;
-        canvas.width = parentWidth;
-        canvas.height = 200;
-        
-        signaturePadRef.current.clear();
-        
-        // Ne restaure les données que si elles existent
-        if (data.length > 0) {
-          signaturePadRef.current.fromData(data);
-        }
+        try {
+          // Sauvegarder les données actuelles de signature
+          data = signaturePadRef.current.toData();
+          
+          // Ajuster la taille du canvas
+          const parentWidth = canvas.parentElement?.clientWidth || 300;
+          canvas.width = parentWidth;
+          canvas.height = 200;
+          
+          // Effacer le canvas (nécessaire après redimensionnement)
+          signaturePadRef.current.clear();
+          
+          // Restaurer les données seulement si elles existent
+          if (data && data.length > 0) {
+            signaturePadRef.current.fromData(data);
+          }
 
-        console.log("Canvas redimensionné", { width: canvas.width, height: canvas.height });
+          console.log("Canvas redimensionné avec succès", { 
+            width: canvas.width, 
+            height: canvas.height,
+            dataPoints: data ? data.length : 0
+          });
+        } catch (error) {
+          console.error("Erreur lors du redimensionnement:", error);
+          // Forcer une réinitialisation en cas d'erreur
+          setCanvasInitialized(prev => prev + 1);
+        }
       }
     };
     
@@ -174,9 +246,11 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
     toast.info("Signature effacée");
   };
   
-  // Fonction pour gérer le changement de type de signature
+  // Fonction améliorée pour gérer le changement de type de signature
   const handleTypeChange = (value: string) => {
     const newType = value as 'drawn' | 'initials';
+    console.log("Changement de type de signature", { oldType: signatureType, newType });
+    
     setSignatureType(newType);
     
     // Réinitialiser la signature actuelle
@@ -185,12 +259,10 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
     // Si on passe aux initiales, on efface la signature dessinée
     if (newType === 'initials' && signaturePadRef.current) {
       signaturePadRef.current.clear();
+      setCanvasReady(false);
     } else if (newType === 'drawn') {
-      // Important: Réinitialiser le canvas quand on revient à "Signature dessinée"
-      // On utilise setTimeout pour s'assurer que le DOM est mis à jour
-      setTimeout(() => {
-        initializeCanvas();
-      }, 50);
+      // Incrémenter le compteur pour forcer une réinitialisation complète du canvas
+      setCanvasInitialized(prev => prev + 1);
     }
   };
   
@@ -214,13 +286,15 @@ export function SignatureCanvas({ onSignatureChange, signatureData, userName = "
           <div className="border rounded-md bg-white">
             <canvas 
               ref={canvasRef} 
-              className="w-full touch-action-none" 
+              className="w-full touch-none" 
               style={{ 
                 height: '200px', 
                 border: '1px solid #e2e8f0',
                 borderRadius: '0.375rem',
-                cursor: 'crosshair'
+                cursor: 'crosshair',
+                touchAction: 'none'  // Ajout explicite de touchAction
               }}
+              onTouchStart={(e) => e.preventDefault()}
             />
           </div>
           
