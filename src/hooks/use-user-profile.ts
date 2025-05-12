@@ -10,7 +10,7 @@ export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  const { userId, isSignedIn } = useClerkAuth();
+  const { userId, isSignedIn, getToken } = useClerkAuth();
   const { isAuthenticated, supabaseToken } = useClerkSupabase();
 
   useEffect(() => {
@@ -31,20 +31,33 @@ export function useUserProfile() {
           .eq('id', userId)
           .single();
           
-        if (error) throw error;
+        if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
+          throw error;
+        }
         
         if (data) {
           setProfile(data as UserProfile);
         } else {
           // Créer un nouveau profil si aucun n'existe
-          const { data: userData } = await supabase.auth.getUser();
-          const userEmail = userData?.user?.email || '';
+          // Récupérer les informations utilisateur depuis Clerk
+          const userInfo = await getToken({
+            template: "user_metadata"
+          });
           
-          // Définir les champs requis explicitement
-          const newProfile = {
+          let userMetadata = {};
+          if (userInfo) {
+            try {
+              userMetadata = JSON.parse(atob(userInfo.split('.')[1]));
+            } catch (e) {
+              console.error('Erreur lors du décodage des métadonnées utilisateur:', e);
+            }
+          }
+          
+          // Construire un profil utilisateur complet avec tous les champs requis
+          const newProfile: UserProfile = {
             id: userId,
-            full_name: userData?.user?.user_metadata?.full_name || userId,
-            email: userEmail,
+            full_name: userMetadata?.full_name || userMetadata?.name || userId,
+            email: userMetadata?.email || '',
             language: 'fr',
             timezone: 'Europe/Paris',
             notification_settings: {
@@ -56,6 +69,7 @@ export function useUserProfile() {
             updated_at: new Date().toISOString()
           };
           
+          // Insérer le nouveau profil dans Supabase
           const { data: createdProfile, error: createError } = await supabase
             .from('profiles')
             .insert(newProfile)
@@ -65,6 +79,7 @@ export function useUserProfile() {
           if (createError) throw createError;
           
           setProfile(createdProfile as UserProfile);
+          console.log('Nouveau profil utilisateur créé:', createdProfile);
         }
       } catch (err: any) {
         console.error('Erreur lors du chargement du profil:', err);
@@ -79,7 +94,7 @@ export function useUserProfile() {
     } else {
       setLoading(false);
     }
-  }, [userId, isSignedIn, isAuthenticated, supabaseToken]);
+  }, [userId, isSignedIn, isAuthenticated, supabaseToken, getToken]);
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     try {
@@ -90,6 +105,18 @@ export function useUserProfile() {
         toast.error('Vous devez être connecté pour mettre à jour votre profil');
         return { success: false };
       }
+      
+      // S'assurer que les champs requis sont présents
+      if (!updates.email && profile?.email) {
+        updates.email = profile.email;
+      }
+      
+      if (!updates.full_name && profile?.full_name) {
+        updates.full_name = profile.full_name;
+      }
+      
+      // Mise à jour du timestamp
+      updates.updated_at = new Date().toISOString();
       
       // Mettre à jour le profil
       const { data, error } = await supabase
