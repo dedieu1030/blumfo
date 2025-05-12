@@ -171,11 +171,12 @@ export default function Invoicing() {
     }));
   };
 
+  // Modifier cette fonction pour utiliser "annually" au lieu de "yearly"
   const handleResetAnnuallyChange = (checked: boolean) => {
     setNumberingConfig(prev => ({
       ...prev,
       resetAnnually: checked,
-      resetPeriod: checked ? "yearly" : "never"
+      resetPeriod: checked ? "annually" : "never"
     }));
   };
 
