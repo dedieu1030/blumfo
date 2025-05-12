@@ -151,16 +151,22 @@ export interface StripeCustomer {
   updatedAt: string;
 }
 
-// Adding missing interfaces
+// Mise à jour de l'interface Invoice pour inclure tous les champs nécessaires
 export interface Invoice {
   id: string;
   number: string;
   invoice_number: string;
-  client: string;
+  client: string | object;
+  client_name?: string;  // Ajout pour compatibilité
   amount: string;
   date: string;
   dueDate: string;
-  status: "paid" | "pending" | "overdue" | "draft";  // Fixed to use specific string literals
+  due_date?: string;    // Ajout pour compatibilité
+  issue_date?: string;  // Ajout pour compatibilité
+  total_amount?: number; // Ajout pour compatibilité
+  status: "paid" | "pending" | "overdue" | "draft";
+  paymentUrl?: string;
+  stripeInvoiceId?: string;
 }
 
 export interface InvoiceNumberingConfig {
@@ -191,10 +197,10 @@ export interface CurrencyInfo {
 
 export type Currency = 'USD' | 'EUR' | 'CAD' | 'GBP' | 'AUD' | 'JPY' | 'CHF';
 
-// Nouvelle interface pour les informations de signature
+// Mise à jour de l'interface SignatureData pour corriger le nom de propriété
 export interface SignatureData {
   type: 'drawn' | 'initials';
-  dataUrl?: string;
+  dataUrl?: string;  // Correction de dataURL à dataUrl
   initials?: string;
   name?: string;
   timestamp?: string;

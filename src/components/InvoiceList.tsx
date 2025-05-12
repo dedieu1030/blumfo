@@ -17,26 +17,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InvoiceMobileCard } from "./InvoiceMobileCard";
 
-interface Invoice {
-  id: string;
-  number: string;
-  invoice_number: string;
-  client: string;
-  amount: string;
-  date: string;
-  dueDate: string;
-  status: "paid" | "pending" | "overdue" | "draft";
-  paymentUrl?: string;
-  stripeInvoiceId?: string;
-}
-
 import React from 'react';
 import { Invoice } from '@/types/invoice';
 
 export interface InvoiceListProps {
   invoices: Invoice[];
   limit?: number;
-  showActions?: boolean;  // Ajouté pour supporter l'option de masquer les actions
+  showActions?: boolean;  
+  title?: string;
+  showViewAll?: boolean;
+  onInvoiceStatusChanged?: () => void;
 }
 
 export function InvoiceList({ 
@@ -139,14 +129,16 @@ export function InvoiceList({
   
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">{title}</h2>
-        {showViewAll && (
-          <Button variant="link" className="text-violet">
-            {t("viewAll")}
-          </Button>
-        )}
-      </div>
+      {title && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium">{title}</h2>
+          {showViewAll && (
+            <Button variant="link" className="text-violet">
+              {t("viewAll")}
+            </Button>
+          )}
+        </div>
+      )}
       
       {/* Affichage mobile (vue par cartes) */}
       {isMobile ? (

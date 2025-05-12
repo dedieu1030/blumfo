@@ -42,13 +42,18 @@ const Dashboard = () => {
         }
 
         // Transform data for overdue invoices
-        const transformedOverdueInvoices = overdueData.map((invoice) => ({
+        const transformedOverdueInvoices: Invoice[] = overdueData.map((invoice) => ({
           id: invoice.id,
           number: invoice.invoice_number,
+          invoice_number: invoice.invoice_number,
           client_name: invoice.client?.client_name || "Client inconnu",
+          client: invoice.client || "Client inconnu",
           amount: invoice.total_amount.toString(),
           date: invoice.issue_date,
           dueDate: invoice.due_date,
+          issue_date: invoice.issue_date,
+          due_date: invoice.due_date,
+          total_amount: invoice.total_amount,
           status: invoice.status
         }));
 
@@ -66,13 +71,18 @@ const Dashboard = () => {
         }
 
         // Transform data to match Invoice type
-        const transformedInvoices = recentData.map((invoice) => ({
+        const transformedInvoices: Invoice[] = recentData.map((invoice) => ({
           id: invoice.id,
           number: invoice.invoice_number,
+          invoice_number: invoice.invoice_number,
           client_name: invoice.client?.client_name || "Client inconnu",
+          client: invoice.client || "Client inconnu",
           amount: invoice.total_amount.toString(),
           date: invoice.issue_date,
           dueDate: invoice.due_date,
+          issue_date: invoice.issue_date,
+          due_date: invoice.due_date,
+          total_amount: invoice.total_amount,
           status: invoice.status
         }));
 
@@ -118,6 +128,7 @@ const Dashboard = () => {
             <InvoiceList 
               invoices={recentInvoices}
               limit={5}
+              showActions={false}
             />
           </CardContent>
         </Card>
