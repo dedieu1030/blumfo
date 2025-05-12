@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FilePlus, FileText, Plus } from "lucide-react";
 import { useState } from "react";
-import InvoiceDialog from "./InvoiceDialog";
+import { InvoiceDialog } from "./InvoiceDialog";
 import { QuoteDialog } from "./QuoteDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 

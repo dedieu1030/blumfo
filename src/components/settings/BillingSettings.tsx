@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,7 +87,7 @@ export function BillingSettings() {
   const handleResetPeriodChange = (value: string) => {
     setNumberingConfig(prev => ({ 
       ...prev, 
-      resetPeriod: value as "never" | "monthly" | "annually" 
+      resetPeriod: value as 'never' | 'yearly' | 'monthly' 
     }));
   };
 
@@ -102,7 +103,7 @@ export function BillingSettings() {
     setNumberingConfig(prev => ({
       ...prev,
       resetAnnually: checked,
-      resetPeriod: checked ? "annually" : "never"
+      resetPeriod: checked ? 'yearly' : 'never'
     }));
   };
 
@@ -184,7 +185,7 @@ export function BillingSettings() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="never">Jamais</SelectItem>
-              <SelectItem value="annually">Annuellement</SelectItem>
+              <SelectItem value="yearly">Annuellement</SelectItem>
               <SelectItem value="monthly">Mensuellement</SelectItem>
             </SelectContent>
           </Select>
