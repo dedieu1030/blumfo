@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UserProfile as IUserProfile } from '@/types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,13 +7,12 @@ import { Button } from '@/components/ui/button';
 import { UserCircle, Mail, Phone, Globe, Clock, LogOut } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { useAuth as useClerkAuth, useSignOut } from '@clerk/clerk-react';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 
 export function UserProfile() {
   const { profile, loading } = useUserProfile();
-  const { isSignedIn } = useClerkAuth();
-  const { signOut } = useSignOut();
+  const { isSignedIn, signOut } = useClerkAuth();
   const navigate = useNavigate();
   
   const handleLogout = async () => {

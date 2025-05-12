@@ -1,3 +1,4 @@
+
 export const en = {
   // Common
   dashboard: "Dashboard",
@@ -243,7 +244,6 @@ export const en = {
   fullName: "Full Name",
   email: "Email",
   phone: "Phone",
-  language: "Language",
   timezone: "Timezone",
   yourFullName: "Your full name",
   yourEmail: "Your email address",

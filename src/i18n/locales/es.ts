@@ -1,3 +1,4 @@
+
 export const es = {
   // Común
   dashboard: "Tablero",
@@ -232,7 +233,6 @@ export const es = {
   fullName: "Nombre completo",
   email: "Correo electrónico",
   phone: "Teléfono",
-  language: "Idioma",
   timezone: "Zona horaria",
   yourFullName: "Su nombre completo",
   yourEmail: "Su dirección de correo electrónico",
