@@ -34,20 +34,27 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
   };
 
   // Méthode pour formater le montant avec le symbole de devise
-  const formatAmount = (amount: string) => {
+  const formatAmount = (amount: string | number) => {
     if (!amount) return '0,00 €';
     
-    // Si le montant a déjà un symbole de devise, le retourner tel quel
-    if (amount.includes('€')) return amount;
+    // Si le montant est déjà une chaîne et contient un symbole de devise, le retourner tel quel
+    if (typeof amount === 'string' && amount.includes('€')) return amount;
     
     // Sinon, formater le montant avec le symbole de devise
-    const numAmount = parseFloat(amount.replace(/[^\d.,]/g, '').replace(',', '.'));
+    const numAmount = typeof amount === 'number' 
+      ? amount 
+      : parseFloat(amount.replace(/[^\d.,]/g, '').replace(',', '.'));
+    
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(numAmount);
   };
 
   // Helper pour obtenir la classe CSS appropriée pour le badge de statut
   const getStatusBadgeVariant = (status: string): "pending" | "paid" | "overdue" | "draft" => {
-    return status as "pending" | "paid" | "overdue" | "draft";
+    if (status === "pending" || status === "paid" || status === "overdue" || status === "draft") {
+      return status;
+    }
+    // Valeur par défaut si le statut ne correspond pas aux variantes prédéfinies
+    return "pending";
   };
   
   return (
@@ -60,7 +67,7 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <Hash className="h-3.5 w-3.5 text-muted-foreground" />
-              <p className="font-medium text-sm">{invoice.number}</p>
+              <p className="font-medium text-sm">{invoice.number || invoice.invoice_number}</p>
             </div>
             <p className="text-xs text-muted-foreground truncate max-w-[180px]">{getClientName()}</p>
           </div>
@@ -72,10 +79,10 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
       
       <CardContent className="p-3 pb-1">
         <div className="flex justify-between items-center">
-          <div className="text-base font-medium">{formatAmount(invoice.amount)}</div>
+          <div className="text-base font-medium">{formatAmount(invoice.amount || invoice.total_amount)}</div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
-            {invoice.date}
+            {invoice.date || invoice.issue_date}
           </div>
         </div>
       </CardContent>
@@ -84,11 +91,11 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
         <div className="px-3 py-2 bg-secondary/10 text-sm space-y-1.5 animate-accordion-down">
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("dueDate")}</span>
-            <span>{invoice.dueDate}</span>
+            <span>{invoice.dueDate || invoice.due_date}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("invoiceNumber")}</span>
-            <span>{invoice.invoice_number}</span>
+            <span>{invoice.invoice_number || invoice.number}</span>
           </div>
         </div>
       )}
@@ -130,14 +137,14 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
               <span>{t("sendByEmail")}</span>
             </DropdownMenuItem>
             
-            {invoice.paymentUrl && (
+            {(invoice.paymentUrl || invoice.payment_link) && (
               <>
-                <DropdownMenuItem onClick={() => onCopyLink(invoice.paymentUrl!)}>
+                <DropdownMenuItem onClick={() => onCopyLink(invoice.paymentUrl || invoice.payment_link || '')}>
                   <Copy className="h-4 w-4 mr-2" />
                   <span>{t("copyPaymentLink")}</span>
                 </DropdownMenuItem>
                 
-                <DropdownMenuItem onClick={() => window.open(invoice.paymentUrl, '_blank')}>
+                <DropdownMenuItem onClick={() => window.open(invoice.paymentUrl || invoice.payment_link, '_blank')}>
                   <ExternalLink className="h-4 w-4 mr-2" />
                   <span>{t("openPaymentLink")}</span>
                 </DropdownMenuItem>

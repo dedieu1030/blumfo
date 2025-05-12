@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { NewClientForm } from "@/components/NewClientForm";
+import { UserPlus } from "lucide-react";
 
 export interface Client {
   id: string;
@@ -32,6 +34,7 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNewClientFormOpen, setIsNewClientFormOpen] = useState(false);
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -76,6 +79,12 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
     }
   }, [searchQuery, clients]);
 
+  const handleNewClientCreated = (newClient: Client) => {
+    setClients(prevClients => [...prevClients, newClient]);
+    onClientSelect(newClient);
+    setIsNewClientFormOpen(false);
+  };
+
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -113,10 +122,38 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
           ))}
         </div>
       ) : (
-        <div className="text-center p-4 border rounded-md">
+        <div className="text-center p-4 border rounded-md space-y-4">
           <p className="text-muted-foreground">Aucun client trouvé</p>
+          
+          <Button 
+            variant="outline" 
+            onClick={() => setIsNewClientFormOpen(true)}
+            className="w-full"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Créer un nouveau client
+          </Button>
         </div>
       )}
+
+      {/* Toujours afficher le bouton de création, même si des clients sont trouvés */}
+      {filteredClients.length > 0 && (
+        <Button 
+          variant="outline" 
+          onClick={() => setIsNewClientFormOpen(true)} 
+          className="w-full"
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          Créer un nouveau client
+        </Button>
+      )}
+
+      <NewClientForm
+        open={isNewClientFormOpen}
+        onOpenChange={setIsNewClientFormOpen}
+        onClientCreated={handleNewClientCreated}
+      />
     </div>
   );
 };
+
