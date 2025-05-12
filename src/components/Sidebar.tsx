@@ -20,14 +20,14 @@ export function Sidebar({ className }: SidebarProps) {
   };
   
   const navigationItems = [
-    { icon: "ChartPie", name: t('dashboard'), path: "/" },
-    { icon: "Card", name: t('invoicing'), path: "/invoicing" },
-    { icon: "Document", name: t('invoices'), path: "/invoices" },
-    { icon: "DocumentAdd", name: "Devis", path: "/quotes" },
-    { icon: "LayoutAlt", name: t('templates'), path: "/templates" },
+    { icon: "PieChart", name: t('dashboard'), path: "/" },
+    { icon: "CreditCard", name: t('invoicing'), path: "/invoicing" },
+    { icon: "FileText", name: t('invoices'), path: "/invoices" },
+    { icon: "FileEdit", name: "Devis", path: "/quotes" },
+    { icon: "LayoutGrid", name: t('templates'), path: "/templates" },
     { icon: "Users", name: t('clients'), path: "/clients" },
-    { icon: "Box", name: t('products'), path: "/products" },
-    { icon: "Cog", name: t('settings'), path: "/settings" }
+    { icon: "Package", name: t('products'), path: "/products" },
+    { icon: "Settings", name: t('settings'), path: "/settings" }
   ];
 
   // Obtention des initiales de l'utilisateur pour l'avatar
@@ -57,7 +57,7 @@ export function Sidebar({ className }: SidebarProps) {
             }`}
           >
             <Icon 
-              name={item.icon as any} 
+              name={item.icon} 
               size={20} 
               className={`mr-3 ${isActive(item.path) ? "text-[#003427]" : ""}`} 
             />

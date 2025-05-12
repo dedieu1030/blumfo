@@ -1,9 +1,10 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { plumpLine } from "@streamlinehq/streamlinehq";
+import * as LucideIcons from "lucide-react";
 
-export type IconName = keyof typeof plumpLine;
+// Define available icon names from Lucide
+export type IconName = keyof typeof LucideIcons;
 
 export interface IconProps extends Omit<React.SVGAttributes<SVGElement>, 'name'> {
   name: IconName;
@@ -11,11 +12,11 @@ export interface IconProps extends Omit<React.SVGAttributes<SVGElement>, 'name'>
 }
 
 export function Icon({ name, size = 24, className, ...props }: IconProps) {
-  // Vérifier si l'icône existe dans la collection Streamline Plump Line
-  const IconComponent = plumpLine[name as keyof typeof plumpLine];
+  // Check if the icon exists in the Lucide collection
+  const IconComponent = LucideIcons[name as keyof typeof LucideIcons];
 
   if (!IconComponent) {
-    console.error(`Icône "${String(name)}" non trouvée`);
+    console.error(`Icon "${String(name)}" not found`);
     return null;
   }
 

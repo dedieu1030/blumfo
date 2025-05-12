@@ -68,10 +68,10 @@ export const QuickAction = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleOpenInvoiceDialog}>
-            <Icon name="Document" size={16} className="mr-2" /> Nouvelle facture
+            <Icon name="FileText" size={16} className="mr-2" /> Nouvelle facture
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleOpenQuoteDialog}>
-            <Icon name="DocumentAdd" size={16} className="mr-2" /> Nouveau devis
+            <Icon name="FileEdit" size={16} className="mr-2" /> Nouveau devis
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -1,17 +1,18 @@
 
 import React from "react";
-import { plumpLine } from "@streamlinehq/streamlinehq";
+import * as LucideIcons from "lucide-react";
 import { Icon } from "@/components/ui/icon";
 
 const IconsExample = () => {
-  const iconNames = Object.keys(plumpLine) as Array<keyof typeof plumpLine>;
+  // Get Lucide icon names
+  const iconNames = Object.keys(LucideIcons) as Array<keyof typeof LucideIcons>;
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Streamline Plump Line Icons</h1>
+      <h1 className="text-3xl font-bold mb-6">Lucide Icons</h1>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {iconNames.map((name) => (
+        {iconNames.slice(0, 60).map((name) => (
           <div 
             key={String(name)} 
             className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-gray-50"
