@@ -4,15 +4,27 @@ import { UserProfile as IUserProfile } from '@/types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { Button } from '@/components/ui/button';
-import { UserCircle, Mail, Phone, Globe, Clock } from 'lucide-react';
+import { UserCircle, Mail, Phone, Globe, Clock, LogOut } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { toast } from 'sonner';
 
 export function UserProfile() {
   const { profile, loading } = useUserProfile();
-  const { isSignedIn } = useClerkAuth();
+  const { isSignedIn, signOut } = useClerkAuth();
   const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Vous avez été déconnecté avec succès');
+      navigate('/');
+    } catch (error) {
+      toast.error('Une erreur est survenue lors de la déconnexion');
+      console.error('Erreur de déconnexion:', error);
+    }
+  };
   
   if (loading) {
     return (
@@ -118,9 +130,13 @@ export function UserProfile() {
           </div>
         </div>
         
-        <div className="flex justify-end">
+        <div className="flex justify-between">
           <Button onClick={() => navigate('/profile/edit')}>
             Modifier mon profil
+          </Button>
+          <Button variant="destructive" onClick={handleLogout} className="gap-2">
+            <LogOut className="h-4 w-4" />
+            Se déconnecter
           </Button>
         </div>
       </CardContent>

@@ -9,6 +9,8 @@ export const en = {
   templates: "Templates",
   settings: "Settings",
   notifications: "Notifications",
+  profile: "Profile",
+  logout: "Logout",
   
   // Dashboard
   dashboardDescription: "Overview of your invoicing activity",
@@ -55,7 +57,7 @@ export const en = {
   stripeNotConnectedDesc: "Connect your Stripe account to receive payments",
   
   // Language
-  language: "Language",
+  // language: "Language", // Removed duplicate key
   french: "French",
   english: "English",
   spanish: "Spanish",
@@ -238,4 +240,11 @@ export const en = {
   paymentFailed: "Payment failed",
   paymentSuccessMessage: "Thank you for your payment. Your invoice has been successfully paid.",
   paymentFailureMessage: "We couldn't process your payment.",
+  
+  // User Profile
+  yourFullName: "Your full name",
+  email: "Email",
+  phone: "Phone",
+  language: "Language",
+  timezone: "Timezone",
 };
