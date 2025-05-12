@@ -17,6 +17,38 @@ export const QuickAction = () => {
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
+  // Gestion propre de l'ouverture des dialogues
+  const handleOpenInvoiceDialog = () => {
+    setInvoiceDialogOpen(true);
+  };
+
+  const handleOpenQuoteDialog = () => {
+    setQuoteDialogOpen(true);
+  };
+
+  // Gestion propre de la fermeture des dialogues
+  const handleInvoiceDialogChange = (open: boolean) => {
+    if (!open) {
+      // Un petit délai pour éviter les problèmes de focus
+      setTimeout(() => {
+        setInvoiceDialogOpen(false);
+      }, 0);
+    } else {
+      setInvoiceDialogOpen(true);
+    }
+  };
+
+  const handleQuoteDialogChange = (open: boolean) => {
+    if (!open) {
+      // Un petit délai pour éviter les problèmes de focus
+      setTimeout(() => {
+        setQuoteDialogOpen(false);
+      }, 0);
+    } else {
+      setQuoteDialogOpen(true);
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -35,10 +67,10 @@ export const QuickAction = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setInvoiceDialogOpen(true)}>
+          <DropdownMenuItem onClick={handleOpenInvoiceDialog}>
             <FileText className="mr-2 h-4 w-4" /> Nouvelle facture
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setQuoteDialogOpen(true)}>
+          <DropdownMenuItem onClick={handleOpenQuoteDialog}>
             <FilePlus className="mr-2 h-4 w-4" /> Nouveau devis
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -46,12 +78,12 @@ export const QuickAction = () => {
       
       <InvoiceDialog 
         open={invoiceDialogOpen}
-        onOpenChange={setInvoiceDialogOpen}
+        onOpenChange={handleInvoiceDialogChange}
       />
       
       <QuoteDialog
         open={quoteDialogOpen}
-        onOpenChange={setQuoteDialogOpen}
+        onOpenChange={handleQuoteDialogChange}
       />
     </>
   );

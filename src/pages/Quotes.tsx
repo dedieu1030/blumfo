@@ -10,8 +10,27 @@ const Quotes = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [refresh, setRefresh] = useState(0);
 
+  const handleOpenDialog = () => {
+    setDialogOpen(true);
+  };
+
+  const handleDialogChange = (open: boolean) => {
+    // Si on ferme le dialogue
+    if (!open) {
+      // Petit délai pour éviter les problèmes de focus
+      setTimeout(() => {
+        setDialogOpen(false);
+      }, 0);
+    } else {
+      setDialogOpen(true);
+    }
+  };
+
   const handleRefresh = () => {
-    setRefresh((prev) => prev + 1);
+    // Léger délai pour s'assurer que les données sont bien mises à jour
+    setTimeout(() => {
+      setRefresh(prev => prev + 1);
+    }, 50);
   };
 
   return (
@@ -21,7 +40,7 @@ const Quotes = () => {
         description="Gérez vos devis et suivez leur évolution"
         onOpenMobileMenu={() => {}}
         actions={
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={handleOpenDialog}>
             <Plus className="mr-2 h-4 w-4" /> Nouveau devis
           </Button>
         }
@@ -31,7 +50,7 @@ const Quotes = () => {
       
       <QuoteDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleDialogChange}
         onSuccess={handleRefresh}
       />
     </div>
