@@ -16,7 +16,7 @@ export default function Profile() {
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
       />
 
-      <div className="container mx-auto px-4 py-8">
+      <div>
         <UserProfile />
       </div>
 

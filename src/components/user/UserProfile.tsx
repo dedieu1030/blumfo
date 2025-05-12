@@ -7,6 +7,8 @@ import { UserCircle, Mail, Phone, Globe, Clock, LogOut } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 export function UserProfile() {
   const { profile, loading } = useUserProfile();
@@ -49,84 +51,127 @@ export function UserProfile() {
   }
   
   const handleLogout = async () => {
-    await signOut();
-    navigate('/auth');
+    try {
+      await signOut();
+      toast.success('Vous avez été déconnecté avec succès');
+      navigate('/auth');
+    } catch (error) {
+      toast.error('Une erreur est survenue lors de la déconnexion');
+      console.error('Erreur de déconnexion:', error);
+    }
   };
   
+  // Obtention des initiales pour l'avatar
+  const initials = profile.full_name
+    ? profile.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().substring(0, 2)
+    : 'UN';
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Mon profil</CardTitle>
-        <CardDescription>
-          Vos informations personnelles
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center space-x-4">
-          {profile.avatar_url ? (
-            <img 
-              src={profile.avatar_url} 
-              alt={profile.full_name} 
-              className="h-16 w-16 rounded-full object-cover"
-            />
-          ) : (
-            <div className="bg-primary/10 h-16 w-16 rounded-full flex items-center justify-center">
-              <UserCircle className="h-8 w-8 text-primary" />
+    <Card className="shadow-md">
+      <CardHeader className="border-b pb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-16 w-16 border-2 border-primary/10">
+              {profile.avatar_url ? (
+                <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
+              ) : (
+                <AvatarFallback className="bg-[#003427] text-white text-lg">
+                  {initials}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div>
+              <CardTitle className="text-2xl">{profile.full_name}</CardTitle>
+              <CardDescription className="text-base mt-1">
+                {profile.username ? `@${profile.username}` : profile.email}
+              </CardDescription>
             </div>
-          )}
-          <div>
-            <h3 className="text-lg font-medium">{profile.full_name}</h3>
-            {profile.username && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
+          </div>
+          <Button onClick={() => navigate('/profile/edit')} variant="outline">
+            Modifier mon profil
+          </Button>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-8 pt-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Informations personnelles</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Email</p>
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{profile.email}</span>
+              </div>
+            </div>
+            
+            {profile.phone && (
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Téléphone</p>
+                <div className="flex items-center space-x-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{profile.phone}</span>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Langue</p>
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{profile.language}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Fuseau horaire</p>
+              <div className="flex items-center space-x-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{profile.timezone}</span>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center space-x-2">
-            <Mail className="h-4 w-4 text-muted-foreground" />
-            <span>{profile.email}</span>
-          </div>
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Préférences de notification</h3>
           
-          {profile.phone && (
-            <div className="flex items-center space-x-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>{profile.phone}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="border rounded-md p-4">
+              <div className="flex items-center justify-between">
+                <span>Notifications par email</span>
+                <span className={`h-3 w-3 rounded-full ${profile.notification_settings.email ? 'bg-green-500' : 'bg-gray-300'}`} />
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {profile.notification_settings.email ? 'Activées' : 'Désactivées'}
+              </p>
             </div>
-          )}
-          
-          <div className="flex items-center space-x-2">
-            <Globe className="h-4 w-4 text-muted-foreground" />
-            <span>{profile.language}</span>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span>{profile.timezone}</span>
+            
+            <div className="border rounded-md p-4">
+              <div className="flex items-center justify-between">
+                <span>Notifications push</span>
+                <span className={`h-3 w-3 rounded-full ${profile.notification_settings.push ? 'bg-green-500' : 'bg-gray-300'}`} />
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {profile.notification_settings.push ? 'Activées' : 'Désactivées'}
+              </p>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <div className="flex items-center justify-between">
+                <span>Notifications SMS</span>
+                <span className={`h-3 w-3 rounded-full ${profile.notification_settings.sms ? 'bg-green-500' : 'bg-gray-300'}`} />
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {profile.notification_settings.sms ? 'Activées' : 'Désactivées'}
+              </p>
+            </div>
           </div>
         </div>
         
         <div className="pt-4 border-t">
-          <h4 className="font-medium mb-2">Préférences de notification</h4>
-          <div className="space-y-1 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${profile.notification_settings.email ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span>Notifications par email: {profile.notification_settings.email ? 'Activées' : 'Désactivées'}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${profile.notification_settings.push ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span>Notifications push: {profile.notification_settings.push ? 'Activées' : 'Désactivées'}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${profile.notification_settings.sms ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span>Notifications SMS: {profile.notification_settings.sms ? 'Activées' : 'Désactivées'}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-between">
-          <Button onClick={() => navigate('/profile/edit')} variant="outline">
-            Modifier mon profil
-          </Button>
-          <Button onClick={handleLogout} variant="destructive">
+          <Button onClick={handleLogout} variant="destructive" className="w-full sm:w-auto">
             <LogOut className="h-4 w-4 mr-2" />
             Se déconnecter
           </Button>
