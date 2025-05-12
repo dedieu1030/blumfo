@@ -15,7 +15,16 @@ if (!CLERK_PUBLISHABLE_KEY) {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      appearance={{
+        elements: {
+          rootBox: "max-w-full",
+          card: "shadow-none",
+          formButtonPrimary: "bg-violet hover:bg-violet/90 text-white",
+        }
+      }}
+    >
       <App />
     </ClerkProvider>
   </React.StrictMode>,

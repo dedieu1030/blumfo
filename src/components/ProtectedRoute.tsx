@@ -11,6 +11,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
+  console.log("ProtectedRoute - isAuthenticated:", isAuthenticated, "isLoading:", isLoading);
+
   // Afficher un loader pendant la vérification de l'authentification
   if (isLoading) {
     return (
@@ -22,9 +24,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // Rediriger vers la page de connexion si non authentifié
   if (!isAuthenticated) {
+    console.log("Utilisateur non authentifié, redirection vers /auth");
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Rendre les enfants (le contenu protégé) si authentifié
+  console.log("Utilisateur authentifié, affichage du contenu protégé");
   return <>{children}</>;
 }

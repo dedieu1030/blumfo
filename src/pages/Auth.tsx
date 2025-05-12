@@ -9,63 +9,15 @@ import { toast } from 'sonner';
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { isLoaded, isSignedIn, user } = useUser();
-  const { getToken } = useAuth();
+  const { isLoaded, isSignedIn } = useUser();
   
   // Redirection si déjà connecté
   useEffect(() => {
     if (isLoaded && isSignedIn) {
-      syncUserWithSupabase();
+      console.log("Utilisateur déjà connecté, redirection vers la page d'accueil");
       navigate('/');
     }
   }, [isLoaded, isSignedIn, navigate]);
-
-  // Synchroniser l'utilisateur avec Supabase
-  const syncUserWithSupabase = async () => {
-    try {
-      if (!user) return;
-      
-      // Récupération du JWT Clerk
-      const token = await getToken({ template: 'supabase' });
-      
-      if (!token) {
-        console.error("Impossible de récupérer le token Clerk");
-        return;
-      }
-      
-      // Connecter à Supabase avec le token JWT de Clerk
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.primaryEmailAddress?.emailAddress || '',
-        password: token.substring(0, 32) // Créer un mot de passe basé sur le token (temporaire)
-      });
-      
-      if (signInError) {
-        // Si l'utilisateur n'existe pas dans Supabase, créons-le
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: user.primaryEmailAddress?.emailAddress || '',
-          password: token.substring(0, 32),
-          options: {
-            data: {
-              full_name: user.fullName || '',
-              avatar_url: user.imageUrl || '',
-            },
-          },
-        });
-        
-        if (signUpError) {
-          console.error("Erreur lors de la synchronisation avec Supabase:", signUpError);
-          toast.error("Erreur de synchronisation du compte");
-        } else {
-          console.log("Compte utilisateur créé dans Supabase");
-        }
-      } else {
-        console.log("Utilisateur connecté dans Supabase");
-      }
-    } catch (error) {
-      console.error("Erreur de synchronisation:", error);
-      toast.error("Erreur de synchronisation du compte");
-    }
-  };
 
   if (!isLoaded) {
     return (
@@ -103,7 +55,7 @@ export default function Auth() {
                     routing="path" 
                     path="/auth"
                     signUpUrl="/auth"
-                    afterSignInUrl="/"
+                    forceRedirectUrl="/"
                   />
                 </div>
               </TabsContent>
@@ -113,7 +65,7 @@ export default function Auth() {
                     routing="path" 
                     path="/auth" 
                     signInUrl="/auth"
-                    afterSignUpUrl="/"
+                    forceRedirectUrl="/"
                   />
                 </div>
               </TabsContent>

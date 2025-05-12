@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/user';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -25,7 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (!user) return;
       
-      // Récupération du JWT Clerk
+      console.log("Tentative de synchronisation avec Supabase...");
+      
+      // Récupérer le JWT de Clerk pour Supabase
       const token = await getToken({ template: 'supabase' });
       
       if (!token) {
@@ -33,30 +36,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Connecter à Supabase avec le token JWT de Clerk
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.primaryEmailAddress?.emailAddress || '',
-        password: token.substring(0, 32) // Créer un mot de passe basé sur le token
+      // Utiliser le JWT pour s'authentifier avec Supabase
+      const { data, error: signInError } = await supabase.auth.signInWithJwt({
+        jwt: token,
       });
       
       if (signInError) {
-        // Si l'utilisateur n'existe pas dans Supabase, créons-le
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: user.primaryEmailAddress?.emailAddress || '',
-          password: token.substring(0, 32),
-          options: {
-            data: {
-              full_name: user.fullName || '',
-              avatar_url: user.imageUrl || '',
-            },
-          },
-        });
-        
-        if (signUpError) {
-          console.error("Erreur lors de la synchronisation avec Supabase:", signUpError);
-          throw new Error("Erreur de synchronisation avec Supabase");
-        }
+        console.error("Erreur lors de la connexion à Supabase avec JWT:", signInError);
+        return;
       }
+      
+      console.log("Authentification Supabase réussie avec JWT:", data);
+      
     } catch (error) {
       console.error("Erreur de synchronisation:", error);
       setError(error as Error);
@@ -65,15 +56,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async () => {
     try {
-      setIsLoading(true);
-      
       // Vérifier si l'utilisateur est connecté à Supabase
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        console.log("Pas de session Supabase active");
         setUserProfile(null);
         return;
       }
+      
+      console.log("Session Supabase active, récupération du profil...");
       
       // Récupérer le profil de l'utilisateur
       const { data, error } = await supabase
@@ -82,14 +74,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', session.user.id)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur lors de la récupération du profil:", error);
+        return;
+      }
       
+      console.log("Profil récupéré:", data);
       setUserProfile(data as UserProfile);
     } catch (err: any) {
       console.error('Erreur lors du chargement du profil:', err);
-      setError(err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -102,7 +95,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initAuth = async () => {
       try {
+        setIsLoading(true);
+        
         if (isSignedIn && user) {
+          console.log("Utilisateur connecté dans Clerk:", user.id);
           await syncSupabaseAuth();
           await fetchUserProfile();
         } else {
@@ -110,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (isClerkLoaded) {
             await supabase.auth.signOut();
             setUserProfile(null);
+            console.log("Utilisateur non connecté dans Clerk, déconnexion de Supabase");
           }
         }
       } catch (error) {
@@ -121,22 +118,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initAuth();
-
-    // Mettre en place l'écoute des changements d'authentification Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!session && isSignedIn) {
-          // Réessayer la synchronisation si la session Supabase expire mais que Clerk est connecté
-          syncSupabaseAuth();
-        }
-      }
-    );
-    
-    return () => subscription.unsubscribe();
   }, [isClerkLoaded, isSignedIn, user]);
 
   const contextValue = {
-    isAuthenticated: isSignedIn || false,
+    // Considère l'utilisateur comme authentifié s'il est connecté à Clerk,
+    // même si la synchronisation avec Supabase n'est pas encore terminée
+    isAuthenticated: !!isSignedIn,
     isLoading,
     userProfile,
     error,
