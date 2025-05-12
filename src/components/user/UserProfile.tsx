@@ -56,6 +56,7 @@ export function UserProfile() {
   const displayProfile = profile || {
     full_name: user?.email ? user.email.split('@')[0] : 'Utilisateur',
     email: user?.email || '',
+    phone: '', // Ajout de la propriété phone avec une valeur par défaut vide
     language: 'fr',
     timezone: 'Europe/Paris',
     notification_settings: {
