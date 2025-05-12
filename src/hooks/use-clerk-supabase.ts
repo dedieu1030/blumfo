@@ -39,8 +39,9 @@ export function useClerkSupabase() {
         setSupabaseToken(token);
         
         // Utiliser le JWT pour s'authentifier sur Supabase
-        const { error } = await supabase.auth.signInWithJwt({
-          jwt: token,
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'jwt',
+          token,
         });
         
         if (error) {
