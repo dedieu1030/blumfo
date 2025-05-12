@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -309,15 +308,11 @@ export function InvoiceList({
       {/* Dialogue de confirmation préalable */}
       {selectedInvoice && (
         <InvoicePaymentConfirmDialog
-          isOpen={isConfirmDialogOpen}
+          open={isConfirmDialogOpen}
           onOpenChange={setIsConfirmDialogOpen}
-          invoice={{
-            id: selectedInvoice.id,
-            invoice_number: selectedInvoice.invoice_number,
-            amount: parseFloat(selectedInvoice.amount.replace(/[^\d.-]/g, ''))
-          }}
+          invoiceId={selectedInvoice.id}
+          invoiceNumber={selectedInvoice.invoice_number}
           onConfirm={handlePaymentDetailsSubmitted}
-          isProcessing={isProcessing}
         />
       )}
       
