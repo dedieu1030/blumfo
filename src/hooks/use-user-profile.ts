@@ -44,7 +44,7 @@ export function useUserProfile() {
             template: "user_metadata"
           });
           
-          let userMetadata = {};
+          let userMetadata: Record<string, string> = {};
           if (userInfo) {
             try {
               userMetadata = JSON.parse(atob(userInfo.split('.')[1]));
