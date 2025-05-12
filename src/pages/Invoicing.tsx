@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,7 +28,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ReminderScheduleEditor } from "@/components/ReminderScheduleEditor";
 import { useNavigate } from "react-router-dom";
-import { InvoiceDialog } from "@/components/InvoiceDialog";
+import InvoiceDialog from "@/components/InvoiceDialog";
 import { useTranslation } from "react-i18next";
 
 export default function Invoicing() {
