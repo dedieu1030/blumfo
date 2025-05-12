@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
-import Stripe from 'https://esm.sh/stripe@12.3.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +10,6 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
-    console.log("Mark invoice paid: CORS preflight request");
     return new Response(null, {
       headers: corsHeaders,
       status: 204,
@@ -19,54 +17,10 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Mark invoice paid: Starting function")
-    
-    // Get authorization from request headers
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      console.error("Mark invoice paid: No authorization header provided")
-      throw new Error('No authorization header provided')
-    }
-
-    // Create Supabase client with auth context
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("Mark invoice paid: Missing Supabase environment variables");
-      throw new Error('Server configuration error: Missing Supabase environment variables');
-    }
-    
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseAnonKey,
-      { global: { headers: { Authorization: authHeader } } }
-    )
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      console.error("Mark invoice paid: Unauthorized", userError?.message)
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        }
-      )
-    }
-
-    // Get invoice data from request body
+    // Parse request body
     const { invoiceId, paymentDetails } = await req.json()
-    
-    console.log(`Mark invoice paid: Processing invoice ${invoiceId}`, paymentDetails)
-    
+
     if (!invoiceId) {
-      console.error("Mark invoice paid: Invoice ID is required")
       return new Response(
         JSON.stringify({ error: 'Invoice ID is required' }),
         {
@@ -76,226 +30,144 @@ serve(async (req) => {
       )
     }
 
-    // Get current date for payment date
-    const paidDate = new Date().toISOString()
-    
-    // First, try to update Stripe invoices table if it exists
-    try {
-      console.log(`Mark invoice paid: Attempting to update stripe invoice ${invoiceId}`);
-      const { data: stripeInvoice, error: stripeInvoiceError } = await supabase
-        .from('stripe_invoices')
-        .update({
-          status: 'paid',
-          paid_date: paidDate,
-          updated_at: paidDate
-        })
-        .eq('id', invoiceId)
-        .select()
-        .single()
-        
-      // If we successfully updated a stripe invoice
-      if (!stripeInvoiceError && stripeInvoice) {
-        console.log(`Mark invoice paid: Successfully updated Stripe invoice ${invoiceId}`, stripeInvoice)
-        
-        // Create a payment record for the Stripe invoice
-        try {
-          const paymentData = {
-            invoice_id: invoiceId,
-            amount: stripeInvoice.amount_total,
-            payment_date: paymentDetails?.date || paidDate,
-            payment_method: paymentDetails?.method || 'manual',
-            payment_reference: paymentDetails?.reference || null,
-            status: 'completed',
-            client_id: stripeInvoice.client_id
-          };
-          
-          console.log("Mark invoice paid: Creating payment record with data:", paymentData);
-          
-          const { data: payment, error: paymentError } = await supabase
-            .from('payments')
-            .insert(paymentData)
-            .select()
-            .single()
-          
-          if (paymentError) {
-            console.error("Mark invoice paid: Error creating payment record for stripe invoice:", paymentError)
-            
-            // Return success but with warning about payment record
-            return new Response(
-              JSON.stringify({
-                success: true,
-                invoice: stripeInvoice,
-                payment: null,
-                warning: "Invoice marked as paid but payment record creation failed"
-              }),
-              {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                status: 200,
-              }
-            )
-          }
-          
-          console.log("Mark invoice paid: Created payment record for stripe invoice", payment)
-          
-          return new Response(
-            JSON.stringify({
-              success: true,
-              invoice: stripeInvoice,
-              payment: payment || null
-            }),
-            {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 200,
-            }
-          )
-        } catch (paymentCreateError) {
-          console.error("Mark invoice paid: Exception creating payment record:", paymentCreateError)
-          
-          // Return success but with warning about payment record
-          return new Response(
-            JSON.stringify({
-              success: true,
-              invoice: stripeInvoice,
-              payment: null,
-              warning: "Invoice marked as paid but payment record creation failed due to exception"
-            }),
-            {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 200,
-            }
-          )
-        }
-      }
-    } catch (stripeError) {
-      console.error("Mark invoice paid: Error updating stripe invoice:", stripeError)
-      // Continue to try regular invoice as fallback
-    }
-    
-    // If no Stripe invoice was found, try the regular invoices table
-    try {
-      console.log(`Mark invoice paid: Attempting to update regular invoice ${invoiceId}`)
-      const { data: invoice, error: invoiceError } = await supabase
-        .from('invoices')
-        .update({
-          status: 'paid',
-          updated_at: paidDate
-        })
-        .eq('id', invoiceId)
-        .select()
-      
-      if (invoiceError) {
-        console.error(`Mark invoice paid: Error updating regular invoice:`, invoiceError)
-        throw new Error(`Error updating invoice: ${invoiceError.message}`)
-      }
-      
-      if (!invoice || invoice.length === 0) {
-        console.error(`Mark invoice paid: No invoice found with ID ${invoiceId}`)
-        return new Response(
-          JSON.stringify({
-            error: 'Invoice not found',
-            success: false
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 404,
-          }
-        )
-      }
-      
-      // Create a payment record if successful
-      const invoiceRecord = Array.isArray(invoice) ? invoice[0] : invoice;
-      console.log(`Mark invoice paid: Updated regular invoice ${invoiceId}`, invoiceRecord)
-      
-      try {
-        const paymentData = {
-          invoice_id: invoiceId,
-          amount: invoiceRecord.total_amount,
-          payment_date: paymentDetails?.date || paidDate,
-          payment_method: paymentDetails?.method || 'manual',
-          payment_reference: paymentDetails?.reference || null,
-          status: 'completed',
-          client_id: invoiceRecord.client_id,
-          company_id: invoiceRecord.company_id
-        };
-        
-        console.log("Mark invoice paid: Creating payment record with data:", paymentData);
-        
-        const { data: payment, error: paymentError } = await supabase
-          .from('payments')
-          .insert(paymentData)
-          .select()
-          .single()
-          
-        if (paymentError) {
-          console.error("Mark invoice paid: Error creating payment record for regular invoice:", paymentError)
-          
-          return new Response(
-            JSON.stringify({
-              success: true,
-              invoice: invoiceRecord,
-              payment: null,
-              warning: "Invoice marked as paid but payment record creation failed"
-            }),
-            {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 200,
-            }
-          )
-        }
-        
-        console.log("Mark invoice paid: Created payment record for regular invoice", payment)
-        
-        return new Response(
-          JSON.stringify({
-            success: true,
-            invoice: invoiceRecord,
-            payment: payment || null
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
-          }
-        )
-      } catch (paymentError) {
-        console.error("Mark invoice paid: Error in payment creation:", paymentError)
-        
-        // Still return success since the invoice was marked as paid
-        return new Response(
-          JSON.stringify({
-            success: true,
-            invoice: invoiceRecord,
-            payment: null,
-            warning: "Invoice marked as paid but payment record creation failed"
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
-          }
-        )
-      }
-    } catch (invoiceError) {
-      console.error("Mark invoice paid: Error in invoice update:", invoiceError)
-      throw invoiceError
+    // Get authorization from request headers
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header provided')
     }
 
-    // If we got here, neither table update worked
-    console.error(`Mark invoice paid: Could not find matching invoice to update ${invoiceId}`)
+    // Create Supabase client with auth context
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
+    // Get authenticated user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser()
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
+    }
+
+    // Get the invoice
+    const { data: invoice, error: invoiceError } = await supabaseClient
+      .from('invoices')
+      .select('*')
+      .eq('id', invoiceId)
+      .single()
+
+    if (invoiceError || !invoice) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invoice not found',
+          details: invoiceError?.message 
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404,
+        }
+      )
+    }
+
+    // Check if invoice is already paid
+    if (invoice.status === 'paid') {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          warning: 'Cette facture est déjà marquée comme payée',
+          invoice
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    // Update invoice status to "paid"
+    const { data: updatedInvoice, error: updateError } = await supabaseClient
+      .from('invoices')
+      .update({
+        status: 'paid',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', invoiceId)
+      .select()
+      .single()
+
+    if (updateError) {
+      throw new Error(`Failed to update invoice: ${updateError.message}`)
+    }
+
+    // Create payment record
+    const payment = {
+      invoice_id: invoiceId,
+      client_id: invoice.client_id,
+      amount: invoice.total_amount,
+      payment_date: paymentDetails?.date ? new Date(paymentDetails.date).toISOString() : new Date().toISOString(),
+      payment_method: paymentDetails?.method || 'manual',
+      payment_reference: paymentDetails?.reference || `manual-${Date.now()}`,
+      status: 'completed',
+      currency: 'EUR'
+    }
+
+    const { data: createdPayment, error: paymentError } = await supabaseClient
+      .from('payments')
+      .insert([payment])
+      .select()
+      .single()
+
+    if (paymentError) {
+      console.error('Error creating payment record:', paymentError)
+      // Continue anyway as the invoice is marked paid
+    }
+
+    // Create notification for the payment
+    try {
+      await supabaseClient
+        .from('notifications')
+        .insert([{
+          user_id: user.id,
+          type: 'payment',
+          title: 'Paiement enregistré',
+          message: `Le paiement pour la facture ${invoice.invoice_number} a été enregistré.`,
+          reference_type: 'invoice',
+          reference_id: invoiceId,
+          is_read: false
+        }])
+    } catch (notificationError) {
+      console.error('Error creating notification:', notificationError)
+      // Continue anyway as this is non-critical
+    }
+
+    // Return success response
     return new Response(
       JSON.stringify({
-        error: 'Could not find matching invoice to update',
-        success: false
+        success: true,
+        invoice: updatedInvoice,
+        payment: createdPayment || null
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 404,
+        status: 200,
       }
     )
   } catch (error) {
     console.error('Error marking invoice as paid:', error)
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        success: false
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

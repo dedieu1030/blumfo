@@ -1,201 +1,173 @@
 
-import React, { useState, useEffect } from 'react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-import { useTranslation } from "react-i18next";
-import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { fr } from 'date-fns/locale';
-
-interface Invoice {
-  id: string;
-  invoice_number: string;
-  amount?: number;
-}
-
-interface PaymentDetails {
-  date: Date;
-  method: string;
-  reference?: string;
-}
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { CalendarIcon, Check, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { markInvoiceAsPaid, PaymentDetails } from "@/services/invoiceApiClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface InvoicePaymentConfirmDialogProps {
-  isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
-  invoice: Invoice;
-  onConfirm: (paymentDetails: PaymentDetails) => void;
-  isProcessing?: boolean;
+  invoiceId: string;
+  invoiceNumber: string;
+  onConfirm?: (success: boolean) => void;
 }
 
 export function InvoicePaymentConfirmDialog({
-  isOpen,
+  open,
   onOpenChange,
-  invoice,
-  onConfirm,
-  isProcessing = false
+  invoiceId,
+  invoiceNumber,
+  onConfirm
 }: InvoicePaymentConfirmDialogProps) {
-  const { t } = useTranslation();
-  const [paymentDate, setPaymentDate] = useState<Date>(new Date());
-  const [paymentMethod, setPaymentMethod] = useState<string>('bankTransfer');
-  const [paymentReference, setPaymentReference] = useState<string>('');
-  
-  // Reset form when the dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      setPaymentDate(new Date());
-      setPaymentMethod('bankTransfer');
-      setPaymentReference('');
-    }
-  }, [isOpen]);
-  
-  const handleConfirm = () => {
-    if (!isProcessing) {
-      onConfirm({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
+  const [paymentMethod, setPaymentMethod] = useState<string>("bank_transfer");
+  const [reference, setReference] = useState<string>("");
+  const { toast } = useToast();
+
+  async function handleConfirm() {
+    if (!invoiceId) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const paymentDetails: PaymentDetails = {
         date: paymentDate,
         method: paymentMethod,
-        reference: paymentReference
+        reference: reference.trim() || undefined
+      };
+      
+      const result = await markInvoiceAsPaid(invoiceId, paymentDetails);
+      
+      if (result.success) {
+        toast({
+          title: "Paiement enregistré",
+          description: `La facture ${invoiceNumber} a été marquée comme payée.`,
+          variant: "default",
+        });
+        
+        onOpenChange(false);
+        if (onConfirm) onConfirm(true);
+      } else if (result.warning) {
+        toast({
+          title: "Avertissement",
+          description: result.warning,
+          variant: "destructive",
+        });
+        
+        onOpenChange(false);
+      } else {
+        throw new Error(result.error || "Échec de l'enregistrement du paiement");
+      }
+    } catch (error) {
+      console.error("Erreur lors du marquage de la facture comme payée:", error);
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors du traitement du paiement",
+        variant: "destructive",
       });
+      
+      if (onConfirm) onConfirm(false);
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }
 
   return (
-    <AlertDialog 
-      open={isOpen} 
-      onOpenChange={(open) => {
-        if (!isProcessing) {
-          onOpenChange(open);
-        }
-      }}
-    >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("confirmPayment")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("confirmPaymentDesc", "Êtes-vous sûr de vouloir marquer cette facture comme payée ?")}
-            <div className="mt-2 p-3 bg-muted rounded-md">
-              <p className="font-medium">{t("invoice")}: {invoice.invoice_number}</p>
-              {invoice.amount && (
-                <p className="text-sm text-muted-foreground">
-                  {t("amount")}: {invoice.amount.toLocaleString(undefined, {
-                    style: 'currency',
-                    currency: 'EUR'
-                  })}
-                </p>
-              )}
-            </div>
-            
-            <div className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="payment-date">{t("paymentDate")}</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="payment-date"
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !paymentDate && "text-muted-foreground"
-                      )}
-                      disabled={isProcessing}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {paymentDate ? format(paymentDate, "PPP", { locale: fr }) : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={paymentDate}
-                      onSelect={(date) => {
-                        if (date) {
-                          setPaymentDate(date);
-                        }
-                      }}
-                      // Removed the initialFocus prop here
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="payment-method">{t("paymentMethod")}</Label>
-                <Select 
-                  value={paymentMethod} 
-                  onValueChange={setPaymentMethod}
-                  disabled={isProcessing}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Confirmer le paiement</DialogTitle>
+          <DialogDescription>
+            Enregistrez les informations de paiement pour la facture {invoiceNumber}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="payment-date">Date du paiement</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="payment-date"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !paymentDate && "text-muted-foreground"
+                  )}
                 >
-                  <SelectTrigger id="payment-method" className="w-full">
-                    <SelectValue placeholder={t("selectPaymentMethod")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bankTransfer">{t("bankTransfer")}</SelectItem>
-                    <SelectItem value="check">{t("check")}</SelectItem>
-                    <SelectItem value="cash">{t("cash")}</SelectItem>
-                    <SelectItem value="stripeOffPlatform">{t("stripeOffPlatform")}</SelectItem>
-                    <SelectItem value="other">{t("other")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="payment-reference">
-                  {t("paymentReference")}
-                </Label>
-                <Input
-                  id="payment-reference"
-                  placeholder={t("referenceExample")}
-                  value={paymentReference}
-                  onChange={(e) => setPaymentReference(e.target.value)}
-                  disabled={isProcessing}
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {paymentDate ? format(paymentDate, "PPP", { locale: fr }) : "Sélectionnez une date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={paymentDate}
+                  onSelect={setPaymentDate}
+                  initialFocus
                 />
-                <p className="text-xs text-muted-foreground">
-                  {t("referenceHelp")}
-                </p>
-              </div>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isProcessing}>{t("cancel")}</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={handleConfirm} 
-            className="bg-success hover:bg-success/90"
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="payment-method">Méthode de paiement</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger id="payment-method">
+                <SelectValue placeholder="Sélectionnez une méthode de paiement" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
+                <SelectItem value="credit_card">Carte bancaire</SelectItem>
+                <SelectItem value="check">Chèque</SelectItem>
+                <SelectItem value="cash">Espèces</SelectItem>
+                <SelectItem value="other">Autre</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="payment-reference">
+              Référence du paiement
+              <span className="text-muted-foreground text-xs ml-1">(optionnel)</span>
+            </Label>
+            <Input
+              id="payment-reference"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="N° de transaction, chèque..."
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button onClick={handleConfirm} disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("confirming")}
+                Traitement...
               </>
             ) : (
-              t("confirmPaymentButton")
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Confirmer le paiement
+              </>
             )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
-
-export default InvoicePaymentConfirmDialog;
