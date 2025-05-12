@@ -10,7 +10,7 @@ import { useState } from "react";
 import { InvoiceDialog } from "./InvoiceDialog";
 import { QuoteDialog } from "./QuoteDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Icon } from "@/components/ui/icon";
+import { Icon, IconName } from "@/components/ui/icon";
 
 export const QuickAction = () => {
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);

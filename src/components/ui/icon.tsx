@@ -13,15 +13,15 @@ export interface IconProps extends Omit<React.SVGAttributes<SVGElement>, 'name'>
 
 export function Icon({ name, size = 24, className, ...props }: IconProps) {
   // Check if the icon exists in the Lucide collection
-  const IconComponent = LucideIcons[name as keyof typeof LucideIcons];
+  const LucideIcon = LucideIcons[name];
 
-  if (!IconComponent) {
+  if (!LucideIcon) {
     console.error(`Icon "${String(name)}" not found`);
     return null;
   }
 
   return (
-    <IconComponent 
+    <LucideIcon 
       width={size} 
       height={size}
       className={cn("shrink-0", className)}

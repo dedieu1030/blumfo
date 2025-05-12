@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Icon } from "@/components/ui/icon";
+import { Icon, IconName } from "@/components/ui/icon";
 
 interface SidebarProps {
   className?: string;
@@ -20,14 +20,14 @@ export function Sidebar({ className }: SidebarProps) {
   };
   
   const navigationItems = [
-    { icon: "PieChart", name: t('dashboard'), path: "/" },
-    { icon: "CreditCard", name: t('invoicing'), path: "/invoicing" },
-    { icon: "FileText", name: t('invoices'), path: "/invoices" },
-    { icon: "FileEdit", name: "Devis", path: "/quotes" },
-    { icon: "LayoutGrid", name: t('templates'), path: "/templates" },
-    { icon: "Users", name: t('clients'), path: "/clients" },
-    { icon: "Package", name: t('products'), path: "/products" },
-    { icon: "Settings", name: t('settings'), path: "/settings" }
+    { icon: "PieChart" as IconName, name: t('dashboard'), path: "/" },
+    { icon: "CreditCard" as IconName, name: t('invoicing'), path: "/invoicing" },
+    { icon: "FileText" as IconName, name: t('invoices'), path: "/invoices" },
+    { icon: "FileEdit" as IconName, name: "Devis", path: "/quotes" },
+    { icon: "LayoutGrid" as IconName, name: t('templates'), path: "/templates" },
+    { icon: "Users" as IconName, name: t('clients'), path: "/clients" },
+    { icon: "Package" as IconName, name: t('products'), path: "/products" },
+    { icon: "Settings" as IconName, name: t('settings'), path: "/settings" }
   ];
 
   // Obtention des initiales de l'utilisateur pour l'avatar

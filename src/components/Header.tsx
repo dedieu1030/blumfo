@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useIsToplevel } from "@/hooks/use-is-toplevel";
 import { useWindowSize } from "@/hooks/use-window-size";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@/components/ui/icon";
+import { Icon, IconName } from "@/components/ui/icon";
 
 interface HeaderProps {
   title: string;

@@ -128,7 +128,7 @@ export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: Inv
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuItem onClick={() => {}}>
-              <Icon name="DownloadAlt" size={16} className="mr-2" />
+              <Icon name="Download" size={16} className="mr-2" />
               <span>{t("downloadInvoice")}</span>
             </DropdownMenuItem>
             
