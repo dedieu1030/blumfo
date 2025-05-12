@@ -12,13 +12,23 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, FileText, FilePlus } from "lucide-react";
 import { QuoteList } from "@/components/QuoteList";
 
+// Interface pour les props du DashboardStats
+interface DashboardStatsData {
+  invoicesCount: number;
+  paidCount: number;
+  pendingCount: number;
+  overdueCount: number;
+  isLoading: boolean;
+}
+
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalInvoices: 0,
-    totalPaid: 0,
-    totalPending: 0,
-    totalOverdue: 0,
+  const [statsData, setStatsData] = useState<DashboardStatsData>({
+    invoicesCount: 0,
+    paidCount: 0,
+    pendingCount: 0,
+    overdueCount: 0,
+    isLoading: true
   });
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
 
@@ -35,14 +45,14 @@ const Dashboard = () => {
           throw invoicesError;
         }
 
-        const invoiceStats = {
-          totalInvoices: invoicesData.length,
-          totalPaid: invoicesData.filter((inv) => inv.status === "paid").length,
-          totalPending: invoicesData.filter((inv) => inv.status === "pending").length,
-          totalOverdue: invoicesData.filter((inv) => inv.status === "overdue").length,
-        };
-
-        setStats(invoiceStats);
+        // Update stats with correct property names
+        setStatsData({
+          invoicesCount: invoicesData.length,
+          paidCount: invoicesData.filter((inv) => inv.status === "paid").length,
+          pendingCount: invoicesData.filter((inv) => inv.status === "pending").length,
+          overdueCount: invoicesData.filter((inv) => inv.status === "overdue").length,
+          isLoading: false
+        });
 
         // Fetch recent invoices
         const { data: recentData, error: recentError } = await supabase
@@ -56,18 +66,24 @@ const Dashboard = () => {
         }
 
         // Transform data to match Invoice type
-        const recentInvoicesData = recentData.map((invoice) => ({
+        const transformedInvoices: Invoice[] = recentData.map((invoice) => ({
           id: invoice.id,
-          invoice_number: invoice.invoice_number,
+          number: invoice.invoice_number,
           client_name: invoice.client?.client_name || "Client inconnu",
+          amount: invoice.total_amount,
+          date: invoice.issue_date,
+          dueDate: invoice.due_date,
+          status: invoice.status,
+          client: invoice.client,
+          
+          // Ajout des propriétés requises par le type Invoice
+          invoice_number: invoice.invoice_number,
           issue_date: invoice.issue_date,
           due_date: invoice.due_date,
-          total_amount: invoice.total_amount,
-          status: invoice.status as "paid" | "pending" | "overdue" | "draft",
-          client: invoice.client,
+          total_amount: invoice.total_amount
         }));
 
-        setRecentInvoices(recentInvoicesData);
+        setRecentInvoices(transformedInvoices);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -88,11 +104,11 @@ const Dashboard = () => {
       />
       
       <DashboardStats
-        totalInvoices={stats.totalInvoices}
-        totalPaid={stats.totalPaid}
-        totalPending={stats.totalPending}
-        totalOverdue={stats.totalOverdue}
-        loading={loading}
+        invoicesCount={statsData.invoicesCount}
+        paidCount={statsData.paidCount}
+        pendingCount={statsData.pendingCount}
+        overdueCount={statsData.overdueCount}
+        isLoading={statsData.isLoading}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -112,7 +128,6 @@ const Dashboard = () => {
           <CardContent>
             <InvoiceList 
               invoices={recentInvoices}
-              loading={loading}
               limit={5}
               showActions={false}
             />

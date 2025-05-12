@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -103,9 +102,12 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
       if (quoteError) throw quoteError;
 
       // Créer une nouvelle facture basée sur le devis
+      const invoiceNumber = `INV-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+      
       const { data: invoice, error: invoiceError } = await supabase
         .from("invoices")
         .insert({
+          invoice_number: invoiceNumber,
           client_id: quote.client_id,
           company_id: quote.company_id,
           subtotal: quote.subtotal,

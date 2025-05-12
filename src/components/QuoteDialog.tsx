@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Quote } from "@/types/quote";
 
 interface QuoteFormValues {
   client_id: string | null;
@@ -43,6 +44,8 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
   const [items, setItems] = useState<{ description: string; quantity: number; unit_price: number; total_price: number; }[]>([
     { description: "", quantity: 1, unit_price: 0, total_price: 0 }
   ]);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<QuoteFormValues>({
     defaultValues: {
@@ -54,6 +57,70 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
       items: [{ description: "", quantity: 1, unit_price: 0, total_price: 0 }]
     }
   });
+
+  // Fetch quote data if editing
+  useEffect(() => {
+    if (editQuoteId && open) {
+      const fetchQuote = async () => {
+        try {
+          setIsLoading(true);
+          const { data, error } = await supabase
+            .from("devis")
+            .select(`
+              *,
+              items:devis_items (*)
+            `)
+            .eq("id", editQuoteId)
+            .single();
+
+          if (error) throw error;
+
+          if (data) {
+            const quote = data as Quote;
+            
+            form.reset({
+              client_id: quote.client_id || null,
+              issue_date: new Date(quote.issue_date),
+              validity_date: quote.validity_date ? new Date(quote.validity_date) : null,
+              execution_date: quote.execution_date ? new Date(quote.execution_date) : null,
+              notes: quote.notes,
+              items: []
+            });
+
+            setSelectedClientId(quote.client_id || null);
+
+            if (quote.items && quote.items.length > 0) {
+              setItems(quote.items.map(item => ({
+                description: item.description,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total_price: item.total_price
+              })));
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching quote:", err);
+          toast.error("Erreur lors du chargement du devis");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchQuote();
+    } else {
+      // Reset form when opening for a new quote
+      form.reset({
+        client_id: null,
+        issue_date: new Date(),
+        validity_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        execution_date: null,
+        notes: null,
+        items: []
+      });
+      setItems([{ description: "", quantity: 1, unit_price: 0, total_price: 0 }]);
+      setSelectedClientId(null);
+    }
+  }, [editQuoteId, open, form]);
 
   const calculateTotals = () => {
     const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
@@ -118,7 +185,7 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
         const { error: updateError } = await supabase
           .from('devis')
           .update({
-            client_id: data.client_id,
+            client_id: selectedClientId,
             company_id,
             issue_date: format(data.issue_date, 'yyyy-MM-dd'),
             validity_date: data.validity_date ? format(data.validity_date, 'yyyy-MM-dd') : null,
@@ -146,7 +213,7 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
         const { data: quoteData, error: insertError } = await supabase
           .from('devis')
           .insert({
-            client_id: data.client_id,
+            client_id: selectedClientId,
             company_id,
             issue_date: format(data.issue_date, 'yyyy-MM-dd'),
             validity_date: data.validity_date ? format(data.validity_date, 'yyyy-MM-dd') : null,
@@ -194,6 +261,23 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
     }
   };
 
+  const handleClientChange = (clientId: string) => {
+    setSelectedClientId(clientId);
+    form.setValue("client_id", clientId);
+  };
+
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -207,13 +291,13 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
               <FormField
                 control={form.control}
                 name="client_id"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Client</FormLabel>
                     <FormControl>
                       <ClientSelector 
-                        value={field.value} 
-                        onChange={field.onChange} 
+                        defaultValue={selectedClientId || undefined}
+                        onSelect={handleClientChange}
                       />
                     </FormControl>
                     <FormMessage />

@@ -7,27 +7,31 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { SignatureDisplay } from "@/components/SignatureDisplay";
-import { Quote, QuoteSignature, QuoteSignRequest } from "@/types/quote";
+import { Quote, QuoteSignature as QuoteSignatureType, QuoteSignRequest } from "@/types/quote";
 import { SignatureData } from "@/types/invoice";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface QuoteSignatureProps {
-  quote: Quote;
-  onSuccess?: (signature: QuoteSignature) => void;
+  quote?: Quote;
+  quoteId?: string;
+  onSuccess?: (signature?: QuoteSignatureType) => void;
   readOnly?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function QuoteSignatureComponent({ quote, onSuccess, readOnly = false }: QuoteSignatureProps) {
+export function QuoteSignatureComponent({ quote, quoteId, onSuccess, readOnly = false }: QuoteSignatureProps) {
   const [signatureData, setSignatureData] = useState<SignatureData | undefined>();
   const [signerName, setSignerName] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const existingSignature = quote.signatures && quote.signatures.length > 0 
+  const existingSignature = quote?.signatures && quote.signatures.length > 0 
     ? quote.signatures[0] : undefined;
   
   const handleSignatureChange = (data: SignatureData | undefined) => {
@@ -60,7 +64,7 @@ export function QuoteSignatureComponent({ quote, onSuccess, readOnly = false }: 
       const userAgent = navigator.userAgent;
       
       const signRequest: QuoteSignRequest = {
-        quoteId: quote.id,
+        quoteId: quote?.id || quoteId || "",
         signatureData: signatureData,
         signedName: signerName
       };
@@ -119,7 +123,7 @@ export function QuoteSignatureComponent({ quote, onSuccess, readOnly = false }: 
   }
   
   // Si le devis est déjà signé et qu'on n'est pas en mode lecture seule
-  if (quote.status === 'signed' && !readOnly) {
+  if (quote?.status === 'signed' && !readOnly) {
     return (
       <Card className="max-w-xl mx-auto my-6">
         <CardHeader>
@@ -137,7 +141,7 @@ export function QuoteSignatureComponent({ quote, onSuccess, readOnly = false }: 
       <CardHeader>
         <CardTitle>Signature du devis</CardTitle>
         <CardDescription>
-          Veuillez signer le devis {quote.quote_number} pour accepter les conditions.
+          Veuillez signer le devis {quote?.quote_number} pour accepter les conditions.
         </CardDescription>
       </CardHeader>
       
@@ -189,5 +193,16 @@ export function QuoteSignatureComponent({ quote, onSuccess, readOnly = false }: 
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+// Composant wrapper avec Dialog pour la signature
+export function QuoteSignature({ open, onOpenChange, quoteId, onSuccess }: QuoteSignatureProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <QuoteSignatureComponent quoteId={quoteId} onSuccess={onSuccess} />
+      </DialogContent>
+    </Dialog>
   );
 }

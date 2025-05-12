@@ -56,10 +56,8 @@ const QuoteView = () => {
   const handleSignatureSuccess = () => {
     setSigned(true);
     setSignatureOpen(false);
-    toast("Devis signé avec succès", {
-      description: "Le devis a été signé et envoyé.",
-      icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
-      variant: "default"
+    toast.success("Devis signé avec succès", {
+      description: "Le devis a été signé et envoyé."
     });
   };
 
@@ -85,16 +83,16 @@ const QuoteView = () => {
               <CardDescription>Émis le {format(new Date(quote.issue_date), "dd/MM/yyyy")}</CardDescription>
             </div>
             <div className="text-right">
-              <div className="inline-block px-3 py-1 rounded-full text-sm font-medium 
+              <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium 
                             bg-opacity-10 uppercase
-                            {quote.status === 'draft' && 'bg-gray-200 text-gray-800'} 
-                            {quote.status === 'sent' && 'bg-blue-200 text-blue-800'}
-                            {quote.status === 'viewed' && 'bg-purple-200 text-purple-800'}
-                            {quote.status === 'signed' && 'bg-green-200 text-green-800'}
-                            {quote.status === 'rejected' && 'bg-red-200 text-red-800'}
-                            {quote.status === 'expired' && 'bg-amber-200 text-amber-800'}
-                            {quote.status === 'accepted' && 'bg-emerald-200 text-emerald-800'}
-                            {quote.status === 'invoiced' && 'bg-teal-200 text-teal-800'}">
+                            ${quote.status === 'draft' ? 'bg-gray-200 text-gray-800' : ''} 
+                            ${quote.status === 'sent' ? 'bg-blue-200 text-blue-800' : ''}
+                            ${quote.status === 'viewed' ? 'bg-purple-200 text-purple-800' : ''}
+                            ${quote.status === 'signed' ? 'bg-green-200 text-green-800' : ''}
+                            ${quote.status === 'rejected' ? 'bg-red-200 text-red-800' : ''}
+                            ${quote.status === 'expired' ? 'bg-amber-200 text-amber-800' : ''}
+                            ${quote.status === 'accepted' ? 'bg-emerald-200 text-emerald-800' : ''}
+                            ${quote.status === 'invoiced' ? 'bg-teal-200 text-teal-800' : ''}`}>
                 {quote.status}
               </div>
             </div>
@@ -188,7 +186,7 @@ const QuoteView = () => {
                 {quote.signatures[0].signature_data && (
                   <div className="mt-2 border rounded p-2 bg-gray-50">
                     <img 
-                      src={`data:image/png;base64,${quote.signatures[0].signature_data.data}`} 
+                      src={`data:image/png;base64,${quote.signatures[0].signature_data?.data}`} 
                       alt="Signature" 
                       className="max-h-24"
                     />
