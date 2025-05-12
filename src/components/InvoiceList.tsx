@@ -30,12 +30,13 @@ interface Invoice {
   stripeInvoiceId?: string;
 }
 
-interface InvoiceListProps {
-  title: string;
+import React from 'react';
+import { Invoice } from '@/types/invoice';
+
+export interface InvoiceListProps {
   invoices: Invoice[];
   limit?: number;
-  showViewAll?: boolean;
-  onInvoiceStatusChanged?: () => void;
+  showActions?: boolean;  // Ajouté pour supporter l'option de masquer les actions
 }
 
 export function InvoiceList({ 
@@ -43,6 +44,7 @@ export function InvoiceList({
   invoices, 
   limit, 
   showViewAll = false,
+  showActions = true,
   onInvoiceStatusChanged
 }: InvoiceListProps) {
   const displayedInvoices = limit ? invoices.slice(0, limit) : invoices;

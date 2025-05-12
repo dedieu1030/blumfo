@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -186,7 +185,7 @@ const QuoteView = () => {
                 {quote.signatures[0].signature_data && (
                   <div className="mt-2 border rounded p-2 bg-gray-50">
                     <img 
-                      src={`data:image/png;base64,${quote.signatures[0].signature_data?.data}`} 
+                      src={`data:image/png;base64,${quote.signatures[0].signature_data.dataURL?.split(',')[1] || ''}`} 
                       alt="Signature" 
                       className="max-h-24"
                     />

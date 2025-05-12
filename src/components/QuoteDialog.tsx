@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -261,9 +260,9 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
     }
   };
 
-  const handleClientChange = (clientId: string) => {
-    setSelectedClientId(clientId);
-    form.setValue("client_id", clientId);
+  const handleClientChange = (client) => {
+    setSelectedClientId(client.id);
+    form.setValue("client_id", client.id);
   };
 
   if (isLoading) {
@@ -296,8 +295,8 @@ export const QuoteDialog = ({ open, onOpenChange, editQuoteId, onSuccess }: Quot
                     <FormLabel>Client</FormLabel>
                     <FormControl>
                       <ClientSelector 
-                        defaultValue={selectedClientId || undefined}
-                        onSelect={handleClientChange}
+                        onClientSelect={handleClientChange}
+                        buttonText="Sélectionner un client"
                       />
                     </FormControl>
                     <FormMessage />

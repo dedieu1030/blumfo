@@ -12,24 +12,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, FileText, FilePlus } from "lucide-react";
 import { QuoteList } from "@/components/QuoteList";
 
-// Interface pour les props du DashboardStats
-interface DashboardStatsData {
-  invoicesCount: number;
-  paidCount: number;
-  pendingCount: number;
-  overdueCount: number;
-  isLoading: boolean;
-}
-
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [statsData, setStatsData] = useState<DashboardStatsData>({
-    invoicesCount: 0,
-    paidCount: 0,
-    pendingCount: 0,
-    overdueCount: 0,
-    isLoading: true
-  });
+  const [overdueInvoices, setOverdueInvoices] = useState<Invoice[]>([]);
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
 
   useEffect(() => {
@@ -45,14 +30,29 @@ const Dashboard = () => {
           throw invoicesError;
         }
 
-        // Update stats with correct property names
-        setStatsData({
-          invoicesCount: invoicesData.length,
-          paidCount: invoicesData.filter((inv) => inv.status === "paid").length,
-          pendingCount: invoicesData.filter((inv) => inv.status === "pending").length,
-          overdueCount: invoicesData.filter((inv) => inv.status === "overdue").length,
-          isLoading: false
-        });
+        // Update overdue invoices
+        const { data: overdueData, error: overdueError } = await supabase
+          .from("invoices")
+          .select("*, client:client_id(*)")
+          .eq("status", "overdue")
+          .order("due_date", { ascending: false });
+          
+        if (overdueError) {
+          throw overdueError;
+        }
+
+        // Transform data for overdue invoices
+        const transformedOverdueInvoices = overdueData.map((invoice) => ({
+          id: invoice.id,
+          number: invoice.invoice_number,
+          client_name: invoice.client?.client_name || "Client inconnu",
+          amount: invoice.total_amount.toString(),
+          date: invoice.issue_date,
+          dueDate: invoice.due_date,
+          status: invoice.status
+        }));
+
+        setOverdueInvoices(transformedOverdueInvoices);
 
         // Fetch recent invoices
         const { data: recentData, error: recentError } = await supabase
@@ -66,21 +66,14 @@ const Dashboard = () => {
         }
 
         // Transform data to match Invoice type
-        const transformedInvoices: Invoice[] = recentData.map((invoice) => ({
+        const transformedInvoices = recentData.map((invoice) => ({
           id: invoice.id,
           number: invoice.invoice_number,
           client_name: invoice.client?.client_name || "Client inconnu",
-          amount: invoice.total_amount,
+          amount: invoice.total_amount.toString(),
           date: invoice.issue_date,
           dueDate: invoice.due_date,
-          status: invoice.status,
-          client: invoice.client,
-          
-          // Ajout des propriétés requises par le type Invoice
-          invoice_number: invoice.invoice_number,
-          issue_date: invoice.issue_date,
-          due_date: invoice.due_date,
-          total_amount: invoice.total_amount
+          status: invoice.status
         }));
 
         setRecentInvoices(transformedInvoices);
@@ -104,11 +97,7 @@ const Dashboard = () => {
       />
       
       <DashboardStats
-        invoicesCount={statsData.invoicesCount}
-        paidCount={statsData.paidCount}
-        pendingCount={statsData.pendingCount}
-        overdueCount={statsData.overdueCount}
-        isLoading={statsData.isLoading}
+        overdueInvoices={overdueInvoices}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -129,7 +118,6 @@ const Dashboard = () => {
             <InvoiceList 
               invoices={recentInvoices}
               limit={5}
-              showActions={false}
             />
           </CardContent>
         </Card>
