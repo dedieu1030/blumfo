@@ -105,7 +105,7 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
           
           <div className="p-4 border-t border-border">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <Link to="/profile" className="flex items-center" onClick={() => onOpenChange(false)}>
                 <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                   <span className="text-primary-foreground font-medium">MD</span>
                 </div>
@@ -113,7 +113,7 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
                   <div className="text-sm font-medium">Me Dupont</div>
                   <div className="text-xs text-muted-foreground">Cabinet Dupont</div>
                 </div>
-              </div>
+              </Link>
               <Button variant="ghost" size="sm" onClick={handleLogout} className="text-destructive">
                 Déconnecter
               </Button>

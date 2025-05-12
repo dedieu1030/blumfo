@@ -75,7 +75,7 @@ export function Sidebar({ className }: SidebarProps) {
           {t('profile', 'Profil')}
         </Link>
         
-        <div className="flex items-center cursor-pointer">
+        <Link to="/profile" className="flex items-center cursor-pointer">
           <div className="w-8 h-8 bg-[#003427] rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm">MD</span>
           </div>
@@ -83,7 +83,7 @@ export function Sidebar({ className }: SidebarProps) {
             <div className="text-sm font-medium text-gray-800">Me Dupont</div>
             <div className="text-xs text-gray-600">Cabinet Dupont</div>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );
