@@ -1,3 +1,4 @@
+
 // This file handles PDF generation from invoice templates
 
 import { formatMoney } from './stripe';
@@ -668,4 +669,103 @@ export const generateInvoiceHTML = (invoiceData: any, templateId: string): strin
       
     // Classic (default) template
     default:
-      html
+      html = `
+      <style>
+        ${commonStyles}
+      </style>
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+          <div>
+            <h1 style="font-size: 24px; color: #333; margin: 0;">FACTURE</h1>
+            <p style="color: #666; margin-top: 5px;">N° ${invoiceData.invoiceNumber}</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="font-weight: bold;">Votre Entreprise</p>
+            <p>123 Rue de Paris<br>75001 Paris, France</p>
+          </div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+          <div>
+            <h2 style="font-size: 16px; color: #333; margin-bottom: 10px;">Facturer à:</h2>
+            <p style="font-weight: bold;">${invoiceData.clientName}</p>
+            <p>${invoiceData.clientAddress}</p>
+            <p>${invoiceData.clientEmail}</p>
+          </div>
+          <div style="text-align: right;">
+            <p><strong>Date:</strong> ${invoiceDate}</p>
+            <p><strong>Échéance:</strong> ${formattedDueDate}</p>
+          </div>
+        </div>
+        
+        ${introText ? `<div style="margin-bottom: 20px;">${introText}</div>` : ''}
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <thead>
+            <tr style="background-color: #f5f5f5; text-align: left;">
+              <th style="padding: 10px; border-bottom: 1px solid #ddd;">Description</th>
+              <th style="padding: 10px; border-bottom: 1px solid #ddd;">Quantité</th>
+              <th style="padding: 10px; border-bottom: 1px solid #ddd;">Prix unitaire</th>
+              <th style="padding: 10px; border-bottom: 1px solid #ddd;">TVA</th>
+              <th style="padding: 10px; border-bottom: 1px solid #ddd;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoiceData.serviceLines.map((line: any) => {
+              const hasLineDiscount = line.discount && line.discount.value > 0;
+              const lineDiscountText = hasLineDiscount ? 
+                (line.discount.type === 'percentage' ? `${line.discount.value}%` : `${formatMoney(line.discount.value)}`) : '';
+              
+              return `
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${line.description}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${line.quantity}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${formatMoney(parseFloat(line.unitPrice))}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${line.tva}%</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${formatMoney(parseFloat(line.total))}</td>
+              </tr>
+            `}).join('')}
+          </tbody>
+        </table>
+        
+        ${conclusionText ? `<div style="margin: 20px 0;">${conclusionText}</div>` : ''}
+        
+        <div style="margin-left: auto; width: 250px;">
+          <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+            <p>Sous-total:</p>
+            <p>${formatMoney(invoiceData.subtotal)}</p>
+          </div>
+          ${hasGlobalDiscount ? `
+            <div style="display: flex; justify-content: space-between; padding: 5px 0; color: #d32f2f;">
+              <p>Remise:</p>
+              <p>-${formatMoney(globalDiscountAmount)}</p>
+            </div>
+          ` : ''}
+          <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+            <p>TVA:</p>
+            <p>${formatMoney(invoiceData.taxTotal)}</p>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold; border-top: 1px solid #ddd; margin-top: 5px;">
+            <p>Total:</p>
+            <p>${formatMoney(invoiceData.total)}</p>
+          </div>
+        </div>
+        
+        <div style="margin: 30px 0; text-align: right;">
+          ${signatureHtml}
+        </div>
+        
+        <div style="margin: 30px 0; border-top: 1px solid #ddd; padding-top: 20px;">
+          <p><strong>Modalités de paiement:</strong> ${invoiceData.paymentMethod === 'card' ? 'Carte bancaire' : 
+            invoiceData.paymentMethod === 'transfer' ? 'Virement bancaire' : 'Carte ou virement'}</p>
+          ${invoiceData.notes ? `<p><strong>Notes:</strong> ${invoiceData.notes}</p>` : ''}
+        </div>
+        
+        ${footerText ? `<div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">${footerText}</div>` : ''}
+      </div>
+      `;
+      break;
+  }
+  
+  return html;
+};
