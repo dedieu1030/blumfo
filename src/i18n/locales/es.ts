@@ -1,4 +1,3 @@
-
 export const es = {
   // Común
   dashboard: "Tablero",
@@ -9,6 +8,7 @@ export const es = {
   templates: "Plantillas",
   settings: "Ajustes",
   notifications: "Notificaciones",
+  profile: "Perfil",
   
   // Tablero
   dashboardDescription: "Vista general de su actividad de facturación",
@@ -227,4 +227,27 @@ export const es = {
   paymentFailed: "Pago fallido",
   paymentSuccessMessage: "Gracias por su pago. Su factura ha sido pagada correctamente.",
   paymentFailureMessage: "No pudimos procesar su pago.",
+  
+  // Perfil
+  fullName: "Nombre completo",
+  email: "Correo electrónico",
+  phone: "Teléfono",
+  language: "Idioma",
+  timezone: "Zona horaria",
+  yourFullName: "Su nombre completo",
+  yourEmail: "Su dirección de correo electrónico",
+  yourPhone: "Su número de teléfono",
+  yourLanguage: "Su idioma preferido",
+  yourTimezone: "Su zona horaria",
+  notificationSettings: "Configuración de notificaciones",
+  emailNotifications: "Notificaciones por correo electrónico",
+  pushNotifications: "Notificaciones push",
+  smsNotifications: "Notificaciones SMS",
+  profileUpdated: "Perfil actualizado",
+  profileUpdatedSuccessfully: "Su perfil ha sido actualizado correctamente",
+  fullNameAndEmailRequired: "El nombre completo y el correo electrónico son obligatorios",
+  profileUpdateFailed: "Error al actualizar el perfil",
+  logout: "Cerrar sesión",
+  logoutSuccess: "Ha cerrado sesión correctamente",
+  logoutError: "Error durante el cierre de sesión",
 };
