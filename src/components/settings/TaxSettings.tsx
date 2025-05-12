@@ -10,6 +10,9 @@ import { TaxRateSelector } from "@/components/settings/TaxRateSelector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { taxRegions, getTaxRegionById, getRegionData } from "@/data/taxData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { RegionSelector } from "@/components/settings/RegionSelector";
+import { ChevronRight } from "lucide-react";
 
 interface TaxSettingsProps {
   companyProfile: CompanyProfile | null;
@@ -18,7 +21,9 @@ interface TaxSettingsProps {
 
 export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<"manual" | "region">("manual");
+  const [isRegionSelectorOpen, setIsRegionSelectorOpen] = useState(false);
   
   // Taxe manuelle
   const [manualTaxRate, setManualTaxRate] = useState<number>(20);
@@ -85,6 +90,23 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
     }
   }, [selectedRegion, selectedCountry]);
 
+  // Gestion du select du pays
+  const handleCountryChange = (value: string) => {
+    setSelectedCountry(value);
+    setSelectedRegion("");
+    setRegionTaxRate(null);
+  };
+
+  // Gestion du select de la région
+  const handleRegionChange = (value: string) => {
+    setSelectedRegion(value);
+  };
+
+  // Ouvrir le sélecteur de régions (mobile)
+  const openRegionSelector = () => {
+    setIsRegionSelectorOpen(true);
+  };
+
   const handleUpdate = async () => {
     if (!companyProfile) return;
     
@@ -124,6 +146,19 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
     });
   };
   
+  // Obtenir le nom de la région sélectionnée pour l'affichage mobile
+  const getSelectedRegionName = () => {
+    if (!selectedCountry) return "Sélectionnez un pays";
+    
+    const country = getTaxRegionById(selectedCountry);
+    if (!country) return "Sélectionnez un pays";
+    
+    if (!selectedRegion) return country.name;
+    
+    const region = getRegionData(selectedCountry, selectedRegion);
+    return region ? `${country.name} - ${region.name}` : country.name;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -155,44 +190,76 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
           </TabsContent>
           
           <TabsContent value="region" className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="tax-country">Pays / Région fiscale</Label>
-              <Select 
-                value={selectedCountry} 
-                onValueChange={setSelectedCountry}
-              >
-                <SelectTrigger id="tax-country">
-                  <SelectValue placeholder="Sélectionnez un pays" />
-                </SelectTrigger>
-                <SelectContent>
-                  {taxRegions.map((region) => (
-                    <SelectItem key={region.id} value={region.id}>
-                      {region.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {selectedCountry && availableRegions.length > 0 && (
-              <div className="space-y-2">
-                <Label htmlFor="tax-region">Juridiction fiscale</Label>
-                <Select 
-                  value={selectedRegion} 
-                  onValueChange={setSelectedRegion}
-                  disabled={!selectedCountry}
-                >
-                  <SelectTrigger id="tax-region">
-                    <SelectValue placeholder="Sélectionnez une région" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {availableRegions.map((region) => (
-                      <SelectItem key={region.id} value={region.id}>
-                        {region.name} ({region.totalRate}%)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {isMobile ? (
+              // Version mobile
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mobile-tax-region">Région fiscale</Label>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex justify-between items-center h-10 px-3 py-2"
+                    onClick={openRegionSelector}
+                    id="mobile-tax-region"
+                  >
+                    <span className="text-left truncate">
+                      {getSelectedRegionName()}
+                    </span>
+                    <ChevronRight className="h-4 w-4 opacity-50" />
+                  </Button>
+                </div>
+                
+                <RegionSelector 
+                  isOpen={isRegionSelectorOpen}
+                  onClose={() => setIsRegionSelectorOpen(false)}
+                  selectedCountry={selectedCountry}
+                  selectedRegion={selectedRegion}
+                  onSelectCountry={handleCountryChange}
+                  onSelectRegion={handleRegionChange}
+                />
+              </div>
+            ) : (
+              // Version desktop
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tax-country">Pays / Région fiscale</Label>
+                  <Select 
+                    value={selectedCountry} 
+                    onValueChange={handleCountryChange}
+                  >
+                    <SelectTrigger id="tax-country">
+                      <SelectValue placeholder="Sélectionnez un pays" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {taxRegions.map((region) => (
+                        <SelectItem key={region.id} value={region.id}>
+                          {region.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {selectedCountry && availableRegions.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="tax-region">Juridiction fiscale</Label>
+                    <Select 
+                      value={selectedRegion} 
+                      onValueChange={handleRegionChange}
+                      disabled={!selectedCountry}
+                    >
+                      <SelectTrigger id="tax-region">
+                        <SelectValue placeholder="Sélectionnez une région" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {availableRegions.map((region) => (
+                          <SelectItem key={region.id} value={region.id}>
+                            {region.name} ({region.totalRate}%)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             )}
             
