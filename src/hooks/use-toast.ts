@@ -44,21 +44,4 @@ export const toast = (props: Omit<ToastState, "id">) => {
   };
 };
 
-// Add helper methods for common toast types
-toast.error = (message: string) => {
-  console.error(message);
-  return toast({ 
-    title: "Erreur", 
-    description: message,
-    variant: "destructive" 
-  });
-};
-
-toast.success = (message: string) => {
-  console.log(message);
-  return toast({ 
-    title: "Succès", 
-    description: message,
-    variant: "success" 
-  });
-};
+// Les méthodes d'aide (success, error, info) sont définies dans components/ui/use-toast.ts

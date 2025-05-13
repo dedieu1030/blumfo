@@ -15,7 +15,7 @@ import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "./ClientSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 interface NewClientFormProps {
@@ -33,6 +33,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [authError, setAuthError] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { isAuthenticated, loading: authLoading, user } = useAuth();
 
   // Réinitialiser les états lorsque la modal s'ouvre
@@ -44,6 +45,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       setPhone("");
       setAddress("");
       setAuthError(null);
+      setCompanyId(null);
 
       if (!authLoading && isAuthenticated) {
         fetchUserCompany();
@@ -53,14 +55,82 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     }
   }, [open, authLoading, isAuthenticated]);
 
+  // Fonction pour forcer la vérification de l'entreprise
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setAuthError(null);
+    setCompanyId(null);
+    await fetchUserCompany(true);
+    setIsRefreshing(false);
+  };
+
+  // Vérifier l'existence de la table companies
+  const checkCompaniesTable = async (): Promise<boolean> => {
+    try {
+      // Test simple pour vérifier si la table companies existe
+      const { error } = await supabase
+        .from('companies')
+        .select('id')
+        .limit(1);
+      
+      if (error) {
+        if (error.message.includes('does not exist')) {
+          console.error("La table companies n'existe pas:", error);
+          setAuthError("La table des entreprises n'existe pas. Veuillez configurer votre base de données.");
+          return false;
+        }
+        
+        // Autre erreur mais la table existe
+        console.error("Erreur lors de la vérification de la table companies mais la table existe:", error);
+        return true;
+      }
+      
+      // Si pas d'erreur, la table existe
+      console.log("La table companies existe");
+      return true;
+    } catch (error: any) {
+      console.error("Exception lors de la vérification de la table companies:", error);
+      setAuthError(`Erreur système: ${error.message || 'Erreur inconnue'}`);
+      return false;
+    }
+  };
+
+  // Fonction pour créer une entreprise par défaut
+  const createDefaultCompany = async (userId: string): Promise<string | null> => {
+    try {
+      const { data: newCompany, error: createError } = await supabase
+        .from('companies')
+        .insert({
+          company_name: 'Mon Entreprise',
+          user_id: userId,
+        })
+        .select()
+        .single();
+        
+      if (createError) {
+        console.error("Erreur lors de la création d'une entreprise par défaut:", createError);
+        setAuthError(`Impossible de créer une entreprise: ${createError.message}`);
+        return null;
+      }
+      
+      console.log("Entreprise par défaut créée:", newCompany);
+      toast.success("Une entreprise par défaut a été créée pour vous");
+      return newCompany.id;
+    } catch (error: any) {
+      console.error("Exception lors de la création d'une entreprise:", error);
+      setAuthError(`Erreur lors de la création d'une entreprise: ${error.message || 'Erreur inconnue'}`);
+      return null;
+    }
+  };
+
   // Fonction pour récupérer l'entreprise de l'utilisateur
-  const fetchUserCompany = async () => {
+  const fetchUserCompany = async (forceRefresh = false) => {
     setIsCompanyLoading(true);
     setAuthError(null);
     
     try {
       // Log pour vérifier si la fonction est appelée
-      console.log("Tentative de récupération de l'entreprise de l'utilisateur");
+      console.log("Tentative de récupération de l'entreprise de l'utilisateur", forceRefresh ? "(rafraîchissement forcé)" : "");
       
       // Obtenir la session utilisateur courante
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -82,23 +152,11 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       const userId = sessionData.session.user.id;
       console.log("ID utilisateur récupéré:", userId);
       
-      // Vérifier que la table companies existe d'abord
-      try {
-        const { error: tableCheckError } = await supabase
-          .from('companies')
-          .select('id')
-          .limit(1);
-          
-        if (tableCheckError) {
-          if (tableCheckError.message.includes('does not exist')) {
-            setAuthError("La table des entreprises n'existe pas. Veuillez configurer votre base de données.");
-            console.error("Erreur de vérification de la table companies:", tableCheckError);
-            setIsCompanyLoading(false);
-            return;
-          }
-        }
-      } catch (tableError) {
-        console.error("Erreur lors de la vérification de la table companies:", tableError);
+      // Vérifier que la table companies existe
+      const tableExists = await checkCompaniesTable();
+      if (!tableExists) {
+        setIsCompanyLoading(false);
+        return;
       }
       
       // Vérifier que l'utilisateur a bien un ID
@@ -109,7 +167,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         return;
       }
       
-      // Récupérer l'entreprise associée à l'utilisateur avec plus de détails pour le debug
+      // Récupérer l'entreprise associée à l'utilisateur
       console.log("Exécution de la requête pour récupérer l'entreprise avec user_id =", userId);
       
       const { data: companies, error: companiesError } = await supabase
@@ -127,43 +185,24 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       }
 
       if (!companies || companies.length === 0) {
-        console.warn("Aucune entreprise trouvée pour l'utilisateur");
-        setAuthError("Aucune entreprise trouvée pour votre compte. Veuillez créer une entreprise d'abord.");
-        
-        // Proposer à l'utilisateur de créer une entreprise
-        const createCompany = async () => {
-          try {
-            const { data: newCompany, error: createError } = await supabase
-              .from('companies')
-              .insert({
-                company_name: 'Mon Entreprise',
-                user_id: userId,
-              })
-              .select()
-              .single();
-              
-            if (createError) {
-              console.error("Erreur lors de la création d'une entreprise par défaut:", createError);
-              return;
-            }
-            
-            console.log("Entreprise par défaut créée:", newCompany);
-            setCompanyId(newCompany.id);
-            setAuthError(null);
-          } catch (error) {
-            console.error("Exception lors de la création d'une entreprise:", error);
-          }
-        };
+        console.warn("Aucune entreprise trouvée pour l'utilisateur, tentative de création");
         
         // Créer automatiquement une entreprise par défaut
-        await createCompany();
+        const newCompanyId = await createDefaultCompany(userId);
+        
+        if (newCompanyId) {
+          setCompanyId(newCompanyId);
+          setAuthError(null);
+        }
+        
         setIsCompanyLoading(false);
         return;
       }
 
       // Sélection de la première entreprise par défaut
-      setCompanyId(companies[0].id);
       console.log("Entreprise récupérée avec succès:", companies[0].company_name, "ID:", companies[0].id);
+      setCompanyId(companies[0].id);
+      setAuthError(null);
     } catch (error: any) {
       console.error("Exception non gérée lors de la récupération de l'entreprise:", error);
       setAuthError(`Une erreur inattendue est survenue: ${error.message || 'Erreur inconnue'}`);
@@ -251,6 +290,16 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4 mr-2" />
             <AlertDescription>{authError}</AlertDescription>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="ml-2">Rafraîchir</span>
+            </Button>
           </Alert>
         )}
 
