@@ -34,6 +34,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const { isAuthenticated, loading: authLoading, user } = useAuth();
 
   // Réinitialiser les états lorsque la modal s'ouvre
@@ -46,6 +47,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       setAddress("");
       setAuthError(null);
       setCompanyId(null);
+      setDebugInfo(null);
 
       if (!authLoading && isAuthenticated) {
         fetchUserCompany();
@@ -60,6 +62,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     setIsRefreshing(true);
     setAuthError(null);
     setCompanyId(null);
+    setDebugInfo(null);
     await fetchUserCompany(true);
     setIsRefreshing(false);
   };
@@ -67,21 +70,28 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   // Vérifier l'existence de la table companies
   const checkCompaniesTable = async (): Promise<boolean> => {
     try {
+      // Log pour vérification
+      console.log("Vérification de la table companies...");
+      
       // Test simple pour vérifier si la table companies existe
-      const { error } = await supabase
+      const { data: testData, error: testError } = await supabase
         .from('companies')
         .select('id')
         .limit(1);
       
-      if (error) {
-        if (error.message.includes('does not exist')) {
-          console.error("La table companies n'existe pas:", error);
+      console.log("Résultat du test de la table companies:", { data: testData, error: testError });
+      
+      if (testError) {
+        if (testError.message.includes('does not exist')) {
+          console.error("La table companies n'existe pas:", testError);
           setAuthError("La table des entreprises n'existe pas. Veuillez configurer votre base de données.");
+          setDebugInfo(`Erreur table: ${JSON.stringify(testError)}`);
           return false;
         }
         
         // Autre erreur mais la table existe
-        console.error("Erreur lors de la vérification de la table companies mais la table existe:", error);
+        console.error("Erreur lors de la vérification de la table companies mais la table existe:", testError);
+        setDebugInfo(`Erreur accès: ${testError.message}`);
         return true;
       }
       
@@ -91,6 +101,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     } catch (error: any) {
       console.error("Exception lors de la vérification de la table companies:", error);
       setAuthError(`Erreur système: ${error.message || 'Erreur inconnue'}`);
+      setDebugInfo(`Exception: ${JSON.stringify(error)}`);
       return false;
     }
   };
@@ -98,6 +109,8 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   // Fonction pour créer une entreprise par défaut
   const createDefaultCompany = async (userId: string): Promise<string | null> => {
     try {
+      console.log("Tentative de création d'une entreprise par défaut pour l'utilisateur:", userId);
+      
       const { data: newCompany, error: createError } = await supabase
         .from('companies')
         .insert({
@@ -110,6 +123,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       if (createError) {
         console.error("Erreur lors de la création d'une entreprise par défaut:", createError);
         setAuthError(`Impossible de créer une entreprise: ${createError.message}`);
+        setDebugInfo(`Erreur création: ${JSON.stringify(createError)}`);
         return null;
       }
       
@@ -119,6 +133,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     } catch (error: any) {
       console.error("Exception lors de la création d'une entreprise:", error);
       setAuthError(`Erreur lors de la création d'une entreprise: ${error.message || 'Erreur inconnue'}`);
+      setDebugInfo(`Exception création: ${JSON.stringify(error)}`);
       return null;
     }
   };
@@ -132,12 +147,20 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       // Log pour vérifier si la fonction est appelée
       console.log("Tentative de récupération de l'entreprise de l'utilisateur", forceRefresh ? "(rafraîchissement forcé)" : "");
       
+      // Vérifier d'abord que la table existe
+      const tableExists = await checkCompaniesTable();
+      if (!tableExists) {
+        setIsCompanyLoading(false);
+        return;
+      }
+      
       // Obtenir la session utilisateur courante
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error("Erreur lors de la récupération de la session:", sessionError);
         setAuthError("Impossible de vérifier votre session. Veuillez vous reconnecter.");
+        setDebugInfo(`Erreur session: ${JSON.stringify(sessionError)}`);
         setIsCompanyLoading(false);
         return;
       }
@@ -145,19 +168,13 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       if (!sessionData.session || !sessionData.session.user) {
         console.warn("Aucun utilisateur connecté dans fetchUserCompany");
         setAuthError("Vous devez être connecté pour créer un client");
+        setDebugInfo("Pas de session utilisateur active");
         setIsCompanyLoading(false);
         return;
       }
 
       const userId = sessionData.session.user.id;
       console.log("ID utilisateur récupéré:", userId);
-      
-      // Vérifier que la table companies existe
-      const tableExists = await checkCompaniesTable();
-      if (!tableExists) {
-        setIsCompanyLoading(false);
-        return;
-      }
       
       // Vérifier que l'utilisateur a bien un ID
       if (!userId) {
@@ -180,12 +197,14 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       if (companiesError) {
         console.error("Erreur détaillée lors de la récupération de l'entreprise:", companiesError);
         setAuthError(`Erreur lors de la récupération de votre entreprise: ${companiesError.message || 'Erreur inconnue'}`);
+        setDebugInfo(`Erreur récupération: ${JSON.stringify(companiesError)}`);
         setIsCompanyLoading(false);
         return;
       }
 
       if (!companies || companies.length === 0) {
         console.warn("Aucune entreprise trouvée pour l'utilisateur, tentative de création");
+        setDebugInfo("Aucune entreprise trouvée. Création d'une entreprise par défaut...");
         
         // Créer automatiquement une entreprise par défaut
         const newCompanyId = await createDefaultCompany(userId);
@@ -202,10 +221,12 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       // Sélection de la première entreprise par défaut
       console.log("Entreprise récupérée avec succès:", companies[0].company_name, "ID:", companies[0].id);
       setCompanyId(companies[0].id);
+      setDebugInfo(`Entreprise trouvée: ${companies[0].company_name}`);
       setAuthError(null);
     } catch (error: any) {
       console.error("Exception non gérée lors de la récupération de l'entreprise:", error);
       setAuthError(`Une erreur inattendue est survenue: ${error.message || 'Erreur inconnue'}`);
+      setDebugInfo(`Exception générale: ${JSON.stringify(error)}`);
     } finally {
       setIsCompanyLoading(false);
     }
@@ -300,6 +321,12 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span className="ml-2">Rafraîchir</span>
             </Button>
+          </Alert>
+        )}
+
+        {debugInfo && (
+          <Alert className="mb-4 bg-yellow-50 border-yellow-200">
+            <AlertDescription className="text-xs font-mono">{debugInfo}</AlertDescription>
           </Alert>
         )}
 
