@@ -1,4 +1,3 @@
-
 import { TaxRegion } from "@/types/tax";
 
 // Données des régions fiscales
@@ -336,6 +335,162 @@ export const taxRegionsData: TaxRegion[] = [
         notes: "Produits exonérés de TVA"
       }
     ]
+  },
+  {
+    id: "united-states",
+    name: "États-Unis",
+    countryCode: "US",
+    regions: [
+      {
+        id: "us-al",
+        name: "Alabama",
+        code: "US-AL",
+        taxType: "sales-tax",
+        stateTaxRate: 4,
+        localTaxRate: 5,
+        totalRate: 9,
+      },
+      {
+        id: "us-ak",
+        name: "Alaska",
+        code: "US-AK",
+        taxType: "sales-tax",
+        stateTaxRate: 0,
+        localTaxRate: 1.76,
+        totalRate: 1.76,
+      },
+      {
+        id: "us-az",
+        name: "Arizona",
+        code: "US-AZ",
+        taxType: "sales-tax",
+        stateTaxRate: 5.6,
+        localTaxRate: 2.8,
+        totalRate: 8.4,
+      },
+      {
+        id: "us-ca",
+        name: "Californie",
+        code: "US-CA",
+        taxType: "sales-tax",
+        stateTaxRate: 7.25,
+        localTaxRate: 1.31,
+        totalRate: 8.56,
+      },
+      {
+        id: "us-co",
+        name: "Colorado",
+        code: "US-CO",
+        taxType: "sales-tax",
+        stateTaxRate: 2.9,
+        localTaxRate: 4.82,
+        totalRate: 7.72,
+      },
+      {
+        id: "us-ct",
+        name: "Connecticut",
+        code: "US-CT",
+        taxType: "sales-tax",
+        stateTaxRate: 6.35,
+        localTaxRate: 0,
+        totalRate: 6.35,
+      },
+      {
+        id: "us-de",
+        name: "Delaware",
+        code: "US-DE",
+        taxType: "no-tax",
+        stateTaxRate: 0,
+        localTaxRate: 0,
+        totalRate: 0,
+      },
+      {
+        id: "us-fl",
+        name: "Floride",
+        code: "US-FL",
+        taxType: "sales-tax",
+        stateTaxRate: 6,
+        localTaxRate: 1.05,
+        totalRate: 7.05,
+      },
+      {
+        id: "us-ga",
+        name: "Géorgie",
+        code: "US-GA",
+        taxType: "sales-tax",
+        stateTaxRate: 4,
+        localTaxRate: 3.31,
+        totalRate: 7.31,
+      },
+      {
+        id: "us-ny",
+        name: "New York",
+        code: "US-NY",
+        taxType: "sales-tax",
+        stateTaxRate: 4,
+        localTaxRate: 4.52,
+        totalRate: 8.52,
+      },
+      {
+        id: "us-tx",
+        name: "Texas",
+        code: "US-TX",
+        taxType: "sales-tax",
+        stateTaxRate: 6.25,
+        localTaxRate: 1.94,
+        totalRate: 8.19,
+      },
+      {
+        id: "us-wa",
+        name: "Washington",
+        code: "US-WA",
+        taxType: "sales-tax",
+        stateTaxRate: 6.5,
+        localTaxRate: 2.73,
+        totalRate: 9.23,
+      }
+    ]
+  },
+  {
+    id: "mexico",
+    name: "Mexique",
+    countryCode: "MX",
+    regions: [
+      {
+        id: "mx-standard",
+        name: "Taux Standard (IVA)",
+        code: "MX-STD",
+        taxType: "iva-standard",
+        ivaRate: 16,
+        totalRate: 16,
+      },
+      {
+        id: "mx-border",
+        name: "Zone Frontalière",
+        code: "MX-BOR",
+        taxType: "iva-reduced",
+        ivaRate: 8,
+        totalRate: 8,
+        notes: "Taux réduit pour les zones frontalières nord du Mexique"
+      },
+      {
+        id: "mx-zero",
+        name: "Taux Zéro",
+        code: "MX-ZER",
+        taxType: "iva-zero",
+        ivaRate: 0,
+        totalRate: 0,
+        notes: "Pour certains aliments, médicaments et livres"
+      },
+      {
+        id: "mx-exempt",
+        name: "Exonéré",
+        code: "MX-EXE",
+        taxType: "iva-exempt",
+        totalRate: 0,
+        notes: "Services médicaux, éducation, loyers résidentiels"
+      }
+    ]
   }
 ];
 
@@ -380,6 +535,16 @@ export const defaultTaxConfigs = {
     defaultTaxRate: 5,
     defaultRegion: "canada:ca-ab",
     label: "Sales Tax (Canada)"
+  },
+  "united-states": {
+    defaultTaxRate: 0,
+    defaultRegion: "united-states:us-de",
+    label: "Sales Tax (United States)"
+  },
+  "mexico": {
+    defaultTaxRate: 16,
+    defaultRegion: "mexico:mx-standard",
+    label: "IVA (México)"
   }
 };
 
