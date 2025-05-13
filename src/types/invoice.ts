@@ -1,3 +1,4 @@
+
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
@@ -86,6 +87,7 @@ export interface CompanyProfile {
   stripeAccountId?: string;
   createdAt?: string;
   updatedAt?: string;
+  website?: string;
   // Nouvelles propriétées pour ProfileWizard et ProfileViewer
   profileType?: 'personal' | 'business';
   profileSubtype?: string;
