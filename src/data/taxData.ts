@@ -4,13 +4,13 @@ import { TaxRegion } from "@/types/tax";
 // Données des régions fiscales
 export const taxRegionsData: TaxRegion[] = [
   {
-    id: "france",
-    name: "France",
-    countryCode: "FR",
+    id: "european-union",
+    name: "Union Européenne",
+    countryCode: "EU",
     regions: [
       {
         id: "fr-standard",
-        name: "Taux Standard",
+        name: "France - Taux Standard",
         code: "FR-STD",
         taxType: "vat-standard",
         vatStandardRate: 20,
@@ -18,7 +18,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "fr-intermediate",
-        name: "Taux Intermédiaire",
+        name: "France - Taux Intermédiaire",
         code: "FR-INT",
         taxType: "vat-reduced",
         vatReducedRates: [10],
@@ -26,7 +26,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "fr-reduced",
-        name: "Taux Réduit",
+        name: "France - Taux Réduit",
         code: "FR-RED",
         taxType: "vat-reduced",
         vatReducedRates: [5.5],
@@ -34,7 +34,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "fr-super-reduced",
-        name: "Taux Super Réduit",
+        name: "France - Taux Super Réduit",
         code: "FR-SRD",
         taxType: "vat-super-reduced",
         vatSuperReducedRate: 2.1,
@@ -42,21 +42,14 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "fr-exempt",
-        name: "Exonéré",
+        name: "France - Exonéré",
         code: "FR-EXE",
         taxType: "vat-exempt",
         totalRate: 0,
-      }
-    ]
-  },
-  {
-    id: "germany",
-    name: "Allemagne",
-    countryCode: "DE",
-    regions: [
+      },
       {
         id: "de-standard",
-        name: "Taux Standard",
+        name: "Allemagne - Taux Standard",
         code: "DE-STD",
         taxType: "vat-standard",
         vatStandardRate: 19,
@@ -64,7 +57,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "de-reduced",
-        name: "Taux Réduit",
+        name: "Allemagne - Taux Réduit",
         code: "DE-RED",
         taxType: "vat-reduced",
         vatReducedRates: [7],
@@ -72,21 +65,14 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "de-exempt",
-        name: "Exonéré",
+        name: "Allemagne - Exonéré",
         code: "DE-EXE",
         taxType: "vat-exempt",
         totalRate: 0,
-      }
-    ]
-  },
-  {
-    id: "spain",
-    name: "Espagne",
-    countryCode: "ES",
-    regions: [
+      },
       {
         id: "es-standard",
-        name: "Taux Standard (IVA)",
+        name: "Espagne - Taux Standard (IVA)",
         code: "ES-STD",
         taxType: "vat-standard",
         vatStandardRate: 21,
@@ -94,7 +80,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "es-reduced",
-        name: "Taux Réduit (IVA)",
+        name: "Espagne - Taux Réduit (IVA)",
         code: "ES-RED",
         taxType: "vat-reduced",
         vatReducedRates: [10],
@@ -102,7 +88,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "es-super-reduced",
-        name: "Taux Super Réduit (IVA)",
+        name: "Espagne - Taux Super Réduit (IVA)",
         code: "ES-SRD",
         taxType: "vat-super-reduced",
         vatSuperReducedRate: 4,
@@ -110,30 +96,22 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "es-exempt",
-        name: "Exonéré",
+        name: "Espagne - Exonéré",
         code: "ES-EXE",
         taxType: "vat-exempt",
         totalRate: 0,
       },
       {
         id: "es-canary",
-        name: "Îles Canaries (IGIC)",
+        name: "Espagne - Îles Canaries (IGIC)",
         code: "ES-CAN",
         taxType: "vat-standard",
         vatStandardRate: 7,
         totalRate: 7,
-        notes: "Impuesto General Indirecto Canario"
-      }
-    ]
-  },
-  {
-    id: "italy",
-    name: "Italie",
-    countryCode: "IT",
-    regions: [
+      },
       {
         id: "it-standard",
-        name: "Taux Standard (IVA)",
+        name: "Italie - Taux Standard (IVA)",
         code: "IT-STD",
         taxType: "vat-standard",
         vatStandardRate: 22,
@@ -141,7 +119,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "it-reduced-10",
-        name: "Taux Réduit (IVA)",
+        name: "Italie - Taux Réduit (IVA)",
         code: "IT-RED",
         taxType: "vat-reduced",
         vatReducedRates: [10],
@@ -149,7 +127,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "it-reduced-5",
-        name: "Taux Super Réduit (IVA)",
+        name: "Italie - Taux Super Réduit (IVA)",
         code: "IT-SRD",
         taxType: "vat-reduced",
         vatReducedRates: [5],
@@ -157,7 +135,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "it-super-reduced",
-        name: "Taux Minimal (IVA)",
+        name: "Italie - Taux Minimal (IVA)",
         code: "IT-MIN",
         taxType: "vat-super-reduced",
         vatSuperReducedRate: 4,
@@ -165,21 +143,14 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "it-exempt",
-        name: "Exonéré",
+        name: "Italie - Exonéré",
         code: "IT-EXE",
         taxType: "vat-exempt",
         totalRate: 0,
-      }
-    ]
-  },
-  {
-    id: "belgium",
-    name: "Belgique",
-    countryCode: "BE",
-    regions: [
+      },
       {
         id: "be-standard",
-        name: "Taux Standard",
+        name: "Belgique - Taux Standard",
         code: "BE-STD",
         taxType: "vat-standard",
         vatStandardRate: 21,
@@ -187,7 +158,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "be-reduced-12",
-        name: "Taux Réduit (12%)",
+        name: "Belgique - Taux Réduit (12%)",
         code: "BE-R12",
         taxType: "vat-reduced",
         vatReducedRates: [12],
@@ -195,7 +166,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "be-reduced-6",
-        name: "Taux Réduit (6%)",
+        name: "Belgique - Taux Réduit (6%)",
         code: "BE-R06",
         taxType: "vat-reduced",
         vatReducedRates: [6],
@@ -203,8 +174,39 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "be-exempt",
-        name: "Exonéré",
+        name: "Belgique - Exonéré",
         code: "BE-EXE",
+        taxType: "vat-exempt",
+        totalRate: 0,
+      },
+      {
+        id: "uk-standard",
+        name: "Royaume-Uni - Taux Standard",
+        code: "GB-STD",
+        taxType: "vat-standard",
+        vatStandardRate: 20,
+        totalRate: 20,
+      },
+      {
+        id: "uk-reduced",
+        name: "Royaume-Uni - Taux Réduit",
+        code: "GB-RED",
+        taxType: "vat-reduced",
+        vatReducedRates: [5],
+        totalRate: 5,
+      },
+      {
+        id: "uk-zero",
+        name: "Royaume-Uni - Taux Zéro",
+        code: "GB-ZER",
+        taxType: "vat-reduced",
+        vatReducedRates: [0],
+        totalRate: 0,
+      },
+      {
+        id: "uk-exempt",
+        name: "Royaume-Uni - Exonéré",
+        code: "GB-EXE",
         taxType: "vat-exempt",
         totalRate: 0,
       }
@@ -245,46 +247,6 @@ export const taxRegionsData: TaxRegion[] = [
         code: "CH-EXE",
         taxType: "vat-exempt",
         totalRate: 0,
-      }
-    ]
-  },
-  {
-    id: "united-kingdom",
-    name: "Royaume-Uni",
-    countryCode: "GB",
-    regions: [
-      {
-        id: "uk-standard",
-        name: "Taux Standard",
-        code: "GB-STD",
-        taxType: "vat-standard",
-        vatStandardRate: 20,
-        totalRate: 20,
-      },
-      {
-        id: "uk-reduced",
-        name: "Taux Réduit",
-        code: "GB-RED",
-        taxType: "vat-reduced",
-        vatReducedRates: [5],
-        totalRate: 5,
-      },
-      {
-        id: "uk-zero",
-        name: "Taux Zéro",
-        code: "GB-ZER",
-        taxType: "vat-reduced",
-        vatReducedRates: [0],
-        totalRate: 0,
-        notes: "Produits soumis à la TVA mais avec un taux à 0%"
-      },
-      {
-        id: "uk-exempt",
-        name: "Exonéré",
-        code: "GB-EXE",
-        taxType: "vat-exempt",
-        totalRate: 0,
-        notes: "Produits exonérés de TVA"
       }
     ]
   },
@@ -473,40 +435,15 @@ export const taxRegionsData: TaxRegion[] = [
 
 // Configuration des taxes par défaut pour les profils clients
 export const defaultTaxConfigs = {
-  "france": {
+  "european-union": {
     defaultTaxRate: 20,
-    defaultRegion: "france:fr-standard",
-    label: "TVA (France)"
-  },
-  "germany": {
-    defaultTaxRate: 19,
-    defaultRegion: "germany:de-standard",
-    label: "MwSt. (Deutschland)"
-  },
-  "spain": {
-    defaultTaxRate: 21,
-    defaultRegion: "spain:es-standard",
-    label: "IVA (España)"
-  },
-  "italy": {
-    defaultTaxRate: 22,
-    defaultRegion: "italy:it-standard",
-    label: "IVA (Italia)"
-  },
-  "belgium": {
-    defaultTaxRate: 21,
-    defaultRegion: "belgium:be-standard",
-    label: "BTW/TVA (België/Belgique)"
+    defaultRegion: "european-union:fr-standard",
+    label: "TVA (UE)"
   },
   "switzerland": {
     defaultTaxRate: 8.1,
     defaultRegion: "switzerland:ch-standard",
     label: "MwSt./TVA/IVA (Schweiz/Suisse/Svizzera)"
-  },
-  "united-kingdom": {
-    defaultTaxRate: 20,
-    defaultRegion: "united-kingdom:uk-standard",
-    label: "VAT (United Kingdom)"
   },
   "canada": {
     defaultTaxRate: 5,
