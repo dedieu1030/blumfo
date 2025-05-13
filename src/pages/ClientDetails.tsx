@@ -15,7 +15,7 @@ import { Client } from "@/components/ClientSelector";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ClientCategorySelector } from "@/components/ClientCategorySelector";
 import { ClientNotes } from "@/components/ClientNotes";
-import { formatCurrency } from "@/lib/utils";
+import { CurrencyFormat } from "@/components/ui/number-format";
 
 type ClientDetailsParams = {
   id: string;
@@ -319,13 +319,19 @@ export default function ClientDetails() {
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Chiffre d'affaires total</span>
                     <span className="font-medium">
-                      {formatCurrency(totalInvoicesAmount / 100, clientInvoices[0]?.currency || 'EUR')}
+                      <CurrencyFormat 
+                        value={totalInvoicesAmount / 100} 
+                        options={{ currency: clientInvoices[0]?.currency || 'EUR' }} 
+                      />
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Montant payé</span>
                     <span className="font-medium">
-                      {formatCurrency(paidInvoicesAmount / 100, clientInvoices[0]?.currency || 'EUR')}
+                      <CurrencyFormat 
+                        value={paidInvoicesAmount / 100} 
+                        options={{ currency: clientInvoices[0]?.currency || 'EUR' }} 
+                      />
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -402,7 +408,10 @@ export default function ClientDetails() {
                                 ? format(new Date(invoice.due_date), 'dd/MM/yyyy')
                                 : '-'}</TableCell>
                               <TableCell>
-                                {formatCurrency(invoice.amount_total / 100, invoice.currency)}
+                                <CurrencyFormat 
+                                  value={invoice.amount_total / 100} 
+                                  options={{ currency: invoice.currency }} 
+                                />
                               </TableCell>
                               <TableCell>
                                 <InvoiceStatus status={invoice.status as "paid" | "pending" | "overdue" | "draft"} />
