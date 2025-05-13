@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { BusinessProfileSubtype } from "./ProfileSubtypeSelector";
 import { CompanyProfile } from "@/types/invoice";
-import { TaxRateSelector } from "@/components/settings/TaxRateSelector";
+import { RegionalTaxSelector } from "@/components/settings/RegionalTaxSelector";
 
 interface BusinessProfileFormProps {
   subtype: BusinessProfileSubtype;
@@ -27,6 +28,7 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
     bankName: "",
     accountHolder: "",
     taxRate: 20, // Use numeric value for internal state
+    taxRegion: "", // Ajout du champ pour stocker la région fiscale
     termsAndConditions: "Paiement sous 30 jours. Pénalité 1.5%/mois en cas de retard.",
     thankYouMessage: "Merci pour votre confiance",
     defaultCurrency: "EUR",
@@ -85,6 +87,7 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
       phone: formData.phone || '',
       emailType: formData.emailType as 'personal' | 'professional' | 'company',
       taxRate: formData.taxRate as number,
+      taxRegion: formData.taxRegion || '',
       defaultCurrency: formData.defaultCurrency || 'EUR',
       ...formData
     } as CompanyProfile;
@@ -147,6 +150,15 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
   };
 
   const emailTypeOptions = getEmailTypeOptions();
+
+  // Gestion du changement de région fiscale
+  const handleTaxRegionChange = (value: number, regionKey?: string) => {
+    setFormData(prev => ({
+      ...prev,
+      taxRate: value,
+      taxRegion: regionKey || prev.taxRegion
+    }));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
@@ -267,9 +279,10 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
         <h3 className="text-lg font-medium mb-4">Paramètres de facturation</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 md:col-span-2">
-            <TaxRateSelector
+            <RegionalTaxSelector
               defaultValue={Number(formData.taxRate)}
-              onChange={(value) => handleChange("taxRate", value)}
+              defaultRegion={formData.taxRegion || undefined}
+              onChange={(value, regionKey) => handleTaxRegionChange(value, regionKey)}
             />
           </div>
           <div className="space-y-2">

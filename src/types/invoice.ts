@@ -1,4 +1,3 @@
-
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
@@ -57,29 +56,25 @@ export interface DiscountInfo {
 }
 
 export interface CompanyProfile {
+  id?: string;
   name: string;
-  address?: string;
-  email?: string;
-  phone?: string;
-  website?: string;
-  tpsNumber?: string;
-  tvqNumber?: string;
-  businessType?: string;
+  address: string;
+  email: string;
+  emailType: 'personal' | 'professional' | 'company';
+  phone: string;
+  taxRate: number;
+  taxRegion?: string; // Format: "countryId:regionId"
+  defaultCurrency: string;
+  businessType?: 'company' | 'individual' | 'lawyer' | 'freelancer' | 'other';
   businessTypeCustom?: string;
-  emailType?: string;
-  logoUrl?: string;
-  // Additional properties
-  bankAccount?: string;
-  bankName?: string;
-  accountHolder?: string;
-  taxRate?: number;
-  defaultCurrency?: string;
-  termsAndConditions?: string;
+  termsAndConditions: string;
   thankYouMessage?: string;
+  bankName?: string;
+  bankAccount?: string;
+  accountHolder?: string;
   paypal?: string;
   payoneer?: string;
-  // Profile type properties
-  profileType?: "personal" | "business";
+  profileType?: 'personal' | 'business';
   profileSubtype?: string;
 }
 

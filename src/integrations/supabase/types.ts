@@ -1330,6 +1330,14 @@ export type Database = {
           category_color: string
         }[]
       }
+      get_client_invoice_count: {
+        Args: { client_id: string }
+        Returns: number
+      }
+      get_current_user_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
     }
     Enums: {
       client_group_type: "vip" | "regular" | "monthly" | "project"

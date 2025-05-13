@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { CompanyProfile } from "@/types/invoice";
-import { TaxRateSelector } from "@/components/settings/TaxRateSelector";
+import { RegionalTaxSelector } from "@/components/settings/RegionalTaxSelector";
 
 interface CompanyProfileFormProps {
   initialData?: Partial<CompanyProfile>;
@@ -26,6 +27,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
     bankName: "",
     accountHolder: "",
     taxRate: 20, // Use numeric value for internal state
+    taxRegion: "", // New field to store the selected tax region
     termsAndConditions: "Paiement sous 30 jours. Pénalité 1.5%/mois en cas de retard.",
     thankYouMessage: "Merci pour votre confiance",
     defaultCurrency: "EUR",
@@ -74,6 +76,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
       phone: formData.phone || '',
       emailType: formData.emailType as 'personal' | 'professional' | 'company',
       taxRate: formData.taxRate as number,
+      taxRegion: formData.taxRegion || '',  // Include the tax region
       defaultCurrency: formData.defaultCurrency || 'EUR',
       ...formData
     } as CompanyProfile;
@@ -170,6 +173,15 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
 
   const labels = getLabels();
   const emailTypeOptions = getEmailTypeOptions();
+
+  // Gestion du changement de région fiscale
+  const handleTaxRegionChange = (taxRate: number, regionKey?: string) => {
+    setFormData(prev => ({
+      ...prev,
+      taxRate: taxRate,
+      taxRegion: regionKey || prev.taxRegion
+    }));
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -340,9 +352,11 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
             <h3 className="text-lg font-medium mb-4">Paramètres de facturation</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 md:col-span-2">
-                <TaxRateSelector
+                {/* Remplacer TaxRateSelector par RegionalTaxSelector */}
+                <RegionalTaxSelector
                   defaultValue={Number(formData.taxRate)}
-                  onChange={(value) => handleChange("taxRate", value)}
+                  defaultRegion={formData.taxRegion || undefined}
+                  onChange={(value, regionKey) => handleTaxRegionChange(value, regionKey)}
                 />
               </div>
               <div className="space-y-2">
