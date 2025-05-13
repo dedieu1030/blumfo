@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { QuoteDialog } from "./QuoteDialog";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Icon } from "@/components/ui/icon";
 
 interface QuoteListProps {
   limit?: number;
@@ -30,7 +29,6 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [noData, setNoData] = useState(false);
   const [editQuoteId, setEditQuoteId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -39,7 +37,6 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
     try {
       setLoading(true);
       setError(null);
-      setNoData(false);
       console.log("Fetching quotes...");
       let query = supabase
         .from("devis")
@@ -58,16 +55,15 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
 
       if (error) {
         console.error("Error in Supabase query:", error);
-        setError("Erreur technique lors du chargement des devis");
+        setError("Erreur lors du chargement des devis");
         throw error;
       }
 
       console.log("Quotes data received:", data);
       setQuotes(data as Quote[]);
-      setNoData(data.length === 0);
     } catch (error) {
       console.error("Error fetching quotes:", error);
-      setError("Erreur technique lors du chargement des devis");
+      setError("Erreur lors du chargement des devis");
     } finally {
       setLoading(false);
     }
@@ -94,10 +90,6 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
   const handleQuoteSuccess = () => {
     fetchQuotes();
     if (onRefresh) onRefresh();
-  };
-
-  const handleCreateQuote = () => {
-    setDialogOpen(true);
   };
 
   const handleConvertToInvoice = async (quoteId: string) => {
@@ -194,44 +186,6 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
     }
   };
 
-  const renderEmptyState = () => {
-    return (
-      <TableRow>
-        <TableCell colSpan={showActions ? 6 : 5} className="text-center py-8 text-gray-500">
-          <div className="flex flex-col items-center justify-center py-6">
-            <Icon name="FileEdit" className="h-12 w-12 text-gray-300 mb-3" />
-            <h3 className="text-lg font-medium">Aucun devis trouvé</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Vous n'avez pas encore créé de devis.
-            </p>
-            <Button onClick={handleCreateQuote}>
-              <Icon name="Plus" className="mr-2 h-4 w-4" /> Créer un devis
-            </Button>
-          </div>
-        </TableCell>
-      </TableRow>
-    );
-  };
-
-  const renderError = () => {
-    return (
-      <TableRow>
-        <TableCell colSpan={showActions ? 6 : 5}>
-          <Alert variant="destructive" className="my-4">
-            <Icon name="AlertTriangle" className="h-4 w-4" />
-            <AlertTitle>Erreur</AlertTitle>
-            <AlertDescription className="flex flex-col gap-2">
-              {error}
-              <Button variant="outline" size="sm" className="w-fit" onClick={fetchQuotes}>
-                <Icon name="RefreshCw" className="mr-2 h-4 w-4" /> Réessayer
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </TableCell>
-      </TableRow>
-    );
-  };
-
   return (
     <>
       <Card className="overflow-hidden">
@@ -262,9 +216,27 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
                   </TableRow>
                 ))
               ) : error ? (
-                renderError()
-              ) : noData ? (
-                renderEmptyState()
+                <TableRow>
+                  <TableCell colSpan={showActions ? 6 : 5} className="text-center py-8 text-destructive">
+                    {error}
+                    <div className="mt-2">
+                      <Button variant="outline" size="sm" onClick={fetchQuotes}>
+                        Réessayer
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : quotes.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={showActions ? 6 : 5} className="text-center py-8 text-gray-500">
+                    Aucun devis trouvé
+                    <div className="mt-3">
+                      <Button variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
+                        Créer un devis
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
                 quotes.map((quote) => (
                   <TableRow key={quote.id}>
