@@ -1,24 +1,16 @@
 
 export interface UserProfile {
   id: string;
-  username?: string;
   full_name: string;
-  avatar_url?: string;
   email: string;
+  avatar_url?: string;
   phone?: string;
   language: string;
   timezone: string;
+  username?: string;
   notification_settings: {
     email: boolean;
     push: boolean;
     sms: boolean;
   };
-  created_at: string;
-  updated_at: string;
-}
-
-export interface NotificationSettings {
-  email: boolean;
-  push: boolean;
-  sms: boolean;
 }

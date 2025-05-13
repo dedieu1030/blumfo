@@ -1,4 +1,5 @@
 
+
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
@@ -100,6 +101,8 @@ export interface PaymentTermTemplate {
   customDate?: string;
   termsText: string;
   isDefault: boolean;
+  daysAfterIssue?: number;
+  description?: string;
 }
 
 export interface PaymentMethodDetails {
@@ -175,7 +178,7 @@ export interface Invoice {
   due_date?: string;    // For compatibility
   issue_date?: string;  // For compatibility
   total_amount?: number; // For compatibility
-  status: "paid" | "pending" | "overdue" | "draft";
+  status: "paid" | "pending" | "overdue" | "draft" | "cancelled";
   paymentUrl?: string;
   stripeInvoiceId?: string;
 }
@@ -204,6 +207,8 @@ export interface CurrencyInfo {
   decimalPlaces: number;
   symbolPosition: 'before' | 'after';
   position?: 'before' | 'after'; // Added for backward compatibility
+  decimalSeparator?: string;    // Added for compatibility with invoiceSettingsService
+  thousandSeparator?: string;   // Added for compatibility with invoiceSettingsService
 }
 
 export type Currency = 'USD' | 'EUR' | 'CAD' | 'GBP' | 'AUD' | 'JPY' | 'CHF';
@@ -217,4 +222,5 @@ export interface SignatureData {
   timestamp?: string;
 }
 
+// Ajout de l'import de TaxConfiguration depuis tax.ts
 import { TaxConfiguration } from "./tax";

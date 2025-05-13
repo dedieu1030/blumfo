@@ -1,90 +1,68 @@
+import { useState } from "react"
+import { PlusCircle } from "lucide-react"
 
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { InvoiceDialog } from "./InvoiceDialog";
-import { QuoteDialog } from "./QuoteDialog";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Icon, IconName } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { InvoiceDialog } from "@/components/invoice/invoice-dialog"
 
-export const QuickAction = () => {
-  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
-  const isMobile = useIsMobile();
-
-  // Gestion propre de l'ouverture des dialogues
-  const handleOpenInvoiceDialog = () => {
-    setInvoiceDialogOpen(true);
-  };
-
-  const handleOpenQuoteDialog = () => {
-    setQuoteDialogOpen(true);
-  };
-
-  // Gestion propre de la fermeture des dialogues
-  const handleInvoiceDialogChange = (open: boolean) => {
-    if (!open) {
-      // Un petit délai pour éviter les problèmes de focus
-      setTimeout(() => {
-        setInvoiceDialogOpen(false);
-      }, 0);
-    } else {
-      setInvoiceDialogOpen(true);
-    }
-  };
-
-  const handleQuoteDialogChange = (open: boolean) => {
-    if (!open) {
-      // Un petit délai pour éviter les problèmes de focus
-      setTimeout(() => {
-        setQuoteDialogOpen(false);
-      }, 0);
-    } else {
-      setQuoteDialogOpen(true);
-    }
-  };
+export function QuickAction() {
+  const [open, setOpen] = useState(false)
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false)
 
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            size={isMobile ? "sm" : "default"}
-            className="bg-violet hover:bg-violet/90 whitespace-nowrap"
-          >
-            {isMobile ? (
-              <Icon name="Plus" size={16} />
-            ) : (
-              <>
-                <Icon name="Plus" size={16} className="mr-1" /> Créer
-              </>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleOpenInvoiceDialog}>
-            <Icon name="FileText" size={16} className="mr-2" /> Nouvelle facture
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleOpenQuoteDialog}>
-            <Icon name="FileEdit" size={16} className="mr-2" /> Nouveau devis
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      
-      <InvoiceDialog 
-        open={invoiceDialogOpen}
-        onOpenChange={handleInvoiceDialogChange}
-      />
-      
-      <QuoteDialog
-        open={quoteDialogOpen}
-        onOpenChange={handleQuoteDialogChange}
-      />
-    </>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Quick Actions
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Quick Actions</DialogTitle>
+          <DialogDescription>
+            Make changes to your profile here. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Name
+            </Label>
+            <Input id="name" value="Pedro Duarte" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="username" className="text-right">
+              Username
+            </Label>
+            <Input id="username" value="@peduarte" className="col-span-3" />
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="submit">Save changes</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    <InvoiceDialog 
+      open={invoiceDialogOpen} 
+      onOpenChange={setInvoiceDialogOpen} 
+      onGenerateInvoice={() => {}} // Ajout de la fonction vide requise par le type
+      isGenerating={false} // Ajout de la propriété requise par le type
+    />
+    </Dialog>
   );
-};
+}
+
+export default QuickAction;
