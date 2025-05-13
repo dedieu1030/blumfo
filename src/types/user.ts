@@ -8,11 +8,7 @@ export interface UserProfile {
   phone?: string;
   language: string;
   timezone: string;
-  notification_settings: {
-    email: boolean;
-    push: boolean;
-    sms: boolean;
-  };
+  notification_settings: NotificationSettings;
   created_at: string;
   updated_at: string;
 }

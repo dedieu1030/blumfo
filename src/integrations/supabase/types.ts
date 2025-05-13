@@ -160,45 +160,102 @@ export type Database = {
       }
       companies: {
         Row: {
+          account_holder: string | null
           address: string | null
+          bank_account: string | null
+          bank_name: string | null
+          business_type: string | null
+          business_type_custom: string | null
           company_name: string
+          country: string | null
           created_at: string | null
+          default_currency: string | null
           email: string | null
+          email_type: string | null
           id: string
           logo_url: string | null
+          payoneer: string | null
+          paypal: string | null
           phone: string | null
+          profile_subtype: string | null
+          profile_type: string | null
+          registration_number: string | null
+          stripe_account_id: string | null
+          stripe_connected: boolean | null
+          tax_configuration: Json | null
+          terms_and_conditions: string | null
+          thank_you_message: string | null
           tps_number: string | null
           tvq_number: string | null
           updated_at: string | null
           user_id: string | null
+          vat_number: string | null
           website: string | null
         }
         Insert: {
+          account_holder?: string | null
           address?: string | null
+          bank_account?: string | null
+          bank_name?: string | null
+          business_type?: string | null
+          business_type_custom?: string | null
           company_name: string
+          country?: string | null
           created_at?: string | null
+          default_currency?: string | null
           email?: string | null
+          email_type?: string | null
           id?: string
           logo_url?: string | null
+          payoneer?: string | null
+          paypal?: string | null
           phone?: string | null
+          profile_subtype?: string | null
+          profile_type?: string | null
+          registration_number?: string | null
+          stripe_account_id?: string | null
+          stripe_connected?: boolean | null
+          tax_configuration?: Json | null
+          terms_and_conditions?: string | null
+          thank_you_message?: string | null
           tps_number?: string | null
           tvq_number?: string | null
           updated_at?: string | null
           user_id?: string | null
+          vat_number?: string | null
           website?: string | null
         }
         Update: {
+          account_holder?: string | null
           address?: string | null
+          bank_account?: string | null
+          bank_name?: string | null
+          business_type?: string | null
+          business_type_custom?: string | null
           company_name?: string
+          country?: string | null
           created_at?: string | null
+          default_currency?: string | null
           email?: string | null
+          email_type?: string | null
           id?: string
           logo_url?: string | null
+          payoneer?: string | null
+          paypal?: string | null
           phone?: string | null
+          profile_subtype?: string | null
+          profile_type?: string | null
+          registration_number?: string | null
+          stripe_account_id?: string | null
+          stripe_connected?: boolean | null
+          tax_configuration?: Json | null
+          terms_and_conditions?: string | null
+          thank_you_message?: string | null
           tps_number?: string | null
           tvq_number?: string | null
           updated_at?: string | null
           user_id?: string | null
+          vat_number?: string | null
           website?: string | null
         }
         Relationships: []
@@ -742,6 +799,45 @@ export type Database = {
           requires_gateway?: boolean
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      payment_terms_templates: {
+        Row: {
+          created_at: string | null
+          custom_date: string | null
+          days_after_issue: number | null
+          delay: string
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          terms_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_date?: string | null
+          days_after_issue?: number | null
+          delay: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          terms_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_date?: string | null
+          days_after_issue?: number | null
+          delay?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          terms_text?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
