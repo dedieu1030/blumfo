@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { CustomTaxConfiguration, TaxConfiguration } from "@/types/tax";
+import { useCompanyProfile } from "@/hooks/use-company-profile";
 
 interface TaxSettingsProps {
   companyProfile: CompanyProfile | null;
@@ -14,9 +15,11 @@ interface TaxSettingsProps {
 
 export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   const { toast } = useToast();
+  const { saveProfile } = useCompanyProfile();
   const [taxRate, setTaxRate] = useState<number>(20); // Taux par défaut: 20%
   const [taxRegion, setTaxRegion] = useState<string | undefined>(undefined);
   const [customTax, setCustomTax] = useState<CustomTaxConfiguration | undefined>(undefined);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Initialiser avec les valeurs existantes si disponibles
   useEffect(() => {
@@ -44,7 +47,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   };
 
   // Enregistrer les paramètres de TVA
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!companyProfile) {
       toast({
         title: "Erreur",
@@ -53,6 +56,8 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
       });
       return;
     }
+
+    setIsSaving(true);
 
     const updatedConfiguration: TaxConfiguration = {
       defaultTaxRate: taxRate.toString(),
@@ -68,12 +73,24 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
       taxConfiguration: updatedConfiguration, // Nouvelle structure
     };
 
-    onSave(updatedProfile);
+    // Sauvegarder via le hook personnalisé pour synchroniser avec Supabase
+    const result = await saveProfile(updatedProfile);
 
-    toast({
-      title: "Configuration de TVA enregistrée",
-      description: `Le taux de TVA par défaut est maintenant ${taxRate}%.`,
-    });
+    setIsSaving(false);
+
+    if (result.success) {
+      onSave(updatedProfile);
+      toast({
+        title: "Configuration de TVA enregistrée",
+        description: `Le taux de TVA par défaut est maintenant ${taxRate}%.`,
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Une erreur est survenue lors de la sauvegarde.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -94,8 +111,8 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
           />
         </div>
 
-        <Button onClick={handleSave} className="w-full">
-          Enregistrer les paramètres de TVA
+        <Button onClick={handleSave} className="w-full" disabled={isSaving}>
+          {isSaving ? "Enregistrement..." : "Enregistrer les paramètres de TVA"}
         </Button>
       </CardContent>
     </Card>
