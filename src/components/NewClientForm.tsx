@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "./ClientSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -111,15 +111,19 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         console.warn("Aucune entreprise trouvée pour l'utilisateur");
         setAuthError("Aucune entreprise trouvée pour votre compte. Veuillez créer une entreprise d'abord.");
         
-        // Vérifions si l'utilisateur existe bien dans la base de données
-        const { data: userExists, error: userCheckError } = await supabase
-          .from('companies')
-          .select('count(*)', { count: 'exact' });
-          
-        console.log("Vérification des entreprises disponibles:", { 
-          count: userExists?.count, 
-          error: userCheckError 
-        });
+        // Vérifions si l'utilisateur existe bien dans la base de données - correction de l'erreur ici
+        try {
+          const { count, error: countError } = await supabase
+            .from('companies')
+            .select('*', { count: 'exact', head: true });
+            
+          console.log("Vérification des entreprises disponibles:", { 
+            count, 
+            error: countError 
+          });
+        } catch (countError) {
+          console.error("Erreur lors du comptage des entreprises:", countError);
+        }
         
         setIsCompanyLoading(false);
         return;
@@ -138,12 +142,20 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
 
   const handleSubmit = async () => {
     if (!clientName) {
-      toast.error("Le nom du client est requis");
+      toast({
+        title: "Erreur",
+        description: "Le nom du client est requis",
+        variant: "destructive"
+      });
       return;
     }
 
     if (!companyId) {
-      toast.error("Impossible de créer un client sans entreprise associée");
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer un client sans entreprise associée",
+        variant: "destructive"
+      });
       console.error("Tentative de création de client sans company_id défini");
       return;
     }
@@ -177,7 +189,11 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         throw error;
       }
 
-      toast.success("Client créé avec succès");
+      toast({
+        title: "Succès",
+        description: "Client créé avec succès",
+        variant: "success"
+      });
       
       // Mapper les propriétés pour assurer la compatibilité
       const clientData: Client = {
@@ -198,7 +214,11 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error creating client:", error);
-      toast.error(error.message || "Erreur lors de la création du client");
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la création du client",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
