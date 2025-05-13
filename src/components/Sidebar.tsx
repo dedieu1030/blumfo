@@ -36,61 +36,55 @@ export function Sidebar({ className }: SidebarProps) {
     : "MD";
 
   return (
-    <div className={`fixed hidden md:flex flex-col bg-gradient-to-b from-[#003427] via-[#004E37] to-[#F0EBE7] text-gray-800 w-64 h-screen relative ${className}`}>
-      {/* Overlay semi-transparent pour améliorer la lisibilité du texte */}
-      <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]"></div>
-      
-      {/* Contenu de la sidebar au-dessus de l'overlay */}
-      <div className="relative z-10 flex flex-col h-full">
-        <div className="p-8 flex justify-center items-center">
-          <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-white">
-            blumfo<span className="inline-flex items-center">
-              <span className="h-1.5 w-1.5 ml-0.5 rounded-full bg-[#E5FC37]"></span>
-            </span>
-          </h1>
-        </div>
+    <div className={`fixed hidden md:flex flex-col bg-[#F0EBE7] text-gray-800 w-64 h-screen ${className}`}>
+      <div className="p-8 flex justify-center items-center">
+        <h1 className="font-['Space_Mono'] font-bold text-3xl tracking-tighter text-[#003427]">
+          blumfo<span className="inline-flex items-center">
+            <span className="h-1.5 w-1.5 ml-0.5 rounded-full bg-[#FA7043]"></span>
+          </span>
+        </h1>
+      </div>
 
-        <div className="flex-1 px-4 py-6 space-y-1">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                isActive(item.path)
-                  ? "bg-white/20 text-white"
-                  : "text-white/80 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <Icon 
-                name={item.icon} 
-                size={20} 
-                className={`mr-3 ${isActive(item.path) ? "text-white" : "text-white/80"}`} 
-              />
-              {item.name}
-            </Link>
-          ))}
-        </div>
-        
-        <div className="p-4 border-t border-white/20">
-          <Link 
-            to="/profile" 
-            className={`flex items-center px-3 py-2.5 rounded-md transition-colors ${
-              isActive("/profile")
-                ? "bg-white/20 text-white"
-                : "text-white/80 hover:text-white hover:bg-white/10"
+      <div className="flex-1 px-4 py-6 space-y-1">
+        {navigationItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+              isActive(item.path)
+                ? "bg-white/50 text-[#003427]"
+                : "text-gray-700 hover:text-gray-900 hover:bg-white/20"
             }`}
           >
-            <Avatar className="h-8 w-8 mr-3">
-              <AvatarFallback className="bg-[#E5FC37] text-[#003427] text-xs">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="text-sm font-medium">Mon profil</div>
-              <div className="text-xs text-white/70">Paramètres du compte</div>
-            </div>
+            <Icon 
+              name={item.icon} 
+              size={20} 
+              className={`mr-3 ${isActive(item.path) ? "text-[#003427]" : ""}`} 
+            />
+            {item.name}
           </Link>
-        </div>
+        ))}
+      </div>
+      
+      <div className="p-4 border-t border-gray-200">
+        <Link 
+          to="/profile" 
+          className={`flex items-center px-3 py-2.5 rounded-md transition-colors ${
+            isActive("/profile")
+              ? "bg-white/50 text-[#003427]"
+              : "text-gray-700 hover:text-gray-900 hover:bg-white/20"
+          }`}
+        >
+          <Avatar className="h-8 w-8 mr-3">
+            <AvatarFallback className="bg-[#003427] text-white text-xs">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="text-sm font-medium">Mon profil</div>
+            <div className="text-xs text-gray-600">Paramètres du compte</div>
+          </div>
+        </Link>
       </div>
     </div>
   );

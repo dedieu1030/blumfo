@@ -40,7 +40,7 @@ const Quotes = () => {
         description="Gérez vos devis et suivez leur évolution"
         onOpenMobileMenu={() => {}}
         actions={
-          <Button onClick={handleOpenDialog} className="bg-[#003427] hover:bg-[#004E37]">
+          <Button onClick={handleOpenDialog}>
             <Plus className="mr-2 h-4 w-4" /> Nouveau devis
           </Button>
         }
