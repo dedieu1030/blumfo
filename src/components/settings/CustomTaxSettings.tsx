@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, ChevronsUpDown, Plus, Trash, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Plus, Trash } from "lucide-react";
 import { cn, formatTaxRate } from "@/lib/utils";
 import { CustomTaxConfiguration, COUNTRIES, TAX_TYPES } from "@/types/tax";
-import { taxZonesData } from "@/data/taxData";
 
 interface CustomTaxSettingsProps {
   defaultValue: number | string;
@@ -17,82 +18,6 @@ interface CustomTaxSettingsProps {
   onChange: (value: number, regionKey?: string, customConfig?: CustomTaxConfiguration) => void;
   showLabel?: boolean;
 }
-
-// Fonction qui récupère tous les codes de pays déjà présents dans les zones fiscales prédéfinies
-const getExistingCountryCodes = (): string[] => {
-  return taxZonesData.flatMap(zone => 
-    zone.countries.map(country => country.countryCode)
-  );
-};
-
-// Organiser les pays par continent
-const organizeCountriesByContinent = (countries) => {
-  const continents = {
-    "Europe": [],
-    "Amérique du Nord": [], 
-    "Amérique du Sud": [],
-    "Asie": [],
-    "Afrique": [],
-    "Océanie": []
-  };
-
-  // Liste des pays européens (codes ISO)
-  const europeanCountries = [
-    "AL", "AD", "AM", "AT", "AZ", "BY", "BE", "BA", "BG", "HR", 
-    "CY", "CZ", "DK", "EE", "FI", "FR", "GE", "DE", "GR", "HU", 
-    "IS", "IE", "IT", "KZ", "XK", "LV", "LI", "LT", "LU", "MK", 
-    "MT", "MD", "MC", "ME", "NL", "NO", "PL", "PT", "RO", "RU", 
-    "SM", "RS", "SK", "SI", "ES", "SE", "CH", "TR", "UA", "GB", "VA"
-  ];
-
-  // Liste des pays d'Amérique du Nord
-  const northAmericaCountries = [
-    "CA", "US", "MX", "GT", "BZ", "SV", "HN", "NI", "CR", "PA",
-    "BS", "CU", "JM", "HT", "DO", "PR", "BM", "BB", "AG", "DM",
-    "LC", "VC", "GD", "TT", "KN"
-  ];
-
-  // Liste des pays d'Amérique du Sud
-  const southAmericaCountries = [
-    "AR", "BO", "BR", "CL", "CO", "EC", "GY", "PY", "PE", "SR", 
-    "UY", "VE"
-  ];
-
-  // Liste des pays d'Asie
-  const asianCountries = [
-    "AF", "SA", "AM", "AZ", "BH", "BD", "BT", "MM", "BN", "KH",
-    "CN", "CY", "KP", "KR", "AE", "GE", "IN", "ID", "IR", "IQ",
-    "IL", "JP", "JO", "KZ", "KG", "KW", "LA", "LB", "MY", "MV",
-    "MN", "NP", "OM", "UZ", "PK", "PS", "PH", "QA", "RU", "SG",
-    "LK", "SY", "TJ", "TW", "TH", "TL", "TR", "TM", "VN", "YE"
-  ];
-
-  // Liste des pays d'Océanie
-  const oceaniaCountries = [
-    "AU", "FJ", "KI", "MH", "FM", "NR", "NZ", "PW", "PG", "WS",
-    "SB", "TO", "TV", "VU"
-  ];
-
-  // Tous les autres sont en Afrique par défaut (simplification)
-  
-  countries.forEach(country => {
-    if (europeanCountries.includes(country.code)) {
-      continents["Europe"].push(country);
-    } else if (northAmericaCountries.includes(country.code)) {
-      continents["Amérique du Nord"].push(country);
-    } else if (southAmericaCountries.includes(country.code)) {
-      continents["Amérique du Sud"].push(country);
-    } else if (asianCountries.includes(country.code)) {
-      continents["Asie"].push(country);
-    } else if (oceaniaCountries.includes(country.code)) {
-      continents["Océanie"].push(country);
-    } else {
-      continents["Afrique"].push(country);
-    }
-  });
-
-  return continents;
-};
 
 export function CustomTaxSettings({
   defaultValue = 20,
@@ -110,6 +35,7 @@ export function CustomTaxSettings({
   });
   
   // État pour la recherche de pays
+  const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   
   // État pour le nouveau taux additionnel
@@ -128,24 +54,11 @@ export function CustomTaxSettings({
     }
   }, [defaultConfig, defaultValue]);
 
-  // Codes des pays déjà présents dans les régions fiscales prédéfinies
-  const existingCountryCodes = getExistingCountryCodes();
-
-  // Filtrer les pays pour exclure ceux déjà disponibles dans les régions fiscales
-  const availableCountries = COUNTRIES.filter(country => 
-    !existingCountryCodes.includes(country.code)
-  );
-
   // Filtrer les pays par la recherche
-  const filteredCountries = searchValue 
-    ? availableCountries.filter(country => 
-        country.name.toLowerCase().includes(searchValue.toLowerCase()) || 
-        country.code.toLowerCase().includes(searchValue.toLowerCase())
-      )
-    : availableCountries;
-
-  // Organiser les pays par continent
-  const countriesByContinent = organizeCountriesByContinent(filteredCountries);
+  const filteredCountries = COUNTRIES.filter(country => 
+    country.name.toLowerCase().includes(searchValue.toLowerCase()) || 
+    country.code.toLowerCase().includes(searchValue.toLowerCase())
+  );
 
   // Mettre à jour le taux principal
   const handleMainRateChange = (value: number[]) => {
@@ -179,6 +92,7 @@ export function CustomTaxSettings({
       setCustomTax(updatedConfig);
       onChange(customTax.mainRate, undefined, updatedConfig);
     }
+    setOpen(false);
   };
 
   // Gérer le changement de type de taxe
@@ -235,49 +149,51 @@ export function CustomTaxSettings({
       )}
       
       <div className="space-y-4">
-        {/* Sélection du pays avec barre de recherche */}
+        {/* Sélection du pays */}
         <div className="space-y-2">
           <Label htmlFor="country-select">Pays</Label>
-          
-          {/* Barre de recherche pour filtrer les pays */}
-          <div className="relative mb-2">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher un pays..."
-              className="pl-9"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-            />
-          </div>
-          
-          {/* Sélecteur de pays */}
-          <Select
-            value={customTax.country}
-            onValueChange={handleCountrySelect}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un pays..." />
-            </SelectTrigger>
-            <SelectContent className="max-h-80">
-              {Object.entries(countriesByContinent).map(([continent, countries]) => 
-                countries.length > 0 ? (
-                  <SelectGroup key={continent}>
-                    <SelectLabel>{continent}</SelectLabel>
-                    {countries.map(country => (
-                      <SelectItem key={country.code} value={country.code}>
-                        {country.name} ({country.code})
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ) : null
-              )}
-              {!Object.values(countriesByContinent).some(group => group.length > 0) && (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  Aucun pays trouvé pour "{searchValue}"
-                </div>
-              )}
-            </SelectContent>
-          </Select>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between"
+              >
+                {customTax.country 
+                  ? customTax.countryName
+                  : "Sélectionner un pays..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command>
+                <CommandInput 
+                  placeholder="Rechercher un pays..." 
+                  value={searchValue}
+                  onValueChange={setSearchValue}
+                />
+                <CommandEmpty>Aucun pays trouvé.</CommandEmpty>
+                <CommandGroup className="max-h-64 overflow-y-auto">
+                  {filteredCountries.map(country => (
+                    <CommandItem
+                      key={country.code}
+                      value={country.code}
+                      onSelect={handleCountrySelect}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          customTax.country === country.code ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {country.name} ({country.code})
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Sélection du type de taxe */}

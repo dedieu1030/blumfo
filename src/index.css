@@ -1,83 +1,136 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 35 33% 98%; /* Beige très clair: #fcfbf8 */
+    --foreground: 25 25% 12%; /* Brun foncé: #312a25 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
- 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
- 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --card: 35 33% 98%;
+    --card-foreground: 25 25% 12%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
- 
-    --radius: 0.5rem;
+    --popover: 35 33% 98%;
+    --popover-foreground: 25 25% 12%;
+
+    --primary: 164 100% 10%; /* Vert foncé: #003427 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 24 18% 93%; /* Beige clair: #F0EBE7 */
+    --secondary-foreground: 25 25% 12%;
+
+    --muted: 24 15% 88%; /* Beige plus léger: #e7e2dd */
+    --muted-foreground: 25 10% 40%; /* Brun moyen: #766b62 */
+
+    --accent: 65 96% 60%; /* Vert lime vif: #E5FC37 - changé depuis corail */
+    --accent-foreground: 25 25% 12%;
+
+    --destructive: 0 74% 57%; /* Rouge: #ea384c */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 57% 52%; /* Vert: #38d26c */
+    --success-foreground: 0 0% 100%;
+
+    --info: 201 94% 49%; /* Bleu: #0EA5E9 */
+    --info-foreground: 0 0% 100%;
+    
+    --warning: 35 92% 55%; /* Orange: #f9a826 */
+    --warning-foreground: 0 0% 100%;
+    
+    --warm: 18 83% 62%; /* Corail: #f87358 */
+    --warm-foreground: 0 0% 100%;
+    
+    --taupe: 30 20% 65%; /* Taupe: #bfae9f */
+    --taupe-foreground: 25 25% 12%;
+
+    --border: 24 15% 85%; /* Beige border: #e1dcd7 */
+    --input: 24 15% 85%; /* Beige border: #e1dcd7 */
+    --ring: 164 100% 10%; /* Vert foncé: #003427 */
+
+    --radius: 0.75rem;
+
+    /* Sidebar specific colors - already good */
+    --sidebar-background: 24 18% 93%; /* #F0EBE7 */
+    --sidebar-foreground: 25 25% 12%;
+    --sidebar-primary: 164 100% 10%; /* Vert foncé: #003427 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 65 96% 60%; /* Vert lime vif: #E5FC37 - changé depuis corail */
+    --sidebar-accent-foreground: 25 25% 12%;
+    --sidebar-border: 24 15% 80%; /* #d5cdc6 */
+    --sidebar-ring: 164 100% 10%; /* Vert foncé: #003427 */
   }
- 
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
- 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
- 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
- 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
- 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
- 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
- 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
- 
+    --background: 25 30% 10%; /* Brun très foncé pour dark mode */
+    --foreground: 24 15% 90%;
+
+    --card: 25 30% 10%;
+    --card-foreground: 24 15% 90%;
+
+    --popover: 25 30% 10%;
+    --popover-foreground: 24 15% 90%;
+
+    --primary: 164 100% 10%; /* Vert foncé: #003427 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 25 25% 20%;
+    --secondary-foreground: 24 15% 90%;
+
+    --muted: 25 25% 25%;
+    --muted-foreground: 24 10% 70%;
+
+    --accent: 65 96% 60%; /* Vert lime vif: #E5FC37 */
+    --accent-foreground: 25 25% 12%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 24 15% 90%;
+
+    --border: 25 25% 30%;
+    --input: 25 25% 30%;
+    --ring: 164 100% 10%; /* Vert foncé: #003427 */
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-space;
   }
 
-  /* Isoler le composant Command pour éviter les conflits */
-  .CommandWrapper {
-    z-index: 50 !important;
-    position: relative !important;
+  h1, h2, h3, h4 {
+    @apply font-space font-medium;
+  }
+  
+  /* Styles pour les barres de défilement natives */
+  ::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(200, 200, 201, 0.5);
+    border-radius: 9999px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(159, 158, 161, 0.5);
+  }
+  
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(200, 200, 201, 0.5) transparent;
   }
 }
+
+
