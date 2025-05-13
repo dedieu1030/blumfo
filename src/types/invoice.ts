@@ -124,10 +124,11 @@ export interface DiscountInfo {
 }
 
 export interface SignatureData {
-  type: 'draw' | 'type' | 'initials';
+  type: "draw" | "type" | "initials";
   dataUrl: string;
   name: string;
   initials?: string;
+  fontFamily?: string;
   timestamp: string;
 }
 

@@ -1,4 +1,3 @@
-
 export interface TaxZone {
   id: string;
   name: string;
@@ -25,15 +24,14 @@ export interface TaxRegionData {
 }
 
 export interface TaxConfiguration {
-  type: 'region' | 'custom';
-  regionKey?: string;  // Format: "zoneId:countryId:regionId"
-  customConfig?: CustomTaxConfiguration;
+  type: "region" | "custom";
   rate: number;
-  // Rétrocompatibilité pour les fonctions existantes
+  // Add these previously missing properties
   defaultTaxRate?: string;
   region?: string;
   country?: string;
   customTax?: CustomTaxConfiguration;
+  customConfig?: CustomTaxConfiguration;
 }
 
 export interface CustomTaxConfiguration {
@@ -47,6 +45,16 @@ export interface CustomTaxConfiguration {
     name: string;
     rate: number;
   }[];
+}
+
+export interface CurrencyInfo {
+  code: string;
+  symbol: string;
+  name: string;
+  symbolPosition?: "before" | "after";
+  decimalSeparator?: string;
+  thousandSeparator?: string;
+  decimalPlaces?: number;
 }
 
 export const TAX_TYPES = {

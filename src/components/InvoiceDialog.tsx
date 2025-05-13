@@ -25,7 +25,7 @@ import { PaymentMethodDetails, ServiceLine, InvoiceData, CompanyProfile, Payment
 import { fetchProducts, formatPrice, Product } from "@/services/productService";
 import { DiscountSelector } from "@/components/DiscountSelector";
 import { CustomInvoiceText } from "@/components/CustomInvoiceText";
-import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { SignatureCanvas, SignatureCanvasAdapter } from "@/components/SignatureCanvas";
 import { SignatureSelector } from "@/components/SignatureSelector";
 import { SignatureDisplay } from "@/components/SignatureDisplay";
 
@@ -969,7 +969,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                 onClick={() => setSignatureDialogOpen(true)}
               >
                 {signatureData ? (
-                  <SignatureDisplay signature={invoice.signature} />
+                  <SignatureDisplay signature={signatureData} />
                 ) : (
                   <div className="h-24 flex items-center justify-center">
                     <p className="text-muted-foreground">Cliquez pour signer</p>
@@ -986,12 +986,10 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                   
                   <div className="flex space-x-4 mb-4">
                     <div className="w-full">
-                      <SignatureCanvas 
-                        onSave={handleSignatureSave}
-                        onClose={handleSignatureCancel}
+                      <SignatureCanvasAdapter 
                         onSignatureChange={handleSignatureChange}
-                        signatureData={invoice.signature}
-                        userName={invoice.clientName}
+                        signatureData={signatureData}
+                        userName={signerName}
                       />
                     </div>
                   </div>
@@ -1266,6 +1264,20 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         </DialogContent>
       </Dialog>
     );
+  };
+
+  // Add new functions to handle signatures
+  const handleSignatureSave = (sig: SignatureData) => {
+    setSignatureData(sig);
+    setSignatureDialogOpen(false);
+  };
+
+  const handleSignatureCancel = () => {
+    setSignatureDialogOpen(false);
+  };
+
+  const handleSignatureChange = (sig: SignatureData) => {
+    setSignatureData(sig);
   };
 
   return (

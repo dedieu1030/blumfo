@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { SignatureCanvas, SignatureCanvasAdapter } from "@/components/SignatureCanvas";
 import { SignatureDisplay } from "@/components/SignatureDisplay";
 import { Quote, QuoteSignature as QuoteSignatureType, QuoteSignRequest } from "@/types/quote";
 import { SignatureData } from "@/types/invoice";
@@ -147,10 +147,8 @@ export function QuoteSignatureComponent({ quote, quoteId, onSuccess, readOnly = 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <SignatureCanvas 
+            <SignatureCanvasAdapter 
               onSignatureChange={handleSignatureChange}
-              onSave={() => {}}
-              onClose={() => {}}
               signatureData={signatureData}
               userName={signerName}
             />
