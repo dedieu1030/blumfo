@@ -166,7 +166,7 @@ export function ReminderScheduleEditor({ schedule, onSave, onCancel }: ReminderS
                 placeholder="Ex: Rappel : Votre facture arrive à échéance"
               />
               <p className="text-xs text-muted-foreground">
-                Variables disponibles: {{invoice_number}}, {{due_date}}, {{amount}}, {{days}}
+                Variables disponibles: {"{{invoice_number}}, {{due_date}}, {{amount}}, {{days}}"}
               </p>
             </div>
             
@@ -180,8 +180,7 @@ export function ReminderScheduleEditor({ schedule, onSave, onCancel }: ReminderS
                 rows={6}
               />
               <p className="text-xs text-muted-foreground">
-                Variables disponibles: {{invoice_number}}, {{due_date}}, {{amount}}, 
-                {{company_name}}, {{client_name}}, {{days}}
+                Variables disponibles: {"{{invoice_number}}, {{due_date}}, {{amount}}, {{company_name}}, {{client_name}}, {{days}}"}
               </p>
             </div>
           </div>

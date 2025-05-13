@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Download, Eye, Printer } from "lucide-react";
 import { saveAs } from 'file-saver';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import { InvoiceData } from '@/types/invoice';
 
 interface InvoicePreviewProps {
@@ -99,18 +99,18 @@ export function InvoicePreview({
     
     return (
       <div className="mt-4 text-sm">
-        {invoiceData.issuerInfo.bankName && (
-          <p><strong>Banque:</strong> {invoiceData.issuerInfo.bankName}</p>
+        {invoiceData.issuerInfo?.bankName && (
+          <p><strong>Banque:</strong> {invoiceData.issuerInfo?.bankName}</p>
         )}
-        {invoiceData.issuerInfo.accountHolder && (
-          <p><strong>Titulaire:</strong> {invoiceData.issuerInfo.accountHolder}</p>
+        {invoiceData.issuerInfo?.accountHolder && (
+          <p><strong>Titulaire:</strong> {invoiceData.issuerInfo?.accountHolder}</p>
         )}
-        {invoiceData.issuerInfo.bankAccount && (
-          <p><strong>IBAN:</strong> {invoiceData.issuerInfo.bankAccount}</p>
+        {invoiceData.issuerInfo?.bankAccount && (
+          <p><strong>IBAN:</strong> {invoiceData.issuerInfo?.bankAccount}</p>
         )}
         <p><strong>Référence:</strong> {invoiceData.invoiceNumber}</p>
-        {invoiceData.issuerInfo.paypal && (
-          <p className="mt-2"><strong>PayPal:</strong> {invoiceData.issuerInfo.paypal}</p>
+        {invoiceData.issuerInfo?.paypal && (
+          <p className="mt-2"><strong>PayPal:</strong> {invoiceData.issuerInfo?.paypal}</p>
         )}
       </div>
     );

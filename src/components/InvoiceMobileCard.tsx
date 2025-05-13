@@ -29,16 +29,18 @@ import { Invoice } from "@/types/invoice";
 
 interface InvoiceMobileCardProps {
   invoice: Invoice;
+  onCopyLink?: (paymentUrl: string) => void;
+  onConfirmPayment?: (invoice: Invoice) => void;
 }
 
-export function InvoiceMobileCard({ invoice }: InvoiceMobileCardProps) {
+export function InvoiceMobileCard({ invoice, onCopyLink, onConfirmPayment }: InvoiceMobileCardProps) {
   const navigate = useNavigate();
   
   // Fonctions d'assistance pour gérer les différents formats de noms de client
   const getClientName = (invoice: Invoice) => {
     if (typeof invoice.client === 'string') {
       return invoice.client;
-    } else if (invoice.client && invoice.client.client_name) {
+    } else if (invoice.client && typeof invoice.client === 'object' && 'client_name' in invoice.client) {
       return invoice.client.client_name;
     } else if (invoice.client_name) {
       return invoice.client_name;
@@ -111,7 +113,19 @@ export function InvoiceMobileCard({ invoice }: InvoiceMobileCardProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <InvoiceActions invoice={invoice} isDropdown={true} />
+                  {invoice.paymentUrl && onCopyLink && (
+                    <DropdownMenuItem onClick={() => onCopyLink(invoice.paymentUrl || '')}>
+                      Copier le lien de paiement
+                    </DropdownMenuItem>
+                  )}
+                  {(invoice.status === 'pending' || invoice.status === 'overdue') && onConfirmPayment && (
+                    <DropdownMenuItem onClick={() => onConfirmPayment(invoice)}>
+                      Marquer comme payée
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={handleOpenInvoice}>
+                    Voir les détails
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

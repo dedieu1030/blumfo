@@ -11,9 +11,8 @@ export interface InvoiceData {
   shipToAddress: string;
   amount: number;
   balance: number;
-  status: 'paid' | 'unpaid' | 'draft';
-  // Propriétés ajoutées pour résoudre les erreurs
-  total: number;
+  status: 'paid' | 'unpaid' | 'draft' | 'pending';
+  total: number;  // Ajout de la propriété manquante
   totalAmount: number;
   items?: InvoiceItem[];
   paymentMethods?: PaymentMethodDetails[];
@@ -23,12 +22,10 @@ export interface InvoiceData {
     email: string;
     phone: string;
     website?: string;
-    // Ajout des propriétés bancaires nécessaires pour InvoicePreview
     bankName?: string;
     accountHolder?: string;
     bankAccount?: string;
     paypal?: string;
-    // Autres propriétés du profil d'entreprise
     emailType?: string;
     businessType?: string;
     termsAndConditions?: string;
@@ -44,7 +41,6 @@ export interface InvoiceData {
   issueDate?: string;
   signature?: SignatureData;
   signatureDate?: string;
-  // Propriétés supplémentaires pour les réductions et textes personnalisés
   subtotal?: number;
   taxRate?: number;
   taxAmount?: number;
@@ -100,9 +96,7 @@ export interface CompanyProfile {
   stripeAccountId?: string;
   createdAt?: string;
   updatedAt?: string;
-  // Configuration fiscale
   taxConfiguration?: TaxConfiguration;
-  // Propriétés pour ProfileWizard et ProfileViewer
   profileType?: 'personal' | 'business';
   profileSubtype?: string;
 }
@@ -113,12 +107,10 @@ export interface InvoiceItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  // Ajout des propriétés pour la TVA et les remises
   tva?: string | number;
   discount?: DiscountInfo;
 }
 
-// Types pour ServiceLine avec toutes les propriétés utilisées dans l'application
 export interface ServiceLine {
   id: string;
   description: string;
@@ -126,12 +118,10 @@ export interface ServiceLine {
   unitPrice: number;
   total: number;
   totalPrice: number;
-  // Propriétés additionnelles
   tva?: string | number;
   discount?: DiscountInfo;
 }
 
-// Types pour les méthodes de paiement
 export type PaymentMethod = 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
 
 export interface PaymentMethodDetails {
@@ -158,7 +148,7 @@ export interface ReminderSchedule {
   name: string;
   isDefault?: boolean;
   triggers: ReminderTrigger[];
-  enabled?: boolean; // Ajout de cette propriété manquante
+  enabled?: boolean;
   user_id?: string;
 }
 
@@ -176,7 +166,6 @@ export interface PaymentTermTemplate {
   description?: string;
   daysAfterIssue: number;
   isDefault?: boolean;
-  // Ajout des propriétés manquantes
   delay?: string;
   customDate?: string;
   termsText?: string;
@@ -189,7 +178,6 @@ export interface InvoiceNumberingConfig {
   includeMonth?: boolean;
   separator?: string;
   digits?: number;
-  // Propriétés supplémentaires
   suffix?: string;
   padding?: number;
   pattern?: string;
@@ -210,19 +198,18 @@ export interface CurrencyInfo {
 
 export type Currency = string;
 
-// Interface complète pour les factures dans les listes
 export interface Invoice {
   id: string;
   invoice_number: string;
   number?: string;
-  client: string | { client_name: string };
-  client_name?: string;  // Ajout pour compatibilité
+  client: string | { client_name: string; [key: string]: any };
+  client_name?: string;
   date: string;
-  issue_date?: string;  // Ajout pour compatibilité
-  due_date?: string;    // Ajout pour compatibilité
-  dueDate?: string;     // Ajout pour compatibilité
+  issue_date?: string;
+  due_date?: string;
+  dueDate?: string;
   amount: string;
-  total_amount?: number; // Ajout pour compatibilité
+  total_amount?: number;
   status: 'paid' | 'pending' | 'draft' | 'overdue';
   paymentUrl?: string;
 }
