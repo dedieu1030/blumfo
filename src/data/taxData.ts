@@ -1,3 +1,4 @@
+
 import { TaxRegion } from "@/types/tax";
 
 // Données des régions fiscales
@@ -9,7 +10,7 @@ export const taxRegionsData: TaxRegion[] = [
     regions: [
       {
         id: "fr-standard",
-        name: "France - Taux Standard",
+        name: "France - Standard",
         code: "FR-STD",
         taxType: "vat-standard",
         vatStandardRate: 20,
@@ -17,7 +18,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "fr-intermediate",
-        name: "France - Taux Intermédiaire",
+        name: "France - Intermédiaire",
         code: "FR-INT",
         taxType: "vat-reduced",
         vatReducedRates: [10],
@@ -25,7 +26,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "fr-reduced",
-        name: "France - Taux Réduit",
+        name: "France - Réduit",
         code: "FR-RED",
         taxType: "vat-reduced",
         vatReducedRates: [5.5],
@@ -33,7 +34,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "fr-super-reduced",
-        name: "France - Taux Super Réduit",
+        name: "France - Super Réduit",
         code: "FR-SRD",
         taxType: "vat-super-reduced",
         vatSuperReducedRate: 2.1,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -11,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TaxRateSelector } from "./TaxRateSelector";
+import { formatTaxRate } from "@/lib/utils";
 
 // Récupération des données de taxe depuis le fichier de types
 import { taxRegionsData } from "@/data/taxData";
@@ -106,6 +106,12 @@ export function RegionalTaxSelector({
     setSearchValue("");
   };
 
+  // Fonction pour revenir à la sélection de pays
+  const backToCountries = () => {
+    setSelectedCountry(null);
+    setSearchValue("");
+  };
+
   const getTaxRateColor = (rate: number) => {
     if (rate <= 5) return "bg-green-100 text-green-800 hover:bg-green-200";
     if (rate <= 15) return "bg-blue-100 text-blue-800 hover:bg-blue-200";
@@ -154,7 +160,7 @@ export function RegionalTaxSelector({
           ? `${selectedRegion.name}`
           : "Sélectionner une région fiscale"}
         {selectedRegion && (
-          <Badge className={getTaxRateColor(selectedRegion.totalRate)} variant="outline">
+          <Badge className={`${getTaxRateColor(selectedRegion.totalRate)} ml-2 min-w-[40px] text-center`} variant="outline">
             {formatTaxRate(selectedRegion.totalRate)}%
           </Badge>
         )}
@@ -163,7 +169,7 @@ export function RegionalTaxSelector({
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent side="bottom" className="h-[85%] max-h-[85vh]">
           <SheetHeader>
-            <SheetTitle className="pr-8">
+            <SheetTitle className="pr-8 text-lg">
               {selectedCountry
                 ? getCountryTitle(selectedCountry)
                 : "Choisir une région fiscale"}
@@ -189,8 +195,8 @@ export function RegionalTaxSelector({
             ) : (
               // Étape 2: Sélection de la région spécifique
               <>
-                <div className="flex items-center space-x-2 sticky top-0 bg-background pt-2 pb-4">
-                  <Button variant="outline" onClick={() => setSelectedCountry(null)}>
+                <div className="flex items-center space-x-2 sticky top-0 bg-background pt-2 pb-4 z-10">
+                  <Button variant="outline" onClick={backToCountries}>
                     Retour
                   </Button>
                   <div className="relative flex-1">
@@ -204,7 +210,7 @@ export function RegionalTaxSelector({
                   </div>
                 </div>
                 
-                <ScrollArea className="h-[50vh]">
+                <ScrollArea className="h-[45vh]">
                   <div className="space-y-2">
                     {filteredRegions(selectedCountry).length > 0 ? (
                       filteredRegions(selectedCountry).map(region => (
@@ -214,8 +220,8 @@ export function RegionalTaxSelector({
                           className="w-full justify-between h-14 text-left"
                           onClick={() => handleSelectRegion(region)}
                         >
-                          <span className="font-medium truncate mr-2">{region.name}</span>
-                          <Badge className={getTaxRateColor(region.totalRate)} variant="outline">
+                          <span className="font-medium truncate mr-2 max-w-[65%]">{region.name}</span>
+                          <Badge className={`${getTaxRateColor(region.totalRate)} min-w-[40px] text-center`} variant="outline">
                             {formatTaxRate(region.totalRate)}%
                           </Badge>
                         </Button>
@@ -231,8 +237,8 @@ export function RegionalTaxSelector({
             )}
           </div>
           
-          <SheetFooter className="pt-2">
-            <Button onClick={closeSelector} className="w-full">
+          <SheetFooter className="pt-4">
+            <Button onClick={closeSelector} variant="default" className="w-full">
               <X className="h-4 w-4 mr-2" />
               Fermer
             </Button>
@@ -249,11 +255,11 @@ export function RegionalTaxSelector({
         <div>
           {selectedRegion ? (
             <div className="border rounded-md p-4 flex items-center justify-between">
-              <div>
-                <p className="font-medium">{selectedRegion.name}</p>
+              <div className="max-w-[60%]">
+                <p className="font-medium truncate">{selectedRegion.name}</p>
                 <p className="text-sm text-muted-foreground">{selectedRegion.code}</p>
               </div>
-              <Badge className={getTaxRateColor(selectedRegion.totalRate)} variant="outline">
+              <Badge className={`${getTaxRateColor(selectedRegion.totalRate)} min-w-[40px] text-center`} variant="outline">
                 {formatTaxRate(selectedRegion.totalRate)}%
               </Badge>
               <Button variant="ghost" size="sm" onClick={openSelector}>
@@ -275,7 +281,7 @@ export function RegionalTaxSelector({
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="sm:max-w-md">
           <SheetHeader>
-            <SheetTitle>
+            <SheetTitle className="text-lg">
               {selectedCountry 
                 ? getCountryTitle(selectedCountry)
                 : "Sélectionner une région fiscale"}
@@ -307,7 +313,7 @@ export function RegionalTaxSelector({
               // Étape 2: Selection de la région spécifique
               <>
                 <div className="flex items-center space-x-2 pb-4">
-                  <Button variant="outline" size="sm" onClick={() => setSelectedCountry(null)}>
+                  <Button variant="outline" size="sm" onClick={backToCountries}>
                     Retour
                   </Button>
                   <div className="relative flex-1">
@@ -330,11 +336,11 @@ export function RegionalTaxSelector({
                         className="w-full justify-between h-14 text-left"
                         onClick={() => handleSelectRegion(region)}
                       >
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">{region.name}</span>
-                          <span className="text-xs text-muted-foreground">{region.code}</span>
+                        <div className="flex flex-col items-start max-w-[65%]">
+                          <span className="font-medium truncate">{region.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">{region.code}</span>
                         </div>
-                        <Badge className={getTaxRateColor(region.totalRate)}>
+                        <Badge className={`${getTaxRateColor(region.totalRate)} min-w-[40px] text-center`}>
                           {formatTaxRate(region.totalRate)}%
                         </Badge>
                       </Button>
@@ -350,7 +356,7 @@ export function RegionalTaxSelector({
           </div>
           
           <SheetFooter>
-            <Button variant="outline" onClick={closeSelector} className="w-full">
+            <Button variant="default" onClick={closeSelector} className="w-full">
               <X className="h-4 w-4 mr-2" />
               Fermer
             </Button>

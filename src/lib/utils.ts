@@ -1,4 +1,3 @@
-
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { formatCurrency as formatCurrencyUtil, formatPercentage as formatPercentageUtil } from "@/components/ui/number-format";
@@ -10,6 +9,19 @@ export function cn(...inputs: ClassValue[]) {
 // Export the formatting functions from our new component for backward compatibility
 export const formatCurrency = formatCurrencyUtil;
 export const formatPercentage = formatPercentageUtil;
+
+// Format tax rate to prevent overflow (max 1 decimal place)
+export function formatTaxRate(rate: number): string {
+  if (rate === undefined || rate === null) return "-";
+  
+  // Check if the value is a whole number
+  if (Number.isInteger(rate)) {
+    return rate.toString();
+  }
+  
+  // Otherwise round to 1 decimal place
+  return rate.toFixed(1);
+}
 
 // Keep the formatDate function
 export function formatDate(date: string | Date): string {
