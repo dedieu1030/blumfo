@@ -1,4 +1,11 @@
 
+
+export interface NotificationSettings {
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+}
+
 export interface UserProfile {
   id: string;
   full_name: string;
@@ -8,9 +15,9 @@ export interface UserProfile {
   language: string;
   timezone: string;
   username?: string;
-  notification_settings: {
-    email: boolean;
-    push: boolean;
-    sms: boolean;
-  };
+  notification_settings: NotificationSettings;
+  // Add these fields to match the database structure
+  created_at?: string;
+  updated_at?: string;
 }
+

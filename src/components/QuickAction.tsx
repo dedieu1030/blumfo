@@ -21,6 +21,12 @@ export function QuickAction() {
   const [open, setOpen] = useState(false)
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false)
 
+  // Create an async function to handle invoice generation
+  const handleGenerateInvoice = async () => {
+    // This is a placeholder function that returns a Promise
+    return Promise.resolve()
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -59,8 +65,8 @@ export function QuickAction() {
       <InvoiceDialog 
         open={invoiceDialogOpen} 
         onOpenChange={setInvoiceDialogOpen} 
-        onGenerateInvoice={() => {}} // Ajout de la fonction vide requise par le type
-        isGenerating={false} // Ajout de la propriété requise par le type
+        onGenerateInvoice={handleGenerateInvoice} // Updated to use the async function
+        isGenerating={false}
       />
     </Dialog>
   );
