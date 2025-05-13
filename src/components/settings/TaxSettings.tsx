@@ -23,6 +23,10 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
       const { defaultTaxRate, region } = companyProfile.taxConfiguration;
       setTaxRate(parseFloat(defaultTaxRate));
       setTaxRegion(region);
+    } else if (companyProfile?.taxRate) {
+      // Utiliser le taux de TVA existant s'il n'y a pas encore de configuration complète
+      setTaxRate(companyProfile.taxRate);
+      setTaxRegion(companyProfile.taxRegion);
     }
   }, [companyProfile]);
 
@@ -51,7 +55,9 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
 
     const updatedProfile: CompanyProfile = {
       ...companyProfile,
-      taxConfiguration: updatedConfiguration,
+      taxRate: taxRate, // Mise à jour du champ taxRate existant pour la compatibilité
+      taxRegion: taxRegion, // Mise à jour du champ taxRegion existant pour la compatibilité
+      taxConfiguration: updatedConfiguration, // Nouvelle structure
     };
 
     onSave(updatedProfile);

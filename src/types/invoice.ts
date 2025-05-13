@@ -76,6 +76,8 @@ export interface CompanyProfile {
   payoneer?: string;
   profileType?: 'personal' | 'business';
   profileSubtype?: string;
+  country?: string; // Pays de l'entreprise
+  taxConfiguration?: import("./tax").TaxConfiguration; // Configuration fiscale
 }
 
 export interface PaymentTermTemplate {
