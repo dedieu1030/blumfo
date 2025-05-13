@@ -1,5 +1,8 @@
 
-import { useToast, toast } from "@/hooks/use-toast";
+import { useToast, toast as baseToast, ToastFunctions } from "@/hooks/use-toast";
+
+// Étendre l'objet toast avec les méthodes d'aide
+const toast = baseToast as ToastFunctions;
 
 // Ajouter les méthodes d'aide pour faciliter l'utilisation
 toast.success = (message: string) => {
