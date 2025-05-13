@@ -1,10 +1,10 @@
 
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { useState } from "react";
 import { QuoteList } from "@/components/QuoteList";
 import { QuoteDialog } from "@/components/QuoteDialog";
+import { Icon } from "@/components/ui/icon";
 
 const Quotes = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -41,7 +41,7 @@ const Quotes = () => {
         onOpenMobileMenu={() => {}}
         actions={
           <Button onClick={handleOpenDialog}>
-            <Plus className="mr-2 h-4 w-4" /> Nouveau devis
+            <Icon name="Plus" className="mr-2 h-4 w-4" /> Nouveau devis
           </Button>
         }
       />
