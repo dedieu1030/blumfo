@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,22 +11,28 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
   
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsSignedIn(!!session);
-      setIsLoaded(true);
-    };
-    
-    checkAuth();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsSignedIn(!!session);
+    // Configurer l'écouteur d'authentification AVANT de vérifier la session existante
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log("Auth state changed:", event, currentSession?.user?.id);
+      setSession(currentSession);
+      setIsSignedIn(!!currentSession);
       setIsLoaded(true);
     });
     
-    return () => subscription.unsubscribe();
+    // Ensuite, vérifier s'il y a déjà une session existante
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Current session:", currentSession?.user?.id);
+      setSession(currentSession);
+      setIsSignedIn(!!currentSession);
+      setIsLoaded(true);
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
   // Affichage pendant le chargement
@@ -39,6 +46,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   
   // Redirection si non authentifié
   if (!isSignedIn) {
+    console.log("User not signed in, redirecting to /auth");
     return <Navigate to="/auth" replace />;
   }
   

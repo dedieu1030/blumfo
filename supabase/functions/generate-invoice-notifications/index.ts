@@ -1,200 +1,196 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.0";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL") || "https://ahodvrugfywgcpreeocn.supabase.co";
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+// Types pour Supabase
+type Invoice = {
+  id: string;
+  invoice_number: string;
+  status: string;
+  client_id?: string;
+  company_id?: string;
+  due_date?: string;
+  total_amount: number;
+}
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+interface NotificationCreateParams {
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  reference_type: string;
+  reference_id: string;
+  metadata?: Record<string, any>;
+}
 
-// Helper to send notifications using the create-notification function
-const sendNotification = async (notification: any) => {
-  const res = await fetch(
-    `${supabaseUrl}/functions/v1/create-notification`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseServiceKey}`,
-      },
-      body: JSON.stringify(notification),
-    }
-  );
-  
-  if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(`Failed to send notification: ${JSON.stringify(errorData)}`);
-  }
-  
-  return await res.json();
-};
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+// Fonction principale
+const handleRequest = async (req: Request): Promise<Response> => {
   try {
-    // Create Supabase client with the service role key
+    // Récupérer le corps de la requête
+    const { invoice_id } = await req.json();
+    
+    if (!invoice_id) {
+      return new Response(JSON.stringify({ error: "invoice_id est requis" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Créer un client Supabase
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    console.log("Checking for invoices requiring notifications...");
-    
-    // Get current date
-    const today = new Date();
-    
-    // Check for invoices that are due soon (3 days before due date)
-    const dueSoonDate = new Date();
-    dueSoonDate.setDate(today.getDate() + 3);
-    const dueSoonFormatted = dueSoonDate.toISOString().split('T')[0];
-    
-    // Find invoices due soon
-    const { data: dueSoonInvoices, error: dueSoonError } = await supabase
+    // Récupérer les informations de la facture
+    const { data: invoice, error: invoiceError } = await supabase
       .from("invoices")
       .select(`
-        id,
-        invoice_number,
-        due_date,
+        id, 
+        invoice_number, 
+        status, 
         client_id,
-        company_id,
-        total_amount,
-        clients:client_id (id, client_name)
-      `)
-      .eq("status", "pending")
-      .eq("due_date", dueSoonFormatted);
-    
-    if (dueSoonError) {
-      console.error("Error fetching due soon invoices:", dueSoonError);
-      throw dueSoonError;
-    }
-    
-    // Check for overdue invoices
-    const { data: overdueInvoices, error: overdueError } = await supabase
-      .from("invoices")
-      .select(`
-        id,
-        invoice_number,
+        company_id, 
         due_date,
-        client_id,
-        company_id,
-        total_amount,
-        clients:client_id (id, client_name)
+        total_amount
       `)
-      .eq("status", "pending")
-      .lt("due_date", today.toISOString().split('T')[0]);
-    
-    if (overdueError) {
-      console.error("Error fetching overdue invoices:", overdueError);
-      throw overdueError;
+      .eq("id", invoice_id)
+      .single();
+      
+    if (invoiceError || !invoice) {
+      console.error("Erreur lors de la récupération de la facture:", invoiceError);
+      return new Response(JSON.stringify({ error: "Facture non trouvée" }), { 
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
     }
-    
-    // Get user IDs from company IDs for notifications
-    const companyIds = [...new Set([
-      ...dueSoonInvoices.map(invoice => invoice.company_id),
-      ...overdueInvoices.map(invoice => invoice.company_id)
-    ])].filter(Boolean);
-    
-    const { data: companies, error: companiesError } = await supabase
+
+    // Récupérer l'utilisateur associé à cette facture via la société
+    const { data: company, error: companyError } = await supabase
       .from("companies")
-      .select("id, user_id")
-      .in("id", companyIds);
-    
-    if (companiesError) {
-      console.error("Error fetching companies:", companiesError);
-      throw companiesError;
+      .select("user_id")
+      .eq("id", invoice.company_id)
+      .single();
+
+    if (companyError || !company || !company.user_id) {
+      console.error("Erreur lors de la récupération de la société:", companyError);
+      return new Response(JSON.stringify({ error: "Société non trouvée" }), { 
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
     }
-    
-    // Create a mapping of company ID to user ID
-    const companyToUserMap = companies.reduce((map: Record<string, string>, company: any) => {
-      if (company.user_id) {
-        map[company.id] = company.user_id;
+
+    // Récupérer le nom du client
+    let clientName = "Client inconnu";
+    if (invoice.client_id) {
+      const { data: client } = await supabase
+        .from("clients")
+        .select("client_name")
+        .eq("id", invoice.client_id)
+        .single();
+
+      if (client) {
+        clientName = client.client_name;
       }
-      return map;
-    }, {});
+    }
+
+    // Générer le message approprié en fonction du statut
+    let notificationData: NotificationCreateParams | null = null;
     
-    // Process due soon notifications
-    const dueSoonPromises = dueSoonInvoices.map(async (invoice: any) => {
-      const userId = companyToUserMap[invoice.company_id];
-      if (!userId) {
-        console.warn(`No user ID found for company ${invoice.company_id}`);
-        return null;
+    const metadata = {
+      invoice_number: invoice.invoice_number,
+      total_amount: invoice.total_amount,
+      due_date: invoice.due_date,
+    };
+
+    switch (invoice.status) {
+      case "draft":
+        notificationData = {
+          user_id: company.user_id,
+          type: "invoice_created",
+          title: "Facture créée",
+          message: `La facture ${invoice.invoice_number} a été créée et est en statut brouillon.`,
+          reference_type: "invoice",
+          reference_id: invoice.id,
+          metadata,
+        };
+        break;
+      case "sent":
+        notificationData = {
+          user_id: company.user_id,
+          type: "invoice_status",
+          title: "Facture envoyée",
+          message: `La facture ${invoice.invoice_number} a été envoyée à ${clientName}.`,
+          reference_type: "invoice",
+          reference_id: invoice.id,
+          metadata,
+        };
+        break;
+      case "paid":
+        notificationData = {
+          user_id: company.user_id,
+          type: "invoice_paid",
+          title: "Facture payée",
+          message: `La facture ${invoice.invoice_number} de ${clientName} a été marquée comme payée.`,
+          reference_type: "invoice",
+          reference_id: invoice.id,
+          metadata,
+        };
+        break;
+      case "overdue":
+        notificationData = {
+          user_id: company.user_id,
+          type: "invoice_overdue",
+          title: "Facture en retard",
+          message: `La facture ${invoice.invoice_number} de ${clientName} est maintenant en retard de paiement.`,
+          reference_type: "invoice",
+          reference_id: invoice.id,
+          metadata,
+        };
+        break;
+      default:
+        // Pas de notification pour les autres statuts
+        break;
+    }
+
+    // Créer la notification si nécessaire
+    if (notificationData) {
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert(notificationData);
+
+      if (notificationError) {
+        console.error("Erreur lors de la création de la notification:", notificationError);
+        return new Response(JSON.stringify({ error: "Erreur lors de la création de la notification" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
       }
       
-      const clientName = invoice.clients?.client_name || 'Unknown Client';
-      
-      return sendNotification({
-        userId,
-        type: "invoice_due_soon",
-        title: `Facture à échéance proche : ${invoice.invoice_number}`,
-        message: `La facture ${invoice.invoice_number} pour ${clientName} d'un montant de ${invoice.total_amount}€ est due dans 3 jours.`,
-        referenceType: "invoice",
-        referenceId: invoice.id,
-        metadata: {
-          invoiceNumber: invoice.invoice_number,
-          dueDate: invoice.due_date,
-          amount: invoice.total_amount
-        }
-      });
-    });
-    
-    // Process overdue notifications
-    const overduePromises = overdueInvoices.map(async (invoice: any) => {
-      const userId = companyToUserMap[invoice.company_id];
-      if (!userId) {
-        console.warn(`No user ID found for company ${invoice.company_id}`);
-        return null;
-      }
-      
-      const clientName = invoice.clients?.client_name || 'Unknown Client';
-      
-      return sendNotification({
-        userId,
-        type: "invoice_overdue",
-        title: `Facture en retard : ${invoice.invoice_number}`,
-        message: `La facture ${invoice.invoice_number} pour ${clientName} d'un montant de ${invoice.total_amount}€ est en retard de paiement.`,
-        referenceType: "invoice",
-        referenceId: invoice.id,
-        metadata: {
-          invoiceNumber: invoice.invoice_number,
-          dueDate: invoice.due_date,
-          amount: invoice.total_amount
-        }
-      });
-    });
-    
-    // Wait for all notifications to be sent
-    const dueSoonResults = await Promise.allSettled(dueSoonPromises);
-    const overdueResults = await Promise.allSettled(overduePromises);
-    
-    // Count successful notifications
-    const dueSoonSuccessCount = dueSoonResults.filter(result => result.status === 'fulfilled').length;
-    const overdueSuccessCount = overdueResults.filter(result => result.status === 'fulfilled').length;
-    
-    console.log(`Sent ${dueSoonSuccessCount} due soon notifications and ${overdueSuccessCount} overdue notifications`);
-    
-    return new Response(
-      JSON.stringify({ 
+      return new Response(JSON.stringify({ 
         success: true, 
-        dueSoonNotificationsSent: dueSoonSuccessCount,
-        overdueNotificationsSent: overdueSuccessCount
-      }),
-      { 
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
+        message: "Notification créée avec succès",
+        notification_type: notificationData.type
+      }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: "Aucune notification nécessaire pour ce statut"
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+
   } catch (error) {
-    console.error("Unexpected error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error", details: error.message }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
+    console.error("Erreur non gérée:", error);
+    return new Response(JSON.stringify({ error: "Erreur interne du serveur" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-});
+}
+
+serve(handleRequest);
