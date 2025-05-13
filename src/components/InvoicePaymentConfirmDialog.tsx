@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CalendarIcon, Check, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { markInvoiceAsPaid, PaymentDetails } from "@/services/invoiceApiClient";
+import { markInvoiceAsPaid, PaymentDetails } from "@/services/paymentService";
 import { useToast } from "@/hooks/use-toast";
 
 interface InvoicePaymentConfirmDialogProps {

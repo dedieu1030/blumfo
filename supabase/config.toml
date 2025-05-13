@@ -30,3 +30,11 @@ verify_jwt = false
 
 [functions.convert-quote-to-invoice]
 verify_jwt = true
+
+[functions.handle-payment-webhook]
+verify_jwt = false
+port = 54333
+
+[functions.process-payment]
+verify_jwt = true
+

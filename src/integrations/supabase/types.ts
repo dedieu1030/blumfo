@@ -628,59 +628,238 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_attempts: {
+        Row: {
+          amount: number
+          attempt_date: string
+          client_ip: string | null
+          created_at: string
+          currency: string
+          error_message: string | null
+          gateway_reference: string | null
+          gateway_response: Json | null
+          id: string
+          payment_id: string
+          payment_method_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          attempt_date?: string
+          client_ip?: string | null
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          gateway_reference?: string | null
+          gateway_response?: Json | null
+          id?: string
+          payment_id: string
+          payment_method_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          attempt_date?: string
+          client_ip?: string | null
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          gateway_reference?: string | null
+          gateway_response?: Json | null
+          id?: string
+          payment_id?: string
+          payment_method_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_attempts_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_attempts_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          code: string
+          config: Json | null
+          created_at: string
+          description: string | null
+          display_order: number
+          gateway_code: string | null
+          icon: string | null
+          id: string
+          is_enabled: boolean
+          name: string
+          requires_gateway: boolean
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          gateway_code?: string | null
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          name: string
+          requires_gateway?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          gateway_code?: string | null
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          name?: string
+          requires_gateway?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payment_webhooks: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          payment_id: string | null
+          processed_at: string | null
+          provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          payment_id?: string | null
+          processed_at?: string | null
+          provider: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          payment_id?: string | null
+          processed_at?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_webhooks_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
+          attempts_count: number | null
           card_brand: string | null
           card_last4: string | null
           client_id: string | null
           company_id: string | null
           created_at: string
           currency: string | null
+          failure_reason: string | null
+          gateway_response: Json | null
+          gateway_status: string | null
           id: string
           invoice_id: string | null
           payment_date: string | null
+          payment_link: string | null
           payment_method: string | null
+          payment_method_id: string | null
           payment_reference: string | null
           status: string
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
+          transaction_reference: string | null
           updated_at: string
         }
         Insert: {
           amount: number
+          attempts_count?: number | null
           card_brand?: string | null
           card_last4?: string | null
           client_id?: string | null
           company_id?: string | null
           created_at?: string
           currency?: string | null
+          failure_reason?: string | null
+          gateway_response?: Json | null
+          gateway_status?: string | null
           id?: string
           invoice_id?: string | null
           payment_date?: string | null
+          payment_link?: string | null
           payment_method?: string | null
+          payment_method_id?: string | null
           payment_reference?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          transaction_reference?: string | null
           updated_at?: string
         }
         Update: {
           amount?: number
+          attempts_count?: number | null
           card_brand?: string | null
           card_last4?: string | null
           client_id?: string | null
           company_id?: string | null
           created_at?: string
           currency?: string | null
+          failure_reason?: string | null
+          gateway_response?: Json | null
+          gateway_status?: string | null
           id?: string
           invoice_id?: string | null
           payment_date?: string | null
+          payment_link?: string | null
           payment_method?: string | null
+          payment_method_id?: string | null
           payment_reference?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          transaction_reference?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -703,6 +882,13 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]

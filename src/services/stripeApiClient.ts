@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { processPayment } from "@/services/paymentService";
 
-// Types for API responses
+// Types pour les réponses d'API
 export interface InvoiceResponse {
   success: boolean;
   invoice?: any;
@@ -29,13 +30,13 @@ export interface SendInvoiceResponse {
 }
 
 /**
- * Gets invoice details including status updates from Stripe
- * @param invoiceId Stripe invoice ID
- * @returns Invoice details
+ * Récupère les détails d'une facture, y compris les mises à jour de statut depuis Stripe
+ * @param invoiceId ID de la facture Stripe
+ * @returns Détails de la facture
  */
 export async function getInvoice(invoiceId: string): Promise<InvoiceResponse> {
   try {
-    // Call the Edge Function
+    // Appeler la fonction Edge
     const { data, error } = await supabase.functions.invoke('get-invoice', {
       body: { invoiceId }
     });
@@ -62,13 +63,13 @@ export async function getInvoice(invoiceId: string): Promise<InvoiceResponse> {
 }
 
 /**
- * Creates a new invoice in Stripe
- * @param invoiceData Data needed to create the invoice
- * @returns Created invoice details
+ * Crée une nouvelle facture dans Stripe
+ * @param invoiceData Données nécessaires pour créer la facture
+ * @returns Détails de la facture créée
  */
 export async function createInvoice(invoiceData: any): Promise<CreateInvoiceResponse> {
   try {
-    // Call the Edge Function
+    // Appeler la fonction Edge
     const { data, error } = await supabase.functions.invoke('create-invoice', {
       body: invoiceData
     });
@@ -96,13 +97,13 @@ export async function createInvoice(invoiceData: any): Promise<CreateInvoiceResp
 }
 
 /**
- * Send an invoice to a customer via email
- * @param invoiceId Stripe invoice ID
- * @returns Response with send status
+ * Envoie une facture à un client par email
+ * @param invoiceId ID de la facture Stripe
+ * @returns Réponse avec le statut d'envoi
  */
 export async function sendInvoice(invoiceId: string): Promise<SendInvoiceResponse> {
   try {
-    // Call the Edge Function
+    // Appeler la fonction Edge
     const { data, error } = await supabase.functions.invoke('send-invoice', {
       body: { invoiceId }
     });
@@ -129,9 +130,9 @@ export async function sendInvoice(invoiceId: string): Promise<SendInvoiceRespons
 }
 
 /**
- * Creates a payment link for an invoice
- * @param invoiceId Stripe invoice ID
- * @returns Response with payment URL
+ * Crée un lien de paiement pour une facture
+ * @param invoiceId ID de la facture Stripe
+ * @returns Réponse avec l'URL de paiement
  */
 export async function createPaymentLink(
   invoiceId: string, 
@@ -139,27 +140,25 @@ export async function createPaymentLink(
   cancelUrl?: string
 ): Promise<PaymentLinkResponse> {
   try {
-    // Call the Edge Function
-    const { data, error } = await supabase.functions.invoke('create-payment-link', {
-      body: { 
-        invoiceId,
-        successUrl,
-        cancelUrl
-      }
+    // Utiliser notre nouveau service de paiement par défaut
+    const response = await processPayment({
+      invoiceId,
+      paymentMethodCode: 'card', // Méthode par défaut
+      successUrl,
+      cancelUrl
     });
 
-    if (error) {
-      console.error('Error creating payment link:', error);
+    if (!response.success) {
       return {
         success: false,
-        error: error.message
+        error: response.error || 'Échec de la création du lien de paiement'
       };
     }
 
     return {
       success: true,
-      paymentUrl: data.paymentUrl,
-      invoice: data.invoice
+      paymentUrl: response.paymentUrl,
+      invoice: response.payment
     };
   } catch (error) {
     console.error('Error creating payment link:', error);
@@ -171,8 +170,8 @@ export async function createPaymentLink(
 }
 
 /**
- * Lists all invoices for the current user
- * @returns List of invoices
+ * Liste toutes les factures pour l'utilisateur actuel
+ * @returns Liste des factures
  */
 export async function listInvoices(): Promise<{
   success: boolean;
@@ -180,7 +179,7 @@ export async function listInvoices(): Promise<{
   error?: string;
 }> {
   try {
-    // Call the Edge Function
+    // Appeler la fonction Edge
     const { data, error } = await supabase.functions.invoke('list-invoices');
 
     if (error) {
