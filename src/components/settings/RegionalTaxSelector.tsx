@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Globe, Settings, Search, X, ArrowLeft } from "lucide-react";
+import { Globe, Settings, Search, ArrowLeft } from "lucide-react";
 import { TaxZone, TaxCountry, TaxRegionData } from "@/types/tax";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -224,7 +223,11 @@ export function RegionalTaxSelector({
       </Button>
       
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent side="bottom" className="h-[85%] max-h-[85vh]">
+        <SheetContent 
+          side="bottom" 
+          className="h-[85%] max-h-[85vh]"
+          hideCloseButton={navigationLevel !== "zones"}
+        >
           <SheetHeader>
             <SheetTitle className="pr-8 text-lg flex justify-between items-center">
               {getNavigationTitle()}
