@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
 import Stripe from 'https://esm.sh/stripe@12.3.0'
@@ -27,6 +26,7 @@ serve(async (req) => {
       successUrl, 
       cancelUrl,
       clientIp,
+      is_partial = false,
       metadata = {}
     } = await req.json()
 
@@ -110,6 +110,27 @@ serve(async (req) => {
       )
     }
 
+    // Calcul du montant à payer (montant spécifié ou montant restant dû)
+    const remainingAmount = invoice.total_amount - (invoice.amount_paid || 0);
+    const paymentAmount = amount !== undefined ? amount : remainingAmount;
+    
+    // Vérifier que le montant de paiement n'est pas supérieur au montant restant dû
+    if (paymentAmount > remainingAmount) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Le montant du paiement (${paymentAmount}) est supérieur au montant restant dû (${remainingAmount})` 
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+    
+    // Si le montant est inférieur au montant total et is_partial n'est pas spécifié, marquer comme paiement partiel
+    const isPartialPayment = is_partial || (paymentAmount < remainingAmount);
+
     // Get payment method details
     const { data: paymentMethod, error: paymentMethodError } = await supabaseClient
       .from('payment_methods')
@@ -135,10 +156,11 @@ serve(async (req) => {
         client_id: invoice.client_id,
         user_id: user.id,
         payment_method_id: paymentMethod.id,
-        amount: amount || invoice.total_amount,
+        amount: paymentAmount,
         currency: currency,
         status: 'pending',
-        payment_method: paymentMethod.code
+        payment_method: paymentMethod.code,
+        is_partial: isPartialPayment
       })
       .select()
       .single()
@@ -191,13 +213,14 @@ serve(async (req) => {
         try {
           // Create a payment intent
           const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round((amount || invoice.total_amount) * 100), // Convert to cents
+            amount: Math.round(paymentAmount * 100), // Convert to cents
             currency: currency.toLowerCase(),
             payment_method_types: ['card'],
             metadata: {
               invoice_id: invoiceId,
               invoice_number: invoice.invoice_number,
               payment_id: payment.id,
+              is_partial: isPartialPayment.toString(),
               ...metadata
             }
           })
@@ -223,9 +246,11 @@ serve(async (req) => {
                 price_data: {
                   currency: currency.toLowerCase(),
                   product_data: {
-                    name: `Facture ${invoice.invoice_number}`,
+                    name: isPartialPayment 
+                      ? `Paiement partiel de la facture ${invoice.invoice_number}`
+                      : `Facture ${invoice.invoice_number}`,
                   },
-                  unit_amount: Math.round((amount || invoice.total_amount) * 100),
+                  unit_amount: Math.round(paymentAmount * 100),
                 },
                 quantity: 1,
               },
@@ -326,7 +351,7 @@ serve(async (req) => {
           success: true,
           payment: payment,
           requiresRedirect: false,
-          message: `Payment initiated via ${paymentMethod.name}`
+          message: `Paiement ${isPartialPayment ? 'partiel ' : ''}initié via ${paymentMethod.name}`
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

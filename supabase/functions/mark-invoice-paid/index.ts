@@ -79,12 +79,12 @@ serve(async (req) => {
       )
     }
 
-    // Check if invoice is already paid
+    // Check if invoice is already fully paid
     if (invoice.status === 'paid') {
       return new Response(
         JSON.stringify({ 
           success: false,
-          warning: 'Cette facture est déjà marquée comme payée',
+          warning: 'Cette facture est déjà marquée comme entièrement payée',
           invoice
         }),
         {
@@ -94,11 +94,28 @@ serve(async (req) => {
       )
     }
 
-    // Update invoice status to "paid"
+    // Déterminer si c'est un paiement partiel
+    const paymentAmount = paymentDetails?.amount || invoice.total_amount;
+    const isPartial = paymentDetails?.is_partial === true || paymentAmount < (invoice.total_amount - (invoice.amount_paid || 0));
+    
+    // Si le montant payé + le nouveau paiement est supérieur ou égal au montant total, c'est un paiement complet
+    const newTotalPaid = (invoice.amount_paid || 0) + paymentAmount;
+    const isFullPayment = newTotalPaid >= invoice.total_amount;
+    
+    // Mettre à jour le statut de la facture
+    let newStatus = invoice.status;
+    if (isFullPayment) {
+      newStatus = 'paid';
+    } else if (newTotalPaid > 0) {
+      newStatus = 'partially_paid';
+    }
+
+    // Update invoice status et amount_paid
     const { data: updatedInvoice, error: updateError } = await supabaseClient
       .from('invoices')
       .update({
-        status: 'paid',
+        status: newStatus,
+        amount_paid: newTotalPaid,
         updated_at: new Date().toISOString()
       })
       .eq('id', invoiceId)
@@ -113,12 +130,13 @@ serve(async (req) => {
     const payment = {
       invoice_id: invoiceId,
       client_id: invoice.client_id,
-      amount: invoice.total_amount,
+      amount: paymentAmount,
       payment_date: paymentDetails?.date ? new Date(paymentDetails.date).toISOString() : new Date().toISOString(),
       payment_method: paymentDetails?.method || 'manual',
       payment_reference: paymentDetails?.reference || `manual-${Date.now()}`,
       status: 'completed',
-      currency: 'EUR'
+      currency: invoice.currency || 'EUR',
+      is_partial: isPartial
     }
 
     const { data: createdPayment, error: paymentError } = await supabaseClient
@@ -139,8 +157,10 @@ serve(async (req) => {
         .insert([{
           user_id: user.id,
           type: 'payment',
-          title: 'Paiement enregistré',
-          message: `Le paiement pour la facture ${invoice.invoice_number} a été enregistré.`,
+          title: isFullPayment ? 'Paiement complet enregistré' : 'Paiement partiel enregistré',
+          message: isFullPayment 
+            ? `Le paiement complet pour la facture ${invoice.invoice_number} a été enregistré.` 
+            : `Un paiement partiel de ${paymentAmount} pour la facture ${invoice.invoice_number} a été enregistré.`,
           reference_type: 'invoice',
           reference_id: invoiceId,
           is_read: false
@@ -155,7 +175,8 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         invoice: updatedInvoice,
-        payment: createdPayment || null
+        payment: createdPayment || null,
+        isPartial: isPartial
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

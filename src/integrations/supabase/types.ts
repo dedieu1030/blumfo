@@ -500,6 +500,8 @@ export type Database = {
       }
       invoices: {
         Row: {
+          amount_due: number | null
+          amount_paid: number | null
           client_id: string | null
           company_id: string | null
           created_at: string | null
@@ -522,6 +524,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          amount_due?: number | null
+          amount_paid?: number | null
           client_id?: string | null
           company_id?: string | null
           created_at?: string | null
@@ -544,6 +548,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          amount_due?: number | null
+          amount_paid?: number | null
           client_id?: string | null
           company_id?: string | null
           created_at?: string | null
@@ -801,6 +807,7 @@ export type Database = {
           gateway_status: string | null
           id: string
           invoice_id: string | null
+          is_partial: boolean | null
           payment_date: string | null
           payment_link: string | null
           payment_method: string | null
@@ -826,6 +833,7 @@ export type Database = {
           gateway_status?: string | null
           id?: string
           invoice_id?: string | null
+          is_partial?: boolean | null
           payment_date?: string | null
           payment_link?: string | null
           payment_method?: string | null
@@ -851,6 +859,7 @@ export type Database = {
           gateway_status?: string | null
           id?: string
           invoice_id?: string | null
+          is_partial?: boolean | null
           payment_date?: string | null
           payment_link?: string | null
           payment_method?: string | null

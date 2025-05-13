@@ -15,6 +15,8 @@ export interface PaymentDetails {
   date?: Date;
   method?: string;
   reference?: string;
+  amount?: number;
+  is_partial?: boolean;
 }
 
 export interface PaymentRequestOptions {
@@ -25,6 +27,7 @@ export interface PaymentRequestOptions {
   successUrl?: string;
   cancelUrl?: string;
   metadata?: Record<string, any>;
+  is_partial?: boolean;
 }
 
 export interface PaymentResponse {
@@ -68,7 +71,8 @@ export async function processPayment(options: PaymentRequestOptions): Promise<Pa
     const { data, error } = await supabase.functions.invoke('process-payment', {
       body: {
         ...options,
-        clientIp: await fetchClientIp()
+        clientIp: await fetchClientIp(),
+        is_partial: options.is_partial || false
       }
     });
 
@@ -147,8 +151,12 @@ export async function markInvoiceAsPaid(invoiceId: string, paymentDetails?: Paym
 export async function getPaymentHistory(options: { 
   clientId?: string; 
   invoiceId?: string; 
-}): Promise<any[]> {
+}): Promise<{
+  payments: any[];
+  invoice?: any;
+}> {
   try {
+    // 1. Récupérer les paiements
     let query = supabase
       .from('payments')
       .select(`
@@ -165,17 +173,34 @@ export async function getPaymentHistory(options: {
       query = query.eq('invoice_id', options.invoiceId);
     }
 
-    const { data, error } = await query;
+    const { data: payments, error: paymentsError } = await query;
 
-    if (error) {
-      console.error('Error fetching payment history:', error);
-      return [];
+    if (paymentsError) {
+      console.error('Error fetching payment history:', paymentsError);
+      return { payments: [] };
     }
 
-    return data || [];
+    // 2. Si un ID de facture est fourni, récupérer également les informations de la facture
+    let invoice = null;
+    if (options.invoiceId) {
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', options.invoiceId)
+        .single();
+
+      if (!invoiceError && invoiceData) {
+        invoice = invoiceData;
+      }
+    }
+
+    return {
+      payments: payments || [],
+      invoice
+    };
   } catch (error) {
     console.error('Exception fetching payment history:', error);
-    return [];
+    return { payments: [] };
   }
 }
 
