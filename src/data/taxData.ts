@@ -249,6 +249,46 @@ export const taxRegionsData: TaxRegion[] = [
     ]
   },
   {
+    id: "united-kingdom",
+    name: "Royaume-Uni",
+    countryCode: "GB",
+    regions: [
+      {
+        id: "uk-standard",
+        name: "Taux Standard",
+        code: "GB-STD",
+        taxType: "vat-standard",
+        vatStandardRate: 20,
+        totalRate: 20,
+      },
+      {
+        id: "uk-reduced",
+        name: "Taux Réduit",
+        code: "GB-RED",
+        taxType: "vat-reduced",
+        vatReducedRates: [5],
+        totalRate: 5,
+      },
+      {
+        id: "uk-zero",
+        name: "Taux Zéro",
+        code: "GB-ZER",
+        taxType: "vat-reduced",
+        vatReducedRates: [0],
+        totalRate: 0,
+        notes: "Produits soumis à la TVA mais avec un taux à 0%"
+      },
+      {
+        id: "uk-exempt",
+        name: "Exonéré",
+        code: "GB-EXE",
+        taxType: "vat-exempt",
+        totalRate: 0,
+        notes: "Produits exonérés de TVA"
+      }
+    ]
+  },
+  {
     id: "canada",
     name: "Canada",
     countryCode: "CA",
@@ -294,46 +334,138 @@ export const taxRegionsData: TaxRegion[] = [
         taxType: "hst",
         hstRate: 15,
         totalRate: 15,
+      },
+      {
+        id: "ca-nb",
+        name: "Nouveau-Brunswick (HST)",
+        code: "CA-NB",
+        taxType: "hst",
+        hstRate: 15,
+        totalRate: 15,
+      },
+      {
+        id: "ca-mb",
+        name: "Manitoba (GST + PST)",
+        code: "CA-MB",
+        taxType: "gst-pst",
+        gstRate: 5,
+        pstRate: 7,
+        totalRate: 12,
+      },
+      {
+        id: "ca-sk",
+        name: "Saskatchewan (GST + PST)",
+        code: "CA-SK",
+        taxType: "gst-pst",
+        gstRate: 5,
+        pstRate: 6,
+        totalRate: 11,
       }
     ]
   },
   {
-    id: "united-kingdom",
-    name: "Royaume-Uni",
-    countryCode: "GB",
+    id: "united-states",
+    name: "États-Unis",
+    countryCode: "US",
     regions: [
       {
-        id: "uk-standard",
-        name: "Taux Standard",
-        code: "GB-STD",
-        taxType: "vat-standard",
-        vatStandardRate: 20,
-        totalRate: 20,
+        id: "us-ca",
+        name: "Californie",
+        code: "US-CA",
+        taxType: "sales-tax",
+        stateTaxRate: 7.25,
+        totalRate: 7.25,
       },
       {
-        id: "uk-reduced",
-        name: "Taux Réduit",
-        code: "GB-RED",
-        taxType: "vat-reduced",
-        vatReducedRates: [5],
-        totalRate: 5,
+        id: "us-ny",
+        name: "New York",
+        code: "US-NY",
+        taxType: "sales-tax",
+        stateTaxRate: 4,
+        localTaxRate: 4.5,
+        totalRate: 8.5,
       },
       {
-        id: "uk-zero",
-        name: "Taux Zéro",
-        code: "GB-ZER",
-        taxType: "vat-reduced",
-        vatReducedRates: [0],
+        id: "us-tx",
+        name: "Texas",
+        code: "US-TX",
+        taxType: "sales-tax",
+        stateTaxRate: 6.25,
+        localTaxRate: 2,
+        totalRate: 8.25,
+      },
+      {
+        id: "us-fl",
+        name: "Floride",
+        code: "US-FL",
+        taxType: "sales-tax",
+        stateTaxRate: 6,
+        localTaxRate: 1,
+        totalRate: 7,
+      },
+      {
+        id: "us-wa",
+        name: "Washington",
+        code: "US-WA",
+        taxType: "sales-tax",
+        stateTaxRate: 6.5,
+        localTaxRate: 3.1,
+        totalRate: 9.6,
+      },
+      {
+        id: "us-or",
+        name: "Oregon",
+        code: "US-OR",
+        taxType: "no-tax",
         totalRate: 0,
-        notes: "Produits soumis à la TVA mais avec un taux à 0%"
+        notes: "Pas de taxe de vente dans l'Oregon"
       },
       {
-        id: "uk-exempt",
-        name: "Exonéré",
-        code: "GB-EXE",
-        taxType: "vat-exempt",
+        id: "us-de",
+        name: "Delaware",
+        code: "US-DE",
+        taxType: "no-tax",
         totalRate: 0,
-        notes: "Produits exonérés de TVA"
+        notes: "Pas de taxe de vente au Delaware"
+      }
+    ]
+  },
+  {
+    id: "mexico",
+    name: "Mexique",
+    countryCode: "MX",
+    regions: [
+      {
+        id: "mx-standard",
+        name: "Taux Standard (IVA)",
+        code: "MX-STD",
+        taxType: "iva-standard",
+        ivaRate: 16,
+        totalRate: 16,
+      },
+      {
+        id: "mx-border",
+        name: "Taux Frontalier (IVA)",
+        code: "MX-BOR",
+        taxType: "iva-reduced",
+        ivaRate: 8,
+        totalRate: 8,
+        notes: "Applicable dans les zones frontalières"
+      },
+      {
+        id: "mx-zero",
+        name: "Taux Zéro (IVA)",
+        code: "MX-ZER",
+        taxType: "iva-zero",
+        ivaRate: 0,
+        totalRate: 0,
+      },
+      {
+        id: "mx-exempt",
+        name: "Exonéré (IVA)",
+        code: "MX-EXE",
+        taxType: "iva-exempt",
+        totalRate: 0,
       }
     ]
   }
@@ -380,6 +512,16 @@ export const defaultTaxConfigs = {
     defaultTaxRate: 5,
     defaultRegion: "canada:ca-ab",
     label: "Sales Tax (Canada)"
+  },
+  "united-states": {
+    defaultTaxRate: 0,
+    defaultRegion: "united-states:us-or",
+    label: "Sales Tax (US)"
+  },
+  "mexico": {
+    defaultTaxRate: 16,
+    defaultRegion: "mexico:mx-standard",
+    label: "IVA (México)"
   }
 };
 
