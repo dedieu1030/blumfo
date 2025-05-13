@@ -4,7 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Globe, Settings, Search, X, ChevronLeft } from "lucide-react";
+import { Globe, Settings, Search, X, ArrowLeft } from "lucide-react";
 import { TaxRegion, TaxRegionData } from "@/types/tax";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -168,10 +168,10 @@ export function RegionalTaxSelector({
               {selectedCountry
                 ? getCountryTitle(selectedCountry)
                 : "Choisir une région fiscale"}
-                
+              
               {selectedCountry && (
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={backToCountries}>
-                  <ChevronLeft className="h-4 w-4" />
+                <Button variant="ghost" size="sm" onClick={backToCountries}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Retour
                 </Button>
               )}
             </SheetTitle>
@@ -285,8 +285,8 @@ export function RegionalTaxSelector({
                 : "Sélectionner une région fiscale"}
               
               {selectedCountry && (
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={backToCountries}>
-                  <ChevronLeft className="h-4 w-4" />
+                <Button variant="ghost" size="sm" onClick={backToCountries}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Retour
                 </Button>
               )}
             </SheetTitle>
