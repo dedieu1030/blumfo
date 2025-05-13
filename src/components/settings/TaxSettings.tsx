@@ -1,135 +1,103 @@
-import React, { useState } from 'react';
+
+import { useState, useEffect } from "react";
+import { CompanyProfile } from "@/types/invoice";
+import { RegionalTaxSelector } from "./RegionalTaxSelector";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-
-interface TaxConfiguration {
-  type: 'none' | 'region' | 'custom';
-  rate: number;
-  defaultTaxRate: string;
-  region: string;
-  country: string;
-  customTax: {
-    enabled: boolean;
-    rates: any[];
-  };
-}
-
-interface CompanyProfile {
-  taxConfiguration?: TaxConfiguration;
-}
+import { CustomTaxConfiguration, TaxConfiguration } from "@/types/tax";
 
 interface TaxSettingsProps {
   companyProfile: CompanyProfile | null;
-  onSave: (profile: CompanyProfile) => void;
+  onSave: (updatedProfile: CompanyProfile) => void;
 }
 
 export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
-  const [taxType, setTaxType] = useState<'none' | 'region' | 'custom'>(
-    companyProfile?.taxConfiguration?.type || 'region'
-  );
-  const [customRate, setCustomRate] = useState<number>(
-    companyProfile?.taxConfiguration?.rate || 20
-  );
-  const [defaultTaxRate, setDefaultTaxRate] = useState<string>(
-    companyProfile?.taxConfiguration?.defaultTaxRate || ''
-  );
-  const [region, setRegion] = useState<string>(
-    companyProfile?.taxConfiguration?.region || ''
-  );
-  const [country, setCountry] = useState<string>(
-    companyProfile?.taxConfiguration?.country || ''
-  );
-
   const { toast } = useToast();
+  const [taxRate, setTaxRate] = useState<number>(20); // Taux par défaut: 20%
+  const [taxRegion, setTaxRegion] = useState<string | undefined>(undefined);
+  const [customTax, setCustomTax] = useState<CustomTaxConfiguration | undefined>(undefined);
+  
+  // Initialiser avec les valeurs existantes si disponibles
+  useEffect(() => {
+    if (companyProfile?.taxConfiguration) {
+      const { defaultTaxRate, region, customTax } = companyProfile.taxConfiguration;
+      setTaxRate(parseFloat(defaultTaxRate));
+      setTaxRegion(region);
+      setCustomTax(customTax);
+    } else if (companyProfile?.taxRate) {
+      // Utiliser le taux de TVA existant s'il n'y a pas encore de configuration complète
+      setTaxRate(companyProfile.taxRate);
+      setTaxRegion(companyProfile.taxRegion);
+    }
+  }, [companyProfile]);
 
+  // Gérer le changement de taux de TVA
+  const handleTaxRateChange = (
+    value: number, 
+    regionKey?: string, 
+    customConfig?: CustomTaxConfiguration
+  ) => {
+    setTaxRate(value);
+    setTaxRegion(regionKey);
+    setCustomTax(customConfig);
+  };
+
+  // Enregistrer les paramètres de TVA
   const handleSave = () => {
-    const updatedProfile = {
+    if (!companyProfile) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez d'abord créer un profil avant de configurer la TVA.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedConfiguration: TaxConfiguration = {
+      defaultTaxRate: taxRate.toString(),
+      region: taxRegion,
+      country: companyProfile.country || "FR",  // Utiliser le pays du profil ou FR par défaut
+      customTax: customTax // Ajouter la configuration personnalisée
+    };
+
+    const updatedProfile: CompanyProfile = {
       ...companyProfile,
-      taxConfiguration: {
-        type: taxType,
-        rate: taxType === 'custom' ? customRate : 0,
-        defaultTaxRate: defaultTaxRate,
-        region: region,
-        country: country,
-        customTax: {
-          enabled: taxType === 'custom',
-          rates: []
-        }
-      }
+      taxRate: taxRate, // Mise à jour du champ taxRate existant pour la compatibilité
+      taxRegion: taxRegion, // Mise à jour du champ taxRegion existant pour la compatibilité
+      taxConfiguration: updatedConfiguration, // Nouvelle structure
     };
 
     onSave(updatedProfile);
+
+    toast({
+      title: "Configuration de TVA enregistrée",
+      description: `Le taux de TVA par défaut est maintenant ${taxRate}%.`,
+    });
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Label htmlFor="tax-type">Type de TVA</Label>
-        <Select value={taxType} onValueChange={(value) => setTaxType(value as 'none' | 'region' | 'custom')}>
-          <SelectTrigger id="tax-type" className="w-[180px]">
-            <SelectValue placeholder="Sélectionnez" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Pas de TVA</SelectItem>
-            <SelectItem value="region">TVA Régionale</SelectItem>
-            <SelectItem value="custom">TVA Personnalisée</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {taxType === 'region' && (
-        <>
-          <div>
-            <Label htmlFor="tax-region">Région</Label>
-            <Input
-              type="text"
-              id="tax-region"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              placeholder="Entrez la région"
-            />
-          </div>
-          <div>
-            <Label htmlFor="tax-country">Pays</Label>
-            <Input
-              type="text"
-              id="tax-country"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              placeholder="Entrez le pays"
-            />
-          </div>
-          <div>
-            <Label htmlFor="default-tax-rate">Taux de TVA par défaut</Label>
-            <Input
-              type="text"
-              id="default-tax-rate"
-              value={defaultTaxRate}
-              onChange={(e) => setDefaultTaxRate(e.target.value)}
-              placeholder="Entrez le taux de TVA par défaut"
-            />
-          </div>
-        </>
-      )}
-
-      {taxType === 'custom' && (
+    <Card>
+      <CardHeader>
+        <CardTitle>Configuration de la TVA</CardTitle>
+        <CardDescription>
+          Définissez le taux de TVA par défaut pour vos factures
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
         <div>
-          <Label htmlFor="custom-tax-rate">Taux de TVA personnalisé (%)</Label>
-          <Input
-            type="number"
-            id="custom-tax-rate"
-            value={customRate}
-            onChange={(e) => setCustomRate(Number(e.target.value))}
-            placeholder="Entrez le taux"
+          <RegionalTaxSelector
+            defaultValue={taxRate}
+            onChange={handleTaxRateChange}
+            defaultRegion={taxRegion}
+            defaultCustomTax={customTax}
           />
         </div>
-      )}
 
-      <Button onClick={handleSave}>Enregistrer</Button>
-    </div>
+        <Button onClick={handleSave} className="w-full">
+          Enregistrer les paramètres de TVA
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

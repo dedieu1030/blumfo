@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -25,8 +26,6 @@ export function CustomTaxSettings({
 }: CustomTaxSettingsProps) {
   // États principaux
   const [customTax, setCustomTax] = useState<CustomTaxConfiguration>({
-    name: defaultConfig?.name || "Custom Tax",
-    rate: defaultConfig?.rate || (typeof defaultValue === "string" ? parseFloat(defaultValue) || 20 : defaultValue),
     country: defaultConfig?.country || "",
     countryName: defaultConfig?.countryName || "",
     taxType: defaultConfig?.taxType || "",
@@ -105,11 +104,7 @@ export function CustomTaxSettings({
   // Mettre à jour le taux principal
   const handleMainRateChange = (value: number[]) => {
     const newRate = value[0];
-    const updatedConfig = { 
-      ...customTax, 
-      mainRate: newRate,
-      rate: newRate // Also update the rate property to match mainRate
-    };
+    const updatedConfig = { ...customTax, mainRate: newRate };
     setCustomTax(updatedConfig);
     onChange(newRate, undefined, updatedConfig);
   };
@@ -120,11 +115,7 @@ export function CustomTaxSettings({
     const value = valueStr === '' ? 0 : parseFloat(valueStr);
     
     if (!isNaN(value) && value >= 0 && value <= 100) {
-      const updatedConfig = { 
-        ...customTax, 
-        mainRate: value,
-        rate: value // Also update the rate property
-      };
+      const updatedConfig = { ...customTax, mainRate: value };
       setCustomTax(updatedConfig);
       onChange(value, undefined, updatedConfig);
     }
@@ -175,13 +166,7 @@ export function CustomTaxSettings({
       { name: newRate.name, rate: newRate.rate }
     ];
     
-    const updatedConfig = { 
-      ...customTax, 
-      additionalRates,
-      // Ensure these required properties are set
-      name: customTax.name || customTax.taxType || "Custom Tax",
-      rate: customTax.mainRate
-    };
+    const updatedConfig = { ...customTax, additionalRates };
     setCustomTax(updatedConfig);
     onChange(customTax.mainRate, undefined, updatedConfig);
     

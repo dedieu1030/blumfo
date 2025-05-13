@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CompanyProfile, PaymentTermTemplate } from "@/types/invoice";
+import { CompanyProfile } from "@/types/invoice";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
 import { ProfileWizard } from "@/components/profile/ProfileWizard";
@@ -15,7 +15,6 @@ import { Plus } from "lucide-react";
 import { PaymentSettings } from "@/components/settings/PaymentSettings";
 import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings";
 import { TaxSettings } from "@/components/settings/TaxSettings";
-import { getDefaultPaymentTerms } from "@/services/invoiceSettingsService";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -66,16 +65,6 @@ export default function Settings() {
     toast({
       title: "Profil créé",
       description: "Votre profil a été créé avec succès."
-    });
-  };
-
-  // Add new function to handle payment terms saving
-  const handleSavePaymentTerms = (templates: PaymentTermTemplate[]) => {
-    localStorage.setItem('paymentTerms', JSON.stringify(templates));
-    
-    toast({
-      title: "Conditions de paiement mises à jour",
-      description: "Vos modifications ont été enregistrées avec succès."
     });
   };
 
@@ -162,10 +151,7 @@ export default function Settings() {
         </TabsContent>
         
         <TabsContent value="payment-terms">
-          <PaymentTermsSettings 
-            onSave={handleSavePaymentTerms} 
-            initialTemplates={getDefaultPaymentTerms()} 
-          />
+          <PaymentTermsSettings />
         </TabsContent>
         
         <TabsContent value="payment">

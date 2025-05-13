@@ -1,21 +1,13 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { ReminderSchedule, ReminderTrigger } from "@/types/invoice";
-import { useTranslation } from 'react-i18next';
-import { Editor } from "@monaco-editor/react";
-import { toast } from "sonner";
+import { Plus, Trash } from "lucide-react";
 
 interface ReminderScheduleEditorProps {
   schedule?: ReminderSchedule;
@@ -24,320 +16,205 @@ interface ReminderScheduleEditorProps {
 }
 
 export function ReminderScheduleEditor({ schedule, onSave, onCancel }: ReminderScheduleEditorProps) {
-  const { t } = useTranslation();
-  const [name, setName] = useState(schedule?.name || '');
+  const [name, setName] = useState(schedule?.name || "");
   const [enabled, setEnabled] = useState(schedule?.enabled !== false);
-  const [isDefault, setIsDefault] = useState(schedule?.isDefault || false);
-  const [triggers, setTriggers] = useState<ReminderTrigger[]>(schedule?.triggers || []);
-  const [newTrigger, setNewTrigger] = useState<Omit<ReminderTrigger, 'id'>>({
-    triggerType: 'before_due',
-    triggerValue: 7,
-    emailSubject: t("reminderEmailSubject", "Reminder: Invoice {invoice_number} is due soon"),
-    emailBody: t("reminderEmailBody", `Dear {client_name},
+  const [triggers, setTriggers] = useState<ReminderTrigger[]>(
+    schedule?.triggers || [
+      {
+        id: `new-${Date.now()}`,
+        triggerType: "days_before_due",
+        triggerValue: 2,
+        emailSubject: "Rappel de facture à venir",
+        emailBody: "Votre facture arrive à échéance dans 2 jours."
+      }
+    ]
+  );
 
-This is a friendly reminder that invoice {invoice_number} for {amount} is due on {due_date}.
-
-You can view the invoice and make a payment here: {payment_url}
-
-Thank you for your business!
-
-Sincerely,
-{company_name}`)
-  });
-  
-  useEffect(() => {
-    if (schedule) {
-      setName(schedule.name);
-      setEnabled(schedule.enabled !== false);
-      setIsDefault(schedule.isDefault || false);
-      setTriggers(schedule.triggers);
-    } else {
-      // Reset newTrigger to default values when creating a new schedule
-      setNewTrigger({
-        triggerType: 'before_due',
-        triggerValue: 7,
-        emailSubject: t("reminderEmailSubject", "Reminder: Invoice {invoice_number} is due soon"),
-        emailBody: t("reminderEmailBody", `Dear {client_name},
-
-This is a friendly reminder that invoice {invoice_number} for {amount} is due on {due_date}.
-
-You can view the invoice and make a payment here: {payment_url}
-
-Thank you for your business!
-
-Sincerely,
-{company_name}`)
-      });
-    }
-  }, [schedule, t]);
-  
-  const handleSave = () => {
-    if (!name.trim()) {
-      toast.error(t("nameIsRequired", "Le nom est obligatoire"));
-      return;
-    }
-    
-    if (triggers.length === 0) {
-      toast.error(t("atLeastOneTrigger", "Veuillez configurer au moins un déclencheur"));
-      return;
-    }
-    
-    const scheduleToSave: ReminderSchedule = {
-      id: schedule?.id || uuidv4(),
-      name: name,
-      enabled: enabled,
-      isDefault: isDefault,
-      triggers: triggers,
-    };
-    
-    onSave(scheduleToSave);
-  };
-  
   const handleAddTrigger = () => {
-    if (!newTrigger.triggerValue) {
-      toast.error(t("triggerValueRequired", "La valeur du déclencheur est obligatoire"));
-      return;
-    }
-    
-    if (!newTrigger.emailSubject || !newTrigger.emailSubject.trim()) {
-      toast.error(t("emailSubjectRequired", "Le sujet de l'email est obligatoire"));
-      return;
-    }
-    
-    if (!newTrigger.emailBody || !newTrigger.emailBody.trim()) {
-      toast.error(t("emailBodyRequired", "Le corps de l'email est obligatoire"));
-      return;
-    }
-    
-    const newTriggerWithId: ReminderTrigger = {
-      id: uuidv4(),
-      ...newTrigger,
+    setTriggers([
+      ...triggers,
+      {
+        id: `new-${Date.now()}`,
+        triggerType: "days_before_due",
+        triggerValue: 2,
+        emailSubject: "Rappel de facture",
+        emailBody: "Ceci est un rappel concernant votre facture."
+      }
+    ]);
+  };
+
+  const handleRemoveTrigger = (index: number) => {
+    if (triggers.length <= 1) return; // Garder au moins un déclencheur
+    setTriggers(triggers.filter((_, i) => i !== index));
+  };
+
+  const handleTriggerChange = (index: number, field: keyof ReminderTrigger, value: any) => {
+    setTriggers(
+      triggers.map((trigger, i) => {
+        if (i === index) {
+          return { ...trigger, [field]: value };
+        }
+        return trigger;
+      })
+    );
+  };
+
+  const handleSave = () => {
+    const updatedSchedule: ReminderSchedule = {
+      id: schedule?.id || "", // ID vide pour une nouvelle planification
+      name,
+      enabled,
+      isDefault: schedule?.isDefault || false,
+      triggers
     };
-    setTriggers([...triggers, newTriggerWithId]);
-    
-    // Reset newTrigger to default values after adding
-    setNewTrigger({
-      triggerType: 'before_due',
-      triggerValue: 7,
-      emailSubject: t("reminderEmailSubject", "Reminder: Invoice {invoice_number} is due soon"),
-      emailBody: t("reminderEmailBody", `Dear {client_name},
 
-This is a friendly reminder that invoice {invoice_number} for {amount} is due on {due_date}.
-
-You can view the invoice and make a payment here: {payment_url}
-
-Thank you for your business!
-
-Sincerely,
-{company_name}`)
-    });
-  };
-  
-  const handleRemoveTrigger = (id: string) => {
-    setTriggers(triggers.filter(trigger => trigger.id !== id));
-  };
-  
-  const handleTriggerChange = (id: string, field: string, value: any) => {
-    setTriggers(triggers.map(trigger =>
-      trigger.id === id ? { ...trigger, [field]: value } : trigger
-    ));
-  };
-  
-  const handleNewTriggerChange = (field: string, value: any) => {
-    setNewTrigger({ ...newTrigger, [field]: value });
-  };
-  
-  const getTriggerDescription = (trigger: ReminderTrigger) => {
-    const { triggerType, triggerValue } = trigger;
-    
-    switch (triggerType) {
-      case 'before_due':
-        return t("daysBeforeDue", { days: triggerValue });
-      case 'after_due':
-        return t("daysAfterDue", { days: triggerValue });
-      case 'after_issue':
-        return t("daysAfterIssue", { days: triggerValue });
-      case 'days_before_due':
-        return t("daysBeforeDue", { days: triggerValue });
-      case 'days_after_due':
-        return t("daysAfterDue", { days: triggerValue });
-      case 'days_after_previous_reminder':
-        return t("daysAfterPreviousReminder", { days: triggerValue });
-      default:
-        return t("unknownTrigger");
-    }
+    onSave(updatedSchedule);
   };
 
-  const previewVariables = {
-    invoice_number: "INV-12345",
-    due_date: "15/05/2025",
-    amount: "100.00€",
-    days: "5",
-    company_name: "Votre Société",
-    client_name: "Client Exemple",
-    payment_url: "https://example.com/payment"
-  };
-  
   return (
     <div className="space-y-6">
-      <div>
-        <Label htmlFor="schedule-name">{t("name")}</Label>
-        <Input
-          id="schedule-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t("enterScheduleName")}
-        />
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Switch id="schedule-enabled" checked={enabled} onCheckedChange={setEnabled} />
-        <Label htmlFor="schedule-enabled">{t("enabled")}</Label>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Switch id="schedule-default" checked={isDefault} onCheckedChange={setIsDefault} />
-        <Label htmlFor="schedule-default">{t("defaultSchedule")}</Label>
-      </div>
-      
-      <Accordion type="single" collapsible className="w-full">
-        {triggers.map(trigger => (
-          <AccordionItem key={trigger.id} value={trigger.id}>
-            <AccordionTrigger>
-              {getTriggerDescription(trigger)}
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor={`trigger-type-${trigger.id}`}>{t("triggerType")}</Label>
-                    <Select
-                      value={trigger.triggerType}
-                      onValueChange={(value) => handleTriggerChange(trigger.id, 'triggerType', value)}
-                    >
-                      <SelectTrigger id={`trigger-type-${trigger.id}`}>
-                        <SelectValue placeholder={t("selectTriggerType")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="before_due">{t("beforeDueDate")}</SelectItem>
-                        <SelectItem value="after_due">{t("afterDueDate")}</SelectItem>
-                        <SelectItem value="after_issue">{t("afterIssueDate")}</SelectItem>
-                        <SelectItem value="days_before_due">{t("daysBeforeDue")}</SelectItem>
-                        <SelectItem value="days_after_due">{t("daysAfterDue")}</SelectItem>
-                        <SelectItem value="days_after_previous_reminder">{t("daysAfterPreviousReminder")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor={`trigger-value-${trigger.id}`}>{t("triggerValue")}</Label>
-                    <Input
-                      type="number"
-                      id={`trigger-value-${trigger.id}`}
-                      value={trigger.triggerValue?.toString() || ''}
-                      onChange={(e) => handleTriggerChange(trigger.id, 'triggerValue', parseInt(e.target.value))}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor={`email-subject-${trigger.id}`}>{t("emailSubject")}</Label>
-                  <Input
-                    id={`email-subject-${trigger.id}`}
-                    value={trigger.emailSubject || ''}
-                    onChange={(e) => handleTriggerChange(trigger.id, 'emailSubject', e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor={`email-body-${trigger.id}`}>{t("emailBody")}</Label>
-                  <Editor
-                    height="200px"
-                    defaultLanguage="html"
-                    value={trigger.emailBody || ''}
-                    onChange={(value) => handleTriggerChange(trigger.id, 'emailBody', value)}
-                  />
-                </div>
-                
-                <div className="flex justify-between">
-                  <Button variant="destructive" size="sm" onClick={() => handleRemoveTrigger(trigger.id)}>
-                    {t("removeTrigger")}
-                  </Button>
-                  <Button variant="secondary" size="sm">
-                    {t("previewEmail")}
-                  </Button>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-      
-      <div className="border p-4 rounded-md space-y-4">
-        <h4 className="text-lg font-medium">{t("addReminder")}</h4>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="new-trigger-type">{t("triggerType")}</Label>
-            <Select
-              value={newTrigger.triggerType}
-              onValueChange={(value) => handleNewTriggerChange('triggerType', value)}
-            >
-              <SelectTrigger id="new-trigger-type">
-                <SelectValue placeholder={t("selectTriggerType")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="before_due">{t("beforeDueDate")}</SelectItem>
-                <SelectItem value="after_due">{t("afterDueDate")}</SelectItem>
-                <SelectItem value="after_issue">{t("afterIssueDate")}</SelectItem>
-                <SelectItem value="days_before_due">{t("daysBeforeDue")}</SelectItem>
-                <SelectItem value="days_after_due">{t("daysAfterDue")}</SelectItem>
-                <SelectItem value="days_after_previous_reminder">{t("daysAfterPreviousReminder")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="new-trigger-value">{t("triggerValue")}</Label>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="col-span-2">
+            <Label htmlFor="scheduleName">Nom de la planification</Label>
             <Input
-              type="number"
-              id="new-trigger-value"
-              value={newTrigger.triggerValue?.toString() || ''}
-              onChange={(e) => handleNewTriggerChange('triggerValue', parseInt(e.target.value))}
+              id="scheduleName"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Rappels standards"
+              className="mt-1"
             />
           </div>
+
+          <div className="flex items-end space-x-2">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={enabled}
+                onCheckedChange={setEnabled}
+                id="scheduleEnabled"
+              />
+              <Label htmlFor="scheduleEnabled">Activée</Label>
+            </div>
+          </div>
         </div>
-        
-        <div>
-          <Label htmlFor="new-email-subject">{t("emailSubject")}</Label>
-          <Input
-            id="new-email-subject"
-            value={newTrigger.emailSubject || ''}
-            onChange={(e) => handleNewTriggerChange('emailSubject', e.target.value)}
-          />
+
+        <div className="pt-4">
+          <h3 className="text-lg font-medium mb-2">Déclencheurs de rappel</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configurez quand les rappels doivent être envoyés. Vous pouvez définir plusieurs rappels dans une même planification.
+          </p>
+
+          {triggers.map((trigger, index) => (
+            <div key={trigger.id} className="bg-background border border-border rounded-md p-4 mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-medium">Rappel {index + 1}</h4>
+                {triggers.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveTrigger(index)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Type de déclencheur</Label>
+                  <Select
+                    value={trigger.triggerType}
+                    onValueChange={(value) =>
+                      handleTriggerChange(index, "triggerType", value as any)
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="days_before_due">
+                        Jours avant échéance
+                      </SelectItem>
+                      <SelectItem value="days_after_due">
+                        Jours après échéance
+                      </SelectItem>
+                      <SelectItem value="days_after_previous_reminder">
+                        Jours après le dernier rappel
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>
+                    {trigger.triggerType === "days_before_due"
+                      ? "Jours avant l'échéance"
+                      : trigger.triggerType === "days_after_due"
+                      ? "Jours après l'échéance"
+                      : "Jours après le dernier rappel"}
+                  </Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={trigger.triggerValue}
+                    onChange={(e) =>
+                      handleTriggerChange(
+                        index,
+                        "triggerValue",
+                        parseInt(e.target.value) || 1
+                      )
+                    }
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <Label htmlFor={`emailSubject-${index}`}>Sujet de l'email</Label>
+                <Input
+                  id={`emailSubject-${index}`}
+                  value={trigger.emailSubject || ""}
+                  onChange={(e) =>
+                    handleTriggerChange(index, "emailSubject", e.target.value)
+                  }
+                  placeholder="Ex: Rappel de facture"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="mt-4">
+                <Label htmlFor={`emailBody-${index}`}>Corps du message</Label>
+                <Textarea
+                  id={`emailBody-${index}`}
+                  value={trigger.emailBody || ""}
+                  onChange={(e) =>
+                    handleTriggerChange(index, "emailBody", e.target.value)
+                  }
+                  placeholder="Contenu de l'email de rappel..."
+                  className="mt-1 min-h-[100px]"
+                />
+              </div>
+            </div>
+          ))}
+
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            onClick={handleAddTrigger}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Ajouter un autre rappel
+          </Button>
         </div>
-        
-        <div>
-          <Label htmlFor="new-email-body">{t("emailBody")}</Label>
-          <Editor
-            height="200px"
-            defaultLanguage="html"
-            value={newTrigger.emailBody || ''}
-            onChange={(value) => handleNewTriggerChange('emailBody', value)}
-          />
-        </div>
-        
-        <Button type="button" onClick={handleAddTrigger}>
-          {t("addTrigger")}
-        </Button>
       </div>
-      
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {t("cancel")}
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button variant="outline" onClick={onCancel}>
+          Annuler
         </Button>
-        <Button type="button" onClick={handleSave}>
-          {t("save")}
+        <Button onClick={handleSave} disabled={!name.trim()}>
+          Enregistrer
         </Button>
       </div>
     </div>

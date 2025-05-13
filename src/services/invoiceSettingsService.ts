@@ -1,53 +1,38 @@
 
-import { PaymentTermTemplate, CurrencyInfo, InvoiceNumberingConfig } from "@/types/invoice";
+import { PaymentTermTemplate, PaymentMethodDetails } from "@/types/invoice";
+import { InvoiceNumberingConfig, CurrencyInfo } from "@/types/invoice";
 
-// Define available currencies
-export const availableCurrencies = [
-  { code: 'EUR', symbol: '€', name: 'Euro', symbolPosition: 'after' as const, decimalSeparator: ',', thousandSeparator: ' ', decimalPlaces: 2 },
-  { code: 'USD', symbol: '$', name: 'US Dollar', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'GBP', symbol: '£', name: 'British Pound Sterling', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'AUD', symbol: 'AU$', name: 'Australian Dollar', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: "'", decimalPlaces: 2 },
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 0 },
-  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'INR', symbol: '₹', name: 'Indian Rupee', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', symbolPosition: 'before' as const, decimalSeparator: ',', thousandSeparator: '.', decimalPlaces: 2 },
-  { code: 'RUB', symbol: '₽', name: 'Russian Ruble', symbolPosition: 'after' as const, decimalSeparator: ',', thousandSeparator: ' ', decimalPlaces: 2 },
-];
-
-export const getCurrencyInfo = (currencyCode: string): CurrencyInfo => {
-  const currency = availableCurrencies.find(c => c.code === currencyCode);
-  
-  if (currency) {
-    return currency;
-  }
-  
-  // Default fallback
-  return { 
-    code: currencyCode, 
-    symbol: currencyCode, 
-    name: currencyCode, 
-    symbolPosition: 'before', 
-    decimalSeparator: '.',
-    thousandSeparator: ',',
-    decimalPlaces: 2 
+// Update currency information with correct position types
+export const getCurrencies = (): { [key: string]: CurrencyInfo } => {
+  return {
+    USD: { code: "USD", name: "US Dollar", symbol: "$", symbolPosition: "before", decimalPlaces: 2 },
+    EUR: { code: "EUR", name: "Euro", symbol: "€", symbolPosition: "after", decimalPlaces: 2 },
+    GBP: { code: "GBP", name: "British Pound", symbol: "£", symbolPosition: "before", decimalPlaces: 2 },
+    CAD: { code: "CAD", name: "Canadian Dollar", symbol: "$", symbolPosition: "before", decimalPlaces: 2 },
+    AUD: { code: "AUD", name: "Australian Dollar", symbol: "$", symbolPosition: "before", decimalPlaces: 2 },
+    JPY: { code: "JPY", name: "Japanese Yen", symbol: "¥", symbolPosition: "before", decimalPlaces: 0 },
+    CHF: { code: "CHF", name: "Swiss Franc", symbol: "CHF", symbolPosition: "before", decimalPlaces: 2 },
+    CNY: { code: "CNY", name: "Chinese Yuan", symbol: "¥", symbolPosition: "before", decimalPlaces: 2 },
+    INR: { code: "INR", name: "Indian Rupee", symbol: "₹", symbolPosition: "before", decimalPlaces: 2 },
+    BRL: { code: "BRL", name: "Brazilian Real", symbol: "R$", symbolPosition: "before", decimalPlaces: 2 },
+    MXN: { code: "MXN", name: "Mexican Peso", symbol: "$", symbolPosition: "before", decimalPlaces: 2 }
   };
 };
 
-// Invoice Numbering Configuration
+// Export currencies as an array for dropdown selections
+export const availableCurrencies = Object.values(getCurrencies());
+
+// Get and save invoice numbering configuration
 export const getInvoiceNumberingConfig = (): InvoiceNumberingConfig => {
-  const savedConfig = localStorage.getItem('invoiceNumberingConfig');
-  
-  if (savedConfig) {
+  const storedConfig = localStorage.getItem('invoiceNumberingConfig');
+  if (storedConfig) {
     try {
-      return JSON.parse(savedConfig);
+      return JSON.parse(storedConfig);
     } catch (e) {
-      console.error("Error parsing invoice numbering config", e);
+      console.error('Error parsing invoice numbering config', e);
     }
   }
   
-  // Default configuration if none is found
   return {
     prefix: "INV",
     suffix: "",
@@ -69,89 +54,96 @@ export const saveInvoiceNumberingConfig = (config: InvoiceNumberingConfig): void
   localStorage.setItem('invoiceNumberingConfig', JSON.stringify(config));
 };
 
-// Currency settings
+// Default currency functions
 export const getDefaultCurrency = (): string => {
-  return localStorage.getItem('defaultCurrency') || 'EUR';
+  const currency = localStorage.getItem('defaultCurrency');
+  return currency || 'EUR';
 };
 
-export const saveDefaultCurrency = (currencyCode: string): void => {
-  localStorage.setItem('defaultCurrency', currencyCode);
+export const saveDefaultCurrency = (currency: string): void => {
+  localStorage.setItem('defaultCurrency', currency);
 };
 
-// Payment terms
-export const getDefaultPaymentTerms = (): PaymentTermTemplate[] => {
-  const savedTerms = localStorage.getItem('paymentTerms');
-  if (savedTerms) {
-    try {
-      return JSON.parse(savedTerms);
-    } catch (e) {
-      console.error("Error parsing payment terms", e);
-    }
+// Payment terms functions
+export const getDefaultPaymentTerm = (customDate?: string): string => {
+  const term = localStorage.getItem('defaultPaymentTerm');
+  const storedCustomDate = localStorage.getItem('defaultPaymentTermCustomDate');
+  
+  if (customDate && term === 'custom') {
+    localStorage.setItem('defaultPaymentTermCustomDate', customDate);
   }
   
-  // Default payment terms if none are found
-  return [
-    {
-      id: "immediate",
-      name: "Paiement immédiat",
-      delay: "0",
-      daysAfterIssue: 0,
-      termsText: "Paiement dû à réception de la facture.",
-      isDefault: true
-    },
-    {
-      id: "15days",
-      name: "15 jours",
-      delay: "15",
-      daysAfterIssue: 15, 
-      termsText: "Paiement dû dans les 15 jours suivant la réception de la facture.",
-      isDefault: false
-    },
-    {
-      id: "30days",
-      name: "30 jours",
-      delay: "30",
-      daysAfterIssue: 30,
-      termsText: "Paiement dû dans les 30 jours suivant la réception de la facture.",
-      isDefault: false
-    },
-    {
-      id: "60days",
-      name: "60 jours",
-      delay: "60",
-      daysAfterIssue: 60,
-      termsText: "Paiement dû dans les 60 jours suivant la réception de la facture.",
-      isDefault: false
-    }
-  ];
+  return term || '30';
 };
 
-// Payment term functions
-export const getDefaultPaymentTerm = (): string => {
-  return localStorage.getItem('defaultPaymentTerm') || 'immediate';
-};
-
-export const saveDefaultPaymentTerm = (termId: string, customDate?: string): void => {
-  localStorage.setItem('defaultPaymentTerm', termId);
-  if (customDate && termId === 'custom') {
+export const saveDefaultPaymentTerm = (term: string, customDate?: string): void => {
+  localStorage.setItem('defaultPaymentTerm', term);
+  
+  if (customDate && term === 'custom') {
     localStorage.setItem('defaultPaymentTermCustomDate', customDate);
   }
 };
 
-// Payment methods
-export const getDefaultPaymentMethods = (): string[] => {
-  const savedMethods = localStorage.getItem('paymentMethods');
-  if (savedMethods) {
+// Payment terms templates
+export const getPaymentTermTemplates = (): PaymentTermTemplate[] => {
+  const templates = localStorage.getItem('paymentTermsTemplates');
+  if (templates) {
     try {
-      return JSON.parse(savedMethods);
+      return JSON.parse(templates);
     } catch (e) {
-      console.error("Error parsing payment methods", e);
-      return ['bank_transfer'];
+      console.error('Error parsing payment term templates', e);
+      return [];
     }
   }
-  return ['bank_transfer'];
+  
+  // Return default templates if none are stored
+  const defaultTemplates: PaymentTermTemplate[] = [
+    {
+      id: '1',
+      name: 'Standard - 30 jours',
+      delay: '30',
+      termsText: 'Paiement à 30 jours. Des pénalités de retard de 3 fois le taux d\'intérêt légal seront appliquées en cas de paiement après la date d\'échéance.',
+      isDefault: true
+    },
+    {
+      id: '2',
+      name: 'Paiement immédiat',
+      delay: 'immediate',
+      termsText: 'Paiement exigible à réception de la facture.',
+      isDefault: false
+    }
+  ];
+  
+  localStorage.setItem('paymentTermsTemplates', JSON.stringify(defaultTemplates));
+  return defaultTemplates;
 };
 
-export const saveDefaultPaymentMethods = (methods: string[]): void => {
-  localStorage.setItem('paymentMethods', JSON.stringify(methods));
+export const savePaymentTermTemplates = (templates: PaymentTermTemplate[]): void => {
+  localStorage.setItem('paymentTermsTemplates', JSON.stringify(templates));
+};
+
+// Default payment methods
+export const getDefaultPaymentMethods = (): PaymentMethodDetails[] => {
+  const methods = localStorage.getItem('defaultPaymentMethods');
+  if (methods) {
+    try {
+      return JSON.parse(methods);
+    } catch (e) {
+      console.error('Error parsing default payment methods', e);
+      return [];
+    }
+  }
+  
+  // Return default methods if none are stored
+  const defaultMethods: PaymentMethodDetails[] = [
+    { type: 'card', enabled: true, details: '' },
+    { type: 'transfer', enabled: true, details: '' }
+  ];
+  
+  localStorage.setItem('defaultPaymentMethods', JSON.stringify(defaultMethods));
+  return defaultMethods;
+};
+
+export const saveDefaultPaymentMethods = (methods: PaymentMethodDetails[]): void => {
+  localStorage.setItem('defaultPaymentMethods', JSON.stringify(methods));
 };

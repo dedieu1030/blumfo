@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SignatureCanvas, SignatureCanvasAdapter } from "@/components/SignatureCanvas";
+import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { SignatureDisplay } from "@/components/SignatureDisplay";
 import { Quote, QuoteSignature as QuoteSignatureType, QuoteSignRequest } from "@/types/quote";
 import { SignatureData } from "@/types/invoice";
@@ -109,7 +110,7 @@ export function QuoteSignatureComponent({ quote, quoteId, onSuccess, readOnly = 
         <CardContent className="space-y-4">
           <div className="border rounded-md p-4 bg-gray-50">
             <SignatureDisplay 
-              signature={existingSignature.signature_data as SignatureData} 
+              signatureData={existingSignature.signature_data as SignatureData} 
               className="flex justify-center" 
             />
           </div>
@@ -147,7 +148,7 @@ export function QuoteSignatureComponent({ quote, quoteId, onSuccess, readOnly = 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <SignatureCanvasAdapter 
+            <SignatureCanvas 
               onSignatureChange={handleSignatureChange}
               signatureData={signatureData}
               userName={signerName}

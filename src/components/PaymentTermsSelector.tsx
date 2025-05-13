@@ -1,17 +1,19 @@
 
-import React, { useState, useEffect } from "react";
-import { Label } from "@/components/ui/label";
+import React, { useState, useEffect } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
-import { Check, CalendarIcon, SaveIcon } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PaymentTermTemplate } from "@/types/invoice";
+import { PaymentTermTemplate } from '@/types/invoice';
+import { Plus, Save } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface PaymentTermsSelectorProps {
   paymentDelay: string;
@@ -42,223 +44,229 @@ export function PaymentTermsSelector({
   onSelectTemplate,
   selectedTemplateId
 }: PaymentTermsSelectorProps) {
+  const { toast } = useToast();
   const [templates, setTemplates] = useState<PaymentTermTemplate[]>([]);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-  const [templateName, setTemplateName] = useState("");
-  const [templateDescription, setTemplateDescription] = useState("");
+  const [templateName, setTemplateName] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     dueDate ? new Date(dueDate) : undefined
   );
 
-  // Load templates from localStorage
+  // Load saved templates on component mount
   useEffect(() => {
     const savedTemplates = localStorage.getItem('paymentTermsTemplates');
     if (savedTemplates) {
       try {
         setTemplates(JSON.parse(savedTemplates));
       } catch (e) {
-        console.error("Erreur lors du parsing des modèles de conditions de paiement", e);
+        console.error("Error parsing payment terms templates", e);
       }
     }
   }, []);
 
-  // Update dueDate when selectedDate changes
+  // Update selected date when dueDate prop changes
   useEffect(() => {
-    if (selectedDate) {
-      onDueDateChange(format(selectedDate, "yyyy-MM-dd"));
+    if (dueDate) {
+      setSelectedDate(new Date(dueDate));
     }
-  }, [selectedDate, onDueDateChange]);
+  }, [dueDate]);
 
-  // Handle template selection
-  const handleTemplateSelect = (templateId: string) => {
-    if (onSelectTemplate) {
-      onSelectTemplate(templateId);
+  const handleTemplateSelection = (templateId: string) => {
+    if (templateId === 'custom') {
+      // User wants to use custom terms
+      onUseCustomTermsChange(true);
+      if (onSelectTemplate) onSelectTemplate('');
+      return;
     }
-    
+
     const template = templates.find(t => t.id === templateId);
     if (template) {
-      onPaymentDelayChange(template.daysAfterIssue.toString());
-      if (template.delay) {
-        onPaymentDelayChange(template.delay);
-      }
-      if (template.customDate) {
-        setSelectedDate(new Date(template.customDate));
-        onDueDateChange(template.customDate);
-      }
-      if (template.termsText) {
-        onCustomTermsChange(template.termsText);
-        onUseCustomTermsChange(true);
-      }
+      onPaymentDelayChange(template.delay);
+      if (template.customDate) onDueDateChange(template.customDate);
+      onCustomTermsChange(template.termsText);
+      onUseCustomTermsChange(true);
+      if (onSelectTemplate) onSelectTemplate(templateId);
+      
+      toast({
+        title: "Conditions de paiement chargées",
+        description: `Les conditions "${template.name}" ont été appliquées à cette facture.`
+      });
     }
   };
 
-  // Handle saving a new template
   const handleSaveTemplate = () => {
     if (!templateName.trim()) {
+      toast({
+        title: "Nom requis",
+        description: "Veuillez donner un nom à ce modèle de conditions",
+        variant: "destructive"
+      });
       return;
     }
-    
+
     const newTemplate: PaymentTermTemplate = {
       id: Date.now().toString(),
       name: templateName,
-      description: templateDescription || undefined,
-      daysAfterIssue: parseInt(paymentDelay, 10) || 0,
-      isDefault: false,
       delay: paymentDelay,
-      customDate: paymentDelay === 'custom' ? dueDate : undefined,
-      termsText: useCustomTerms ? customTerms : undefined
+      termsText: customTerms,
+      isDefault: false,
+      ...(paymentDelay === "custom" && { customDate: dueDate })
     };
+
+    const updatedTemplates = [...templates, newTemplate];
+    setTemplates(updatedTemplates);
+    localStorage.setItem('paymentTermsTemplates', JSON.stringify(updatedTemplates));
     
-    if (onSaveAsTemplate) {
-      onSaveAsTemplate(newTemplate);
-    }
+    if (onSaveAsTemplate) onSaveAsTemplate(newTemplate);
     
-    setTemplateDescription("");
-    setTemplateName("");
+    toast({
+      title: "Modèle enregistré",
+      description: "Vos conditions de paiement personnalisées ont été enregistrées"
+    });
+    
     setShowSaveTemplate(false);
+    setTemplateName('');
+  };
+
+  // Handle date selection from calendar
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      onDueDateChange(format(date, 'yyyy-MM-dd'));
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <Label htmlFor="payment-delay">Délai de paiement</Label>
-        <Select 
-          value={paymentDelay} 
-          onValueChange={onPaymentDelayChange}
-        >
-          <SelectTrigger id="payment-delay" className="mt-1.5">
-            <SelectValue placeholder="Choisir un délai" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="immediate">Paiement immédiat</SelectItem>
-            <SelectItem value="7">7 jours</SelectItem>
-            <SelectItem value="15">15 jours</SelectItem>
-            <SelectItem value="30">30 jours</SelectItem>
-            <SelectItem value="45">45 jours</SelectItem>
-            <SelectItem value="60">60 jours</SelectItem>
-            <SelectItem value="90">90 jours</SelectItem>
-            <SelectItem value="custom">Date personnalisée</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {paymentDelay === 'custom' && (
-        <div>
-          <Label htmlFor="due-date">Date d'échéance</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                id="due-date"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal mt-1.5",
-                  !selectedDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "dd/MM/yyyy") : <span>Sélectionner une date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                initialFocus
-                disabled={(date) => date < new Date()}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
-      
-      <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="use-custom-terms" 
-          checked={useCustomTerms}
-          onCheckedChange={(checked) => onUseCustomTermsChange(checked as boolean)}
-        />
-        <Label htmlFor="use-custom-terms">Utiliser des conditions de paiement personnalisées</Label>
-      </div>
-      
-      {useCustomTerms && (
-        <div>
-          <Label htmlFor="custom-terms">Conditions personnalisées</Label>
-          <Textarea 
-            id="custom-terms"
-            value={customTerms}
-            onChange={(e) => onCustomTermsChange(e.target.value)}
-            placeholder={defaultTerms}
-            className="mt-1.5"
-            rows={4}
-          />
-        </div>
-      )}
-      
+      {/* Template selection */}
       {templates.length > 0 && (
-        <div>
-          <Label htmlFor="payment-template">Modèles enregistrés</Label>
+        <div className="space-y-2">
+          <Label htmlFor="payment-terms-template">Conditions prédéfinies</Label>
           <Select 
-            value={selectedTemplateId || ""} 
-            onValueChange={handleTemplateSelect}
+            value={selectedTemplateId || ''} 
+            onValueChange={handleTemplateSelection}
           >
-            <SelectTrigger id="payment-template" className="mt-1.5">
-              <SelectValue placeholder="Choisir un modèle" />
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionnez des conditions prédéfinies" />
             </SelectTrigger>
             <SelectContent>
-              {templates.map((template) => (
+              {templates.map(template => (
                 <SelectItem key={template.id} value={template.id}>
-                  <div className="flex items-center">
-                    <span>{template.name}</span>
-                    {template.isDefault && (
-                      <Check className="ml-2 h-4 w-4 text-green-500" />
-                    )}
-                  </div>
+                  {template.name}
                 </SelectItem>
               ))}
+              <SelectItem value="custom">Définir des conditions personnalisées</SelectItem>
             </SelectContent>
           </Select>
         </div>
       )}
-      
-      {!showSaveTemplate ? (
-        <Button variant="outline" onClick={() => setShowSaveTemplate(true)}>
-          Enregistrer comme modèle
-        </Button>
-      ) : (
-        <div className="space-y-4 border p-4 rounded-md">
-          <h3 className="font-medium">Enregistrer comme modèle</h3>
-          <div>
-            <Label htmlFor="template-name">Nom du modèle</Label>
-            <Input 
-              id="template-name" 
-              value={templateName} 
-              onChange={(e) => setTemplateName(e.target.value)}
-              placeholder="Ex: Paiement à 30 jours" 
-              className="mt-1.5"
-            />
-          </div>
-          <div>
-            <Label htmlFor="template-description">Description (optionnel)</Label>
-            <Input 
-              id="template-description" 
-              value={templateDescription} 
-              onChange={(e) => setTemplateDescription(e.target.value)}
-              placeholder="Ex: Pour les clients réguliers" 
-              className="mt-1.5"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowSaveTemplate(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleSaveTemplate}>
-              <SaveIcon className="mr-2 h-4 w-4" />
-              Enregistrer
-            </Button>
-          </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="payment-delay">Délai de paiement</Label>
+          <Select value={paymentDelay} onValueChange={onPaymentDelayChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionnez un délai" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="immediate">Paiement immédiat</SelectItem>
+              <SelectItem value="7">7 jours</SelectItem>
+              <SelectItem value="15">15 jours</SelectItem>
+              <SelectItem value="30">30 jours</SelectItem>
+              <SelectItem value="45">45 jours</SelectItem>
+              <SelectItem value="60">60 jours</SelectItem>
+              <SelectItem value="custom">Date spécifique</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      )}
+        
+        {paymentDelay === "custom" && (
+          <div className="space-y-2">
+            <Label htmlFor="due-date">Date d'échéance</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="due-date"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : <span>Sélectionner une date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+      </div>
+      
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="use-custom-terms"
+            checked={useCustomTerms}
+            onCheckedChange={onUseCustomTermsChange}
+          />
+          <Label htmlFor="use-custom-terms">Utiliser des conditions personnalisées pour cette facture</Label>
+        </div>
+        
+        {useCustomTerms ? (
+          <div className="space-y-2">
+            <Label htmlFor="custom-terms">Conditions de paiement personnalisées</Label>
+            <Textarea
+              id="custom-terms"
+              placeholder="Exemple: Paiement à réception de facture. Pénalité de 1.5% par mois de retard."
+              value={customTerms}
+              onChange={(e) => onCustomTermsChange(e.target.value)}
+            />
+            
+            {!showSaveTemplate ? (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+                onClick={() => setShowSaveTemplate(true)}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Enregistrer comme modèle
+              </Button>
+            ) : (
+              <div className="mt-2 flex flex-col space-y-2">
+                <Label htmlFor="template-name">Nom du modèle</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="template-name"
+                    placeholder="Conditions standard 30 jours"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                  />
+                  <Button onClick={handleSaveTemplate}>
+                    Enregistrer
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-3 bg-gray-50 rounded-md text-sm text-muted-foreground">
+            <p>Conditions par défaut utilisées :</p>
+            <p className="mt-1 font-medium text-foreground">{defaultTerms}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+export default PaymentTermsSelector;

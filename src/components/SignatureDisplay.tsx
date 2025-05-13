@@ -1,57 +1,42 @@
 
 import React from 'react';
-import { SignatureData } from '@/types/invoice';
+import { SignatureData } from "@/types/invoice";
+import { cn } from "@/lib/utils";
 
-export interface SignatureDisplayProps {
-  signature: SignatureData;
+interface SignatureDisplayProps {
+  signatureData?: SignatureData;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function SignatureDisplay({ signature, className = "" }: SignatureDisplayProps) {
-  if (!signature) {
-    return <div className={`text-center text-muted-foreground ${className}`}>Signature non disponible</div>;
-  }
-
-  if (signature.type === "draw") {
+export function SignatureDisplay({ signatureData, className = "", style = {} }: SignatureDisplayProps) {
+  if (!signatureData) return null;
+  
+  if (signatureData.type === 'drawn' && signatureData.dataUrl) {
     return (
-      <div className={`flex justify-center ${className}`}>
+      <div className={cn("flex flex-col items-center", className)} style={style}>
         <img 
-          src={signature.dataUrl} 
-          alt="Signature manuscrite" 
-          className="max-h-20 max-w-full"
+          src={signatureData.dataUrl} 
+          alt="Signature" 
+          className="max-h-[60px] max-w-[200px] object-contain"
         />
+        {signatureData.name && (
+          <div className="text-sm text-muted-foreground mt-1">{signatureData.name}</div>
+        )}
       </div>
     );
   }
-
-  if (signature.type === "type") {
+  
+  if (signatureData.type === 'initials' && signatureData.initials) {
     return (
-      <div className={`flex justify-center ${className}`}>
-        <div style={{ 
-          fontFamily: signature.fontFamily || 'Dancing Script', 
-          fontSize: "28px", 
-          color: "blue"
-        }}>
-          {signature.name}
-        </div>
+      <div className={cn("flex flex-col items-center", className)} style={style}>
+        <div className="font-bold text-2xl font-signature">{signatureData.initials}</div>
+        {signatureData.name && (
+          <div className="text-sm text-muted-foreground mt-1">{signatureData.name}</div>
+        )}
       </div>
     );
   }
-
-  if (signature.type === "initials") {
-    return (
-      <div className={`flex justify-center ${className}`}>
-        <div style={{ 
-          fontFamily: signature.fontFamily || 'Arial', 
-          fontSize: "36px", 
-          fontWeight: "bold", 
-          color: "blue"
-        }}>
-          {signature.initials}
-        </div>
-      </div>
-    );
-  }
-
+  
   return null;
 }
