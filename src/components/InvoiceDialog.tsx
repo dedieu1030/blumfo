@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -91,6 +92,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
   const [previewOpen, setPreviewOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   // Common invoice data state
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -104,10 +106,10 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     {
       id: Date.now().toString(),
       description: "",
-      quantity: "1",
-      unitPrice: "0",
+      quantity: 1,
+      unitPrice: 0,
       tva: "20",
-      total: "0",
+      total: 0,
       totalPrice: 0
     }
   ]);
@@ -192,9 +194,9 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         const defaultTemplate = terms.find((t: PaymentTermTemplate) => t.isDefault);
         if (defaultTemplate) {
           setSelectedTermTemplateId(defaultTemplate.id);
-          setPaymentDelay(defaultTemplate.delay);
+          setPaymentDelay(defaultTemplate.delay || "");
           if (defaultTemplate.customDate) setDueDate(defaultTemplate.customDate);
-          setCustomTerms(defaultTemplate.termsText);
+          setCustomTerms(defaultTemplate.termsText || "");
           setUseCustomTerms(true);
         }
       } catch (e) {
@@ -227,9 +229,9 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     let calculatedTaxTotal = 0;
     
     serviceLines.forEach(line => {
-      const lineQuantity = parseFloat(line.quantity) || 0;
-      const lineUnitPrice = parseFloat(line.unitPrice) || 0;
-      const lineTva = parseFloat((line as any).tva || '0') || 0;
+      const lineQuantity = typeof line.quantity === 'string' ? parseFloat(line.quantity as string) || 0 : line.quantity;
+      const lineUnitPrice = typeof line.unitPrice === 'string' ? parseFloat(line.unitPrice as string) || 0 : line.unitPrice;
+      const lineTva = line.tva ? (typeof line.tva === 'string' ? parseFloat(line.tva) || 0 : line.tva) : 0;
       
       // Calculate line total after applying line discount
       let lineTotal = lineQuantity * lineUnitPrice;
@@ -281,8 +283,8 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     
     // Update the total in service lines
     const updatedServiceLines = serviceLines.map(line => {
-      const quantity = parseFloat(line.quantity) || 0;
-      const unitPrice = parseFloat(line.unitPrice) || 0;
+      const quantity = typeof line.quantity === 'string' ? parseFloat(line.quantity as string) || 0 : line.quantity;
+      const unitPrice = typeof line.unitPrice === 'string' ? parseFloat(line.unitPrice as string) || 0 : line.unitPrice;
       let totalPrice = quantity * unitPrice;
       
       // Apply line discount
@@ -296,7 +298,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       
       return {
         ...line,
-        total: totalPrice.toFixed(2),
+        total: totalPrice,
         totalPrice: totalPrice
       };
     });
@@ -313,12 +315,12 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       {
         id: Date.now().toString(),
         description: "",
-        quantity: "1",
-        unitPrice: "0",
-        tva: "20", // Added as custom property
-        total: "0",
+        quantity: 1,
+        unitPrice: 0,
+        tva: "20",
+        total: 0,
         totalPrice: 0
-      } as ServiceLine & { tva: string, total: string }
+      }
     ]);
   };
 
@@ -418,39 +420,58 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       // Prepare invoice data for preview with all required properties
       const invoiceData: InvoiceData = {
         invoiceNumber,
-        invoiceDate: invoiceDate,  // Using invoiceDate instead of issueDate
+        invoiceDate: invoiceDate,
         issueDate: invoiceDate,
         dueDate: paymentDelay === "custom" ? dueDate : "",
         clientName,
+        billTo: clientName,
+        billToEmail: clientEmail,
+        billToAddress: clientAddress,
+        shipTo: clientName,
+        shipToEmail: clientEmail,
+        shipToAddress: clientAddress,
         clientEmail,
         clientAddress,
         clientPhone: "",
-        issuerInfo: companyProfile || {
-          name: "",
-          address: "",
-          email: "",
-          emailType: "professional", 
-          phone: "",
-          bankAccount: "",
-          bankName: "",
-          accountHolder: "",
-          taxRate: 20, // Ensure this is a number
-          businessType: "company", // Ajout de la propriété manquante
-          termsAndConditions: "",
-          thankYouMessage: "",
-          defaultCurrency: "EUR"
+        issuerInfo: {
+          name: companyProfile?.name || "",
+          address: companyProfile?.address || "",
+          email: companyProfile?.email || "",
+          emailType: companyProfile?.emailType || "professional",
+          phone: companyProfile?.phone || "",
+          bankAccount: companyProfile?.bankAccount || "",
+          bankName: companyProfile?.bankName || "",
+          accountHolder: companyProfile?.accountHolder || "",
+          taxRate: numericTaxRate,
+          businessType: companyProfile?.businessType || "company",
+          termsAndConditions: companyProfile?.termsAndConditions || "",
+          thankYouMessage: companyProfile?.thankYouMessage || "",
+          defaultCurrency: companyProfile?.defaultCurrency || "EUR",
+          website: companyProfile?.website,
+          paypal: companyProfile?.paypal
         },
         serviceLines: serviceLines,
-        items: serviceLines,
+        items: serviceLines.map(line => ({
+          id: line.id,
+          description: line.description,
+          quantity: Number(line.quantity),
+          unitPrice: Number(line.unitPrice),
+          totalPrice: Number(line.totalPrice),
+          tva: line.tva,
+          discount: line.discount
+        })),
         subtotal,
         // Ensure taxRate is always a number
         taxRate: numericTaxRate,
         taxAmount: taxTotal,
         total: total,
+        amount: total,
+        balance: 0,
         totalAmount: total,
         paymentDelay,
         paymentMethods,
         notes,
+        status: 'unpaid',
         templateId: selectedTemplate,
         paymentTermsId: selectedTermTemplateId,
         customPaymentTerms: useCustomTerms ? customTerms : "",
@@ -539,39 +560,58 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
       // Prepare complete invoice data
       const invoiceData: InvoiceData = {
         invoiceNumber,
-        invoiceDate: invoiceDate,  // Using invoiceDate instead of issueDate
+        invoiceDate: invoiceDate,
         issueDate: invoiceDate,
         dueDate: paymentDelay === "custom" ? dueDate : "",
         clientName,
+        billTo: clientName,
+        billToEmail: clientEmail,
+        billToAddress: clientAddress,
+        shipTo: clientName,
+        shipToEmail: clientEmail,
+        shipToAddress: clientAddress,
         clientEmail,
         clientAddress,
         clientPhone: "",
-        issuerInfo: companyProfile || {
-          name: "",
-          address: "",
-          email: "",
-          emailType: "professional",
-          phone: "",
-          bankAccount: "",
-          bankName: "",
-          accountHolder: "",
-          taxRate: 20, // Ensure this is a number
-          businessType: "company", // Ajout de la propriété manquante
-          termsAndConditions: "",
-          thankYouMessage: "",
-          defaultCurrency: "EUR"
+        issuerInfo: {
+          name: companyProfile?.name || "",
+          address: companyProfile?.address || "",
+          email: companyProfile?.email || "",
+          emailType: companyProfile?.emailType || "professional",
+          phone: companyProfile?.phone || "",
+          bankAccount: companyProfile?.bankAccount || "",
+          bankName: companyProfile?.bankName || "",
+          accountHolder: companyProfile?.accountHolder || "",
+          taxRate: numericTaxRate,
+          businessType: companyProfile?.businessType || "company",
+          termsAndConditions: companyProfile?.termsAndConditions || "",
+          thankYouMessage: companyProfile?.thankYouMessage || "",
+          defaultCurrency: companyProfile?.defaultCurrency || "EUR",
+          website: companyProfile?.website,
+          paypal: companyProfile?.paypal
         },
         serviceLines: serviceLines,
-        items: serviceLines,
+        items: serviceLines.map(line => ({
+          id: line.id,
+          description: line.description,
+          quantity: Number(line.quantity),
+          unitPrice: Number(line.unitPrice),
+          totalPrice: Number(line.totalPrice),
+          tva: line.tva,
+          discount: line.discount
+        })),
         subtotal,
         // Ensure taxRate is always a number
         taxRate: numericTaxRate,
         taxAmount: taxTotal,
         total: total,
+        amount: total,
+        balance: 0,
         totalAmount: total,
         paymentDelay,
         paymentMethods,
         notes,
+        status: 'unpaid',
         templateId: selectedTemplate,
         paymentTermsId: selectedTermTemplateId,
         customPaymentTerms: useCustomTerms ? customTerms : "",
@@ -731,25 +771,28 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                   <Label htmlFor={`quantity-${index}`} className="md:hidden">Quantité</Label>
                   <Input 
                     id={`quantity-${index}`}
-                    value={line.quantity}
-                    onChange={(e) => updateServiceLine(line.id, "quantity", e.target.value)}
+                    value={String(line.quantity)}
+                    onChange={(e) => updateServiceLine(line.id, "quantity", Number(e.target.value))}
                     placeholder="2" 
+                    type="number"
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
                   <Label htmlFor={`unit-price-${index}`} className="md:hidden">Prix unitaire (€)</Label>
                   <Input 
                     id={`unit-price-${index}`}
-                    value={line.unitPrice}
-                    onChange={(e) => updateServiceLine(line.id, "unitPrice", e.target.value)}
+                    value={String(line.unitPrice)}
+                    onChange={(e) => updateServiceLine(line.id, "unitPrice", Number(e.target.value))}
                     placeholder="200.00" 
+                    type="number"
+                    step="0.01"
                   />
                 </div>
                 <div className="md:col-span-1 space-y-2">
                   <Label htmlFor={`tva-${index}`} className="md:hidden">TVA (%)</Label>
                   <Input 
                     id={`tva-${index}`}
-                    value={line.tva}
+                    value={String(line.tva)}
                     onChange={(e) => updateServiceLine(line.id, "tva", e.target.value)}
                     placeholder="20" 
                   />
@@ -759,7 +802,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                   <DiscountSelector
                     discount={line.discount}
                     onDiscountChange={(discount) => updateServiceLine(line.id, "discount", discount)}
-                    baseAmount={parseFloat(line.quantity) * parseFloat(line.unitPrice)}
+                    baseAmount={Number(line.quantity) * Number(line.unitPrice)}
                     compact={true}
                   />
                 </div>
@@ -768,7 +811,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                     <Label htmlFor={`total-${index}`} className="md:hidden">Total (€)</Label>
                     <Input 
                       id={`total-${index}`}
-                      value={line.total}
+                      value={String(line.total)}
                       disabled
                     />
                   </div>
@@ -1034,43 +1077,60 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     // Create the complete invoice data object to pass to the preview component
     const currentInvoiceData: InvoiceData = {
       invoiceNumber,
-      invoiceDate: invoiceDate,  // Using invoiceDate instead of issueDate
+      invoiceDate: invoiceDate,
       issueDate: invoiceDate,
       dueDate: paymentDelay === "custom" ? dueDate : "",
       clientName,
+      billTo: clientName,
+      billToEmail: clientEmail,
+      billToAddress: clientAddress,
+      shipTo: clientName,
+      shipToEmail: clientEmail,
+      shipToAddress: clientAddress,
       clientEmail,
       clientAddress,
       clientPhone: "",
-      issuerInfo: companyProfile || {
-        name: "",
-        address: "",
-        email: "",
-        emailType: "professional",
-        phone: "",
-        bankAccount: "",
-        bankName: "",
-        accountHolder: "",
-        taxRate: 20, // Ensure this is a number
-        businessType: "company", // Ajout de la propriété manquante
-        termsAndConditions: "",
-        thankYouMessage: "",
-        defaultCurrency: "EUR"
+      issuerInfo: {
+        name: companyProfile?.name || "",
+        address: companyProfile?.address || "",
+        email: companyProfile?.email || "",
+        emailType: companyProfile?.emailType || "professional",
+        phone: companyProfile?.phone || "",
+        bankAccount: companyProfile?.bankAccount || "",
+        bankName: companyProfile?.bankName || "",
+        accountHolder: companyProfile?.accountHolder || "",
+        taxRate: numericTaxRate,
+        businessType: companyProfile?.businessType || "company",
+        termsAndConditions: companyProfile?.termsAndConditions || "",
+        thankYouMessage: companyProfile?.thankYouMessage || "",
+        defaultCurrency: companyProfile?.defaultCurrency || "EUR",
+        website: companyProfile?.website,
+        paypal: companyProfile?.paypal
       },
       serviceLines: serviceLines,
-      items: serviceLines,
+      items: serviceLines.map(line => ({
+        id: line.id,
+        description: line.description,
+        quantity: Number(line.quantity),
+        unitPrice: Number(line.unitPrice),
+        totalPrice: Number(line.totalPrice),
+        tva: line.tva,
+        discount: line.discount
+      })),
       subtotal,
-      // Ensure taxRate is always a number
       taxRate: numericTaxRate,
       taxAmount: taxTotal,
       total: total,
+      amount: total,
+      balance: 0,
       totalAmount: total,
       paymentDelay,
       paymentMethods,
       notes,
+      status: 'unpaid',
       templateId: selectedTemplate,
       paymentTermsId: selectedTermTemplateId,
       customPaymentTerms: useCustomTerms ? customTerms : "",
-      // Add new properties for discounts and custom texts
       discount: globalDiscount,
       introText: introText || undefined,
       conclusionText: conclusionText || undefined,
@@ -1118,7 +1178,6 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
 
   // Add new state for product catalog and selection
   const [productCatalog, setProductCatalog] = useState<Product[]>([]);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   // Load product catalog
   useEffect(() => {
@@ -1139,11 +1198,11 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
     const newServiceLine: ServiceLine = {
       id: Date.now().toString(),
       description: product.description || product.name,
-      quantity: "1",
-      unitPrice: (product.price_cents / 100).toString(),
+      quantity: 1,
+      unitPrice: product.price_cents / 100,
       tva: product.tax_rate?.toString() || "20",
-      total: (product.price_cents / 100).toString(),
-      totalPrice: product.price_cents / 100  // Keep this as a number, don't convert to string
+      total: product.price_cents / 100,
+      totalPrice: product.price_cents / 100
     };
 
     setServiceLines([...serviceLines, newServiceLine]);

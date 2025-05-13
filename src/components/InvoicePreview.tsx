@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from './ui/button';
-import { ZoomIn, ZoomOut, Maximize, Minimize, Download } from 'lucide-react';
-import { generateAndDownloadInvoicePdf } from '@/services/invoiceApiClient';
-import { useToast } from "@/hooks/use-toast";
+
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Download, Eye, Printer } from "lucide-react";
+import { saveAs } from 'file-saver';
+import QRCode from 'qrcode.react';
 import { InvoiceData } from '@/types/invoice';
 
 interface InvoicePreviewProps {
@@ -10,307 +12,239 @@ interface InvoicePreviewProps {
   invoiceData: InvoiceData;
   templateId: string;
   showDownloadButton?: boolean;
+  onClose?: () => void;
 }
 
 export function InvoicePreview({ 
   htmlContent, 
   invoiceData, 
   templateId, 
-  showDownloadButton = false
+  showDownloadButton = false,
+  onClose
 }: InvoicePreviewProps) {
-  const [iframeHeight, setIframeHeight] = useState(842); // A4 height in pixels (at 96 DPI)
-  const [scale, setScale] = useState(0.7); // Default scale to fit in viewport
-  const [fullWidth, setFullWidth] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const { toast } = useToast();
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
-  // A4 dimensions at 96 DPI (standard screen resolution)
-  const A4_WIDTH = 595; // pixels
-  const A4_HEIGHT = 842; // pixels
-  
-  // Setup a message listener for iframe resizing if needed
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'resize-iframe') {
-        // Optional: can be used if we want content-based sizing rather than fixed A4
-        // setIframeHeight(event.data.height);
-      }
-    };
-    
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
-
-  const zoomIn = () => {
-    setScale(prev => Math.min(prev + 0.1, 1.5));
-  };
-
-  const zoomOut = () => {
-    setScale(prev => Math.max(prev - 0.1, 0.3));
-  };
-
-  const toggleFullWidth = () => {
-    setFullWidth(prev => !prev);
-  };
-
-  const handleDownloadPdf = async () => {
-    if (!invoiceData) {
-      toast({
-        title: "Erreur",
-        description: "Données de facture manquantes pour générer le PDF",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsDownloading(true);
-    toast({
-      title: "Génération du PDF",
-      description: "Préparation du PDF en cours..."
-    });
-
+  // Fonction pour télécharger la facture comme PDF
+  const handleDownloadPDF = async () => {
     try {
-      // Utilisation du service API pour générer et télécharger le PDF
-      const success = await generateAndDownloadInvoicePdf(
-        invoiceData, 
-        templateId,
-        // Ici, vous pourriez passer un token d'authentification si nécessaire
-        undefined
-      );
-
-      if (success) {
-        toast({
-          title: "Téléchargement démarré",
-          description: "Votre PDF a été généré avec succès"
-        });
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          htmlContent, 
+          invoiceNumber: invoiceData.invoiceNumber,
+          templateId
+        }),
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        saveAs(blob, `Facture_${invoiceData.invoiceNumber}.pdf`);
       } else {
-        toast({
-          title: "Erreur",
-          description: "Impossible de générer le PDF",
-          variant: "destructive"
-        });
+        console.error('Erreur lors de la génération du PDF');
       }
     } catch (error) {
-      console.error("Erreur lors du téléchargement:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de la génération du PDF",
-        variant: "destructive"
-      });
-    } finally {
-      setIsDownloading(false);
+      console.error('Erreur lors du téléchargement:', error);
     }
   };
+  
+  // Fonction pour imprimer la facture
+  const handlePrintInvoice = () => {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Impression de facture ${invoiceData.invoiceNumber}</title>
+          </head>
+          <body>
+            ${htmlContent}
+            <script>
+              window.onload = function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+  
+  // Fonction pour afficher en plein écran
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
+  };
+  
+  // Fonction pour préparer le QR code avec lien de paiement
+  const getPaymentQRCode = () => {
+    const paymentMethods = invoiceData.paymentMethods || [];
+    const hasOnlinePayment = paymentMethods.some(pm => pm.type === 'card' && pm.enabled);
+    
+    if (!hasOnlinePayment) {
+      return null;
+    }
+    
+    return null; // Placeholder pour futur QR code
+  };
 
-  const formatPaymentInfo = (data: InvoiceData) => {
-    if (!data) return '';
+  // Rendu des informations bancaires
+  const renderBankingInfo = () => {
+    if (!invoiceData.issuerInfo) {
+      return null;
+    }
     
-    const paymentMethods = data.paymentMethods?.filter(m => m.enabled) || [];
-    if (paymentMethods.length === 0) return '';
+    return (
+      <div className="mt-4 text-sm">
+        {invoiceData.issuerInfo.bankName && (
+          <p><strong>Banque:</strong> {invoiceData.issuerInfo.bankName}</p>
+        )}
+        {invoiceData.issuerInfo.accountHolder && (
+          <p><strong>Titulaire:</strong> {invoiceData.issuerInfo.accountHolder}</p>
+        )}
+        {invoiceData.issuerInfo.bankAccount && (
+          <p><strong>IBAN:</strong> {invoiceData.issuerInfo.bankAccount}</p>
+        )}
+        <p><strong>Référence:</strong> {invoiceData.invoiceNumber}</p>
+        {invoiceData.issuerInfo.paypal && (
+          <p className="mt-2"><strong>PayPal:</strong> {invoiceData.issuerInfo.paypal}</p>
+        )}
+      </div>
+    );
+  };
+  
+  // Fonction pour personnaliser le contenu HTML avant l'affichage
+  const processedHtml = () => {
+    let html = htmlContent;
     
-    const issuer = data.issuerInfo;
-    let html = '<div class="payment-info">';
-    html += '<h3>Méthodes de paiement</h3>';
+    // Personnaliser le HTML si nécessaire (par exemple, ajouter un filigrane pour les factures impayées)
+    if (invoiceData.status === 'unpaid' || invoiceData.status === 'pending') {
+      html = html.replace('</body>', `
+        <div style="
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+          font-size: 120px;
+          opacity: 0.15;
+          color: #ff0000;
+          font-weight: bold;
+          pointer-events: none;
+          z-index: 1000;
+        ">NON PAYÉ</div>
+        </body>
+      `);
+    }
     
-    paymentMethods.forEach(method => {
-      switch (method.type) {
-        case 'card':
-          html += '<p><strong>Carte bancaire :</strong> Un lien de paiement Stripe est inclus dans l\'email avec cette facture.</p>';
-          break;
-        case 'transfer':
-          html += `<p><strong>Virement bancaire :</strong><br>`;
-          html += `Banque: ${issuer.bankName}<br>`;
-          html += `Titulaire: ${issuer.accountHolder}<br>`;
-          html += `IBAN: ${issuer.bankAccount}</p>`;
-          break;
-        case 'paypal':
-          html += `<p><strong>PayPal :</strong> ${issuer.paypal}</p>`;
-          break;
-        case 'check':
-          html += `<p><strong>Chèque :</strong> À l'ordre de ${issuer.name}<br>`;
-          html += `Adresse: ${issuer.address}</p>`;
-          break;
-        case 'cash':
-          html += `<p><strong>Espèces :</strong> Paiement en personne uniquement.</p>`;
-          break;
-        case 'other':
-          html += `<p><strong>Autre :</strong> ${method.details}</p>`;
-          break;
-      }
-    });
-    
-    html += '</div>';
     return html;
   };
 
-  const enhanceHtmlWithDetails = (html: string) => {
-    if (!invoiceData) return html;
-    
-    // Injecter les méthodes de paiement
-    const paymentInfoHtml = formatPaymentInfo(invoiceData);
-    
-    // Injecter les conditions de paiement
-    let termsHtml = '';
+  // Afficher les notes conditionnellement
+  const renderNotes = () => {
     if (invoiceData.notes) {
-      termsHtml = `<div class="payment-terms">
-        <h3>Conditions de paiement</h3>
-        <p>${invoiceData.notes}</p>
-      </div>`;
+      return (
+        <div className="mt-4 p-3 bg-gray-100 rounded text-sm">
+          <h4 className="font-medium mb-2">Notes:</h4>
+          <p className="whitespace-pre-line">{invoiceData.notes}</p>
+        </div>
+      );
     }
-    
-    // Injecter le tout avant la fin du document
-    return html.replace('</body>', `${paymentInfoHtml}${termsHtml}</body>`);
+    return null;
   };
-
-  // Enhance the HTML content before displaying
-  const enhancedHtml = invoiceData ? enhanceHtmlWithDetails(htmlContent) : htmlContent;
   
-  // Use enhancedHtml in your wrappedHtml template instead of the original htmlContent
-
-  const wrappedHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        @page {
-          size: A4;
-          margin: 0;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-          background-color: white;
-          font-family: Arial, sans-serif;
-        }
-        .page {
-          width: ${A4_WIDTH}px;
-          min-height: ${A4_HEIGHT}px;
-          padding: 40px;
-          box-sizing: border-box;
-          margin: 0 auto;
-          background-color: white;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        @media print {
-          body {
-            background-color: white;
-          }
-          .page {
-            box-shadow: none;
-            margin: 0;
-            padding: 0;
-          }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="page">
-        ${enhancedHtml}
-      </div>
-      <script>
-        // Send message to parent window with document height
-        window.onload = function() {
-          const height = document.body.scrollHeight;
-          window.parent.postMessage({ type: 'resize-iframe', height }, '*');
-        };
-      </script>
-    </body>
-    </html>
-  `;
-
-  const getIssuerName = () => {
-    if (invoiceData.issuerInfo?.name) {
-      return invoiceData.issuerInfo.name;
+  // Informations de l'émetteur
+  const renderIssuerInfo = () => {
+    if (invoiceData.issuerInfo) {
+      return (
+        <div className="text-sm">
+          <h4 className="font-medium">{invoiceData.issuerInfo.name}</h4>
+          <p className="whitespace-pre-line">{invoiceData.issuerInfo.address}</p>
+          <p>Email: {invoiceData.issuerInfo.email}</p>
+        </div>
+      );
     }
-    return "Facture";
+    return null;
   };
-
-  const getClientName = () => {
-    return invoiceData.clientName || "Client";
-  };
-
-  return (
-    <div className="flex flex-col">
-      <div className="flex justify-between items-center mb-1 px-1">
-        <div className="flex space-x-1">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={zoomOut}
-            title="Réduire"
-            className="h-8 w-8"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span className="flex items-center text-xs font-mono bg-gray-50 px-2 rounded">
-            {Math.round(scale * 100)}%
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={zoomIn}
-            title="Agrandir"
-            className="h-8 w-8"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
+  
+  // Informations du client
+  const renderClientInfo = () => {
+    if (invoiceData.clientName) {
+      return (
+        <div className="text-sm mt-4">
+          <h4 className="font-medium">Client:</h4>
+          <p className="font-medium">{invoiceData.clientName}</p>
+          <p className="whitespace-pre-line">{invoiceData.clientAddress}</p>
+          {invoiceData.clientEmail && <p>Email: {invoiceData.clientEmail}</p>}
         </div>
-        
-        <div className="flex space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleFullWidth}
-            title={fullWidth ? "Taille réelle" : "Ajuster à la fenêtre"}
-            className="h-8"
-          >
-            {fullWidth ? <Minimize className="h-4 w-4 mr-1" /> : <Maximize className="h-4 w-4 mr-1" />}
-            {fullWidth ? "Taille réelle" : "Ajuster"}
-          </Button>
+      );
+    }
+    return null;
+  };
+
+  // Si en plein écran, afficher dans une Dialog
+  if (isFullScreen) {
+    return (
+      <Dialog open={isFullScreen} onOpenChange={toggleFullScreen} modal={false}>
+        <DialogContent className="max-w-screen-lg max-h-screen flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Facture {invoiceData.invoiceNumber}</DialogTitle>
+          </DialogHeader>
           
-          {showDownloadButton && invoiceData && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleDownloadPdf}
-              disabled={isDownloading}
-              className="bg-violet hover:bg-violet/90 h-8"
-            >
-              <Download className="h-4 w-4 mr-1" />
-              {isDownloading ? "Génération..." : "Télécharger"}
+          <div className="flex-1 overflow-y-auto print:overflow-visible p-4">
+            <div dangerouslySetInnerHTML={{ __html: processedHtml() }} />
+          </div>
+          
+          <div className="flex justify-end space-x-2 mt-4 print:hidden">
+            {showDownloadButton && (
+              <Button variant="outline" onClick={handleDownloadPDF}>
+                <Download className="mr-2 h-4 w-4" />
+                Télécharger
+              </Button>
+            )}
+            <Button variant="outline" onClick={handlePrintInvoice}>
+              <Printer className="mr-2 h-4 w-4" />
+              Imprimer
             </Button>
-          )}
-        </div>
+            <Button variant="outline" onClick={toggleFullScreen}>
+              Réduire
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Sinon, afficher normalement
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto print:overflow-visible p-4">
+        <div dangerouslySetInnerHTML={{ __html: processedHtml() }} />
       </div>
-      <div 
-        className="bg-gray-100 p-2 rounded-md overflow-auto"
-        style={{ maxHeight: '75vh' }}
-      >
-        <div
-          className="mx-auto transform origin-top transition-all duration-200"
-          style={{ 
-            width: fullWidth ? '100%' : `${A4_WIDTH * scale}px`,
-            transform: !fullWidth ? `scale(${scale})` : 'none',
-            transformOrigin: 'center top',
-            marginBottom: !fullWidth ? `${(scale - 1) * -100}%` : '0'
-          }}
-        >
-          <iframe
-            srcDoc={wrappedHtml}
-            className="border-0 bg-white shadow-lg"
-            style={{ 
-              width: fullWidth ? '100%' : `${A4_WIDTH}px`,
-              height: fullWidth ? 'auto' : `${A4_HEIGHT}px`,
-              minHeight: fullWidth ? '842px' : 'auto'
-            }}
-            title="Aperçu de la facture"
-          />
-        </div>
+      
+      <div className="flex justify-end space-x-2 mt-4 print:hidden">
+        {showDownloadButton && (
+          <Button variant="outline" onClick={handleDownloadPDF}>
+            <Download className="mr-2 h-4 w-4" />
+            Télécharger
+          </Button>
+        )}
+        <Button variant="outline" onClick={handlePrintInvoice}>
+          <Printer className="mr-2 h-4 w-4" />
+          Imprimer
+        </Button>
+        <Button variant="outline" onClick={toggleFullScreen}>
+          <Eye className="mr-2 h-4 w-4" />
+          Plein écran
+        </Button>
+        {onClose && (
+          <Button variant="outline" onClick={onClose}>
+            Fermer
+          </Button>
+        )}
       </div>
     </div>
   );
 }
-
-export default InvoicePreview;
