@@ -1,12 +1,11 @@
 
-
 export interface TaxConfiguration {
   defaultTaxRate: number | string;
   region?: string;
   country?: string;
   useCustomRates?: boolean;
   customRates?: Record<string, number>;
-  customTax?: CustomTaxConfiguration; // Add this field
+  customTax?: CustomTaxConfiguration;
 }
 
 export type TaxRateType = 'standard' | 'reduced' | 'super_reduced' | 'zero' | 'exempt' | 'custom';
@@ -21,7 +20,6 @@ export interface TaxRate {
   active?: boolean;
 }
 
-// Add these missing type definitions
 export interface CustomTaxConfiguration {
   country?: string;
   countryName?: string;
@@ -37,17 +35,20 @@ export interface TaxZone {
 }
 
 export interface TaxCountry {
-  code: string;
+  id: string;
   name: string;
-  standardRate: number;
-  reducedRates?: {[key: string]: number};
+  code?: string;
+  countryCode: string;
+  regions: TaxRegionData[];
 }
 
 export interface TaxRegionData {
-  key: string;
+  id: string;
   name: string;
   description?: string;
-  rate: number;
+  code: string;
+  taxType: string;
+  totalRate: number;
 }
 
 export const TAX_TYPES = {
@@ -58,4 +59,3 @@ export const TAX_TYPES = {
   EXEMPT: 'exempt',
   CUSTOM: 'custom'
 };
-

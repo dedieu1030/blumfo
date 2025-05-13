@@ -1,4 +1,14 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import {
+  getInvoiceNumberingConfig,
+  saveInvoiceNumberingConfig,
+  getDefaultCurrency,
+  saveDefaultCurrency,
+  availableCurrencies,
+  getDefaultPaymentTerm,
+  saveDefaultPaymentTerm
+} from '@/services/invoiceSettingsService';
+
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -13,15 +23,9 @@ import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InvoiceNumberingConfig, Currency, ReminderSchedule, InvoiceData } from "@/types/invoice";
 import { 
-  getInvoiceNumberingConfig, 
-  saveInvoiceNumberingConfig,
-  getDefaultCurrency,
-  saveDefaultCurrency,
-  availableCurrencies,
-  getDefaultPaymentTerm,
-  saveDefaultPaymentTerm
-} from "@/services/invoiceSettingsService";
-import { getReminderSchedules, saveReminderSchedule } from "@/services/reminderService";
+  getReminderSchedules, 
+  saveReminderSchedule
+} from "@/services/reminderService";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,7 +34,7 @@ import { useNavigate } from "react-router-dom";
 import { InvoiceDialog } from "@/components/InvoiceDialog";
 import { useTranslation } from "react-i18next";
 
-export default function Invoicing() {
+export function Invoicing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -177,6 +181,22 @@ export default function Invoicing() {
       resetAnnually: checked,
       resetPeriod: checked ? "yearly" : "never"
     }));
+  };
+
+  const updateNumberingConfig = async (newConfig) => {
+    await saveInvoiceNumberingConfig(newConfig);
+  };
+
+  const updateDefaultCurrency = async (currency) => {
+    await saveDefaultCurrency(currency);
+  };
+
+  const updateDefaultPaymentTerm = async (termId) => {
+    try {
+      await saveDefaultPaymentTerm(termId);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du terme de paiement", error);
+    }
   };
 
   return (

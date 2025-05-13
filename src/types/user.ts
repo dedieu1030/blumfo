@@ -1,5 +1,4 @@
 
-
 export interface NotificationSettings {
   email: boolean;
   push: boolean;
@@ -16,8 +15,6 @@ export interface UserProfile {
   timezone: string;
   username?: string;
   notification_settings: NotificationSettings;
-  // Add these fields to match the database structure
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
-

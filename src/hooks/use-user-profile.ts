@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { UserProfile } from '@/types/user';
+import { UserProfile, NotificationSettings } from '@/types/user';
 import { toast } from 'sonner';
 
 export function useUserProfile() {
@@ -35,7 +35,28 @@ export function useUserProfile() {
         }
         
         if (data) {
-          setProfile(data as UserProfile);
+          // Convert the JSON notification settings to the required shape
+          const notificationSettings: NotificationSettings = {
+            email: data.notification_settings?.email === true,
+            push: data.notification_settings?.push === true,
+            sms: data.notification_settings?.sms === true,
+          };
+
+          const userProfile: UserProfile = {
+            id: data.id,
+            full_name: data.full_name,
+            email: data.email,
+            avatar_url: data.avatar_url,
+            phone: data.phone,
+            language: data.language,
+            timezone: data.timezone,
+            username: data.username,
+            notification_settings: notificationSettings,
+            created_at: data.created_at,
+            updated_at: data.updated_at
+          };
+          
+          setProfile(userProfile);
         }
       } catch (err: any) {
         console.error('Erreur lors du chargement du profil:', err);
@@ -84,21 +105,51 @@ export function useUserProfile() {
       }
       
       // Mise à jour du timestamp
-      updates.updated_at = new Date().toISOString();
+      const updatedData = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+        // Convert NotificationSettings to JSON compatible format
+        notification_settings: updates.notification_settings ? {
+          email: updates.notification_settings.email,
+          push: updates.notification_settings.push,
+          sms: updates.notification_settings.sms
+        } : undefined
+      };
       
       // Mettre à jour le profil
       const { data, error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(updatedData)
         .eq('id', userId)
         .select()
         .single();
         
       if (error) throw error;
       
-      setProfile(data as UserProfile);
+      // Convert the notification settings back to our type
+      const notificationSettings: NotificationSettings = {
+        email: data.notification_settings?.email === true,
+        push: data.notification_settings?.push === true,
+        sms: data.notification_settings?.sms === true,
+      };
+
+      const updatedProfile: UserProfile = {
+        id: data.id,
+        full_name: data.full_name,
+        email: data.email,
+        avatar_url: data.avatar_url,
+        phone: data.phone,
+        language: data.language,
+        timezone: data.timezone,
+        username: data.username,
+        notification_settings: notificationSettings,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      
+      setProfile(updatedProfile);
       toast.success('Profil mis à jour avec succès');
-      return { success: true, data };
+      return { success: true, data: updatedProfile };
     } catch (err: any) {
       console.error('Erreur lors de la mise à jour du profil:', err);
       setError(err);

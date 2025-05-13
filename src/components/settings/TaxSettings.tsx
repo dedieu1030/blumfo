@@ -22,7 +22,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   useEffect(() => {
     if (companyProfile?.taxConfiguration) {
       const { defaultTaxRate, region, customTax } = companyProfile.taxConfiguration;
-      setTaxRate(parseFloat(defaultTaxRate));
+      setTaxRate(typeof defaultTaxRate === 'string' ? parseFloat(defaultTaxRate) : defaultTaxRate);
       setTaxRegion(region);
       setCustomTax(customTax);
     } else if (companyProfile?.taxRate) {
@@ -58,7 +58,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
       defaultTaxRate: taxRate.toString(),
       region: taxRegion,
       country: companyProfile.country || "FR",  // Utiliser le pays du profil ou FR par défaut
-      customTax: customTax // Ajouter la configuration personnalisée
+      customTax: customTax
     };
 
     const updatedProfile: CompanyProfile = {
