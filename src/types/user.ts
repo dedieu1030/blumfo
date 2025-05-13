@@ -1,4 +1,5 @@
 
+// Add or update the NotificationSettings interface in user.ts
 export interface NotificationSettings {
   email: boolean;
   push: boolean;
@@ -7,13 +8,13 @@ export interface NotificationSettings {
 
 export interface UserProfile {
   id: string;
-  full_name: string;
   email: string;
-  avatar_url?: string;
-  phone?: string;
+  full_name: string;
+  username: string;
+  avatar_url: string;
+  phone: string;
   language: string;
   timezone: string;
-  username?: string;
   notification_settings: NotificationSettings;
   created_at: string;
   updated_at: string;

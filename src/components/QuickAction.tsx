@@ -1,31 +1,22 @@
 
-import { useState } from "react"
-import { PlusCircle } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { InvoiceDialog } from "@/components/InvoiceDialog"
+import { useState } from "react";
+import { PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { InvoiceDialog } from "@/components/InvoiceDialog";
+import { InvoiceData } from "@/types/invoice";
 
 export function QuickAction() {
-  const [open, setOpen] = useState(false)
-  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
 
-  // Create an async function to handle invoice generation
-  const handleGenerateInvoice = async () => {
-    // This is a placeholder function that returns a Promise
-    return Promise.resolve()
-  }
+  // Fix the function to return a Promise<void>
+  const handleGenerateInvoice = async (invoiceData: InvoiceData): Promise<void> => {
+    console.log("Invoice generated:", invoiceData);
+    return Promise.resolve();
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -47,13 +38,21 @@ export function QuickAction() {
             <Label htmlFor="name" className="text-right">
               Name
             </Label>
-            <Input id="name" value="Pedro Duarte" className="col-span-3" />
+            <Input
+              id="name"
+              value="Pedro Duarte"
+              className="col-span-3"
+            />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="username" className="text-right">
               Username
             </Label>
-            <Input id="username" value="@peduarte" className="col-span-3" />
+            <Input
+              id="username"
+              value="@peduarte"
+              className="col-span-3"
+            />
           </div>
         </div>
         <DialogFooter>
@@ -62,14 +61,13 @@ export function QuickAction() {
           </DialogClose>
         </DialogFooter>
       </DialogContent>
+      
       <InvoiceDialog 
-        open={invoiceDialogOpen} 
-        onOpenChange={setInvoiceDialogOpen} 
-        onGenerateInvoice={handleGenerateInvoice} // Updated to use the async function
+        open={invoiceDialogOpen}
+        onOpenChange={setInvoiceDialogOpen}
+        onGenerateInvoice={handleGenerateInvoice}
         isGenerating={false}
       />
     </Dialog>
   );
 }
-
-export default QuickAction;

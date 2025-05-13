@@ -1,8 +1,9 @@
 
 import { PaymentTermTemplate } from '@/types/invoice';
+import { Currency } from '@/types/invoice';
 
 // Functions needed by Invoicing.tsx
-export const getInvoiceNumberingConfig = async () => {
+export const getInvoiceNumberingConfig = () => {
   // Mock implementation
   return {
     prefix: 'INV',
@@ -11,37 +12,30 @@ export const getInvoiceNumberingConfig = async () => {
   };
 };
 
-export const saveInvoiceNumberingConfig = async (config: any) => {
+export const saveInvoiceNumberingConfig = (config: any) => {
   console.log('Saving invoice numbering config:', config);
   return config;
 };
 
-export const getDefaultCurrency = async () => {
+export const getDefaultCurrency = () => {
   return 'EUR';
 };
 
-export const saveDefaultCurrency = async (currency: string) => {
+export const saveDefaultCurrency = (currency: string) => {
   console.log('Saving default currency:', currency);
   return currency;
 };
 
-export const getDefaultPaymentTerm = async () => {
-  return {
-    id: '1',
-    name: 'Net 30',
-    terms_text: 'Payment due within 30 days',
-    days_after_issue: 30,
-    delay: '30',
-    is_default: true,
-  };
+export const getDefaultPaymentTerm = () => {
+  return '30';
 };
 
-export const saveDefaultPaymentTerm = async (termId: string) => {
-  console.log('Saving default payment term:', termId);
+export const saveDefaultPaymentTerm = (termId: string, customDate?: string) => {
+  console.log('Saving default payment term:', termId, customDate || '');
   return termId;
 };
 
-export const availableCurrencies = [
+export const availableCurrencies: Currency[] = [
   { code: 'EUR', name: 'Euro', symbol: '€' },
   { code: 'USD', name: 'US Dollar', symbol: '$' },
   { code: 'GBP', name: 'British Pound', symbol: '£' },
@@ -50,8 +44,8 @@ export const availableCurrencies = [
 ];
 
 // Functions needed by PaymentTermsSettings.tsx
-export const getPaymentTermTemplates = async () => {
-  return [
+export const getPaymentTermTemplates = () => {
+  return Promise.resolve([
     {
       id: '1',
       name: 'Net 30',
@@ -76,24 +70,24 @@ export const getPaymentTermTemplates = async () => {
       delay: '45',
       is_default: false,
     }
-  ];
+  ]);
 };
 
-export const savePaymentTermTemplates = async (templates: PaymentTermTemplate[]) => {
+export const savePaymentTermTemplates = (templates: PaymentTermTemplate[]) => {
   console.log('Saving payment term templates:', templates);
-  return templates;
+  return Promise.resolve(templates);
 };
 
 // Functions needed by PaymentSettings.tsx
-export const getDefaultPaymentMethods = async () => {
-  return [
+export const getDefaultPaymentMethods = () => {
+  return Promise.resolve([
     { id: 'card', name: 'Card Payment', enabled: true },
     { id: 'bank', name: 'Bank Transfer', enabled: true },
     { id: 'paypal', name: 'PayPal', enabled: false }
-  ];
+  ]);
 };
 
-export const saveDefaultPaymentMethods = async (methods: any[]) => {
+export const saveDefaultPaymentMethods = (methods: any[]) => {
   console.log('Saving default payment methods:', methods);
-  return methods;
+  return Promise.resolve(methods);
 };

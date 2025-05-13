@@ -1,61 +1,60 @@
 
+// Extending the existing tax.ts file with additional types needed
+
 export interface TaxConfiguration {
-  defaultTaxRate: number | string;
-  region?: string;
-  country?: string;
-  useCustomRates?: boolean;
-  customRates?: Record<string, number>;
-  customTax?: CustomTaxConfiguration;
-}
-
-export type TaxRateType = 'standard' | 'reduced' | 'super_reduced' | 'zero' | 'exempt' | 'custom';
-
-export interface TaxRate {
   id: string;
+  name: string;
+  country: string;
   rate: number;
-  name: string;
-  type: TaxRateType;
-  country?: string;
-  region?: string;
-  active?: boolean;
+  type: string;
+  customTax?: boolean; // Add customTax property
 }
 
+// Define the CustomTaxConfiguration type
 export interface CustomTaxConfiguration {
-  country?: string;
-  countryName?: string;
-  taxType?: string;
-  mainRate: number;
-  additionalRates?: Array<{name: string; rate: number}>;
-}
-
-export interface TaxZone {
   id: string;
   name: string;
-  countries: TaxCountry[];
+  rate: number;
+  type: string;
+  country?: string;
+  region?: string;
+  isDefault?: boolean;
+}
+
+// Define TaxZone, TaxCountry, and TaxRegionData interfaces
+export interface TaxRegionData {
+  id: string;
+  name: string;
+  code: string;
+  totalRate: number;
+  // Various tax rate types used in different countries
+  vatStandardRate?: number;
+  vatReducedRates?: number[];
+  vatSuperReducedRate?: number;
+  vatParkingRate?: number;
+  gstRate?: number;
+  hstRate?: number;
+  stateTaxRate?: number;
+  ivaRate?: number;
+  notes?: string;
 }
 
 export interface TaxCountry {
   id: string;
   name: string;
-  code?: string;
   countryCode: string;
   regions: TaxRegionData[];
 }
 
-export interface TaxRegionData {
-  id: string;
+export interface TaxZone {
   name: string;
-  description?: string;
-  code: string;
-  taxType: string;
-  totalRate: number;
+  countries: TaxCountry[];
 }
 
-export const TAX_TYPES = {
-  STANDARD: 'standard',
-  REDUCED: 'reduced',
-  SUPER_REDUCED: 'super_reduced',
-  ZERO: 'zero',
-  EXEMPT: 'exempt',
-  CUSTOM: 'custom'
-};
+// Define TAX_TYPES
+export const TAX_TYPES = [
+  { id: 'vat', name: 'VAT' },
+  { id: 'gst', name: 'GST' },
+  { id: 'sales', name: 'Sales Tax' },
+  { id: 'none', name: 'No Tax' },
+];

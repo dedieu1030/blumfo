@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   getInvoiceNumberingConfig,
@@ -34,6 +35,7 @@ import { useNavigate } from "react-router-dom";
 import { InvoiceDialog } from "@/components/InvoiceDialog";
 import { useTranslation } from "react-i18next";
 
+// Change this to a named export
 export function Invoicing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -183,15 +185,15 @@ export function Invoicing() {
     }));
   };
 
-  const updateNumberingConfig = async (newConfig) => {
+  const updateNumberingConfig = async (newConfig: any) => {
     await saveInvoiceNumberingConfig(newConfig);
   };
 
-  const updateDefaultCurrency = async (currency) => {
+  const updateDefaultCurrency = async (currency: string) => {
     await saveDefaultCurrency(currency);
   };
 
-  const updateDefaultPaymentTerm = async (termId) => {
+  const updateDefaultPaymentTerm = async (termId: string) => {
     try {
       await saveDefaultPaymentTerm(termId);
     } catch (error) {
