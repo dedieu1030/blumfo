@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -150,10 +149,10 @@ export function QuoteSignatureComponent({ quote, quoteId, onSuccess, readOnly = 
           <div className="space-y-4">
             <SignatureCanvas 
               onSignatureChange={handleSignatureChange}
-              signatureData={signatureData}
-              userName={signerName}
               onSave={() => {}}
               onClose={() => {}}
+              signatureData={signatureData}
+              userName={signerName}
             />
           </div>
           

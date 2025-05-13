@@ -5,7 +5,7 @@ import { SignatureData } from '@/types/invoice';
 interface SignatureDisplayProps {
   signature: SignatureData;
   className?: string;
-  signatureData?: SignatureData; // Add this to support both property names
+  signatureData?: SignatureData; // Support both property names
 }
 
 export function SignatureDisplay({ signature, signatureData, className }: SignatureDisplayProps) {

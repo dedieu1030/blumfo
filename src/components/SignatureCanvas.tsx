@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SignatureData } from '@/types/invoice';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SignatureData } from '@/types/invoice';
 
 interface SignatureCanvasProps {
   onSave: (signatureData: SignatureData) => void;
@@ -137,7 +137,7 @@ export function SignatureCanvas({
     if (activeTab === 'draw' && signaturePadRef.current && !signaturePadRef.current.isEmpty()) {
       const dataUrl = signaturePadRef.current.toDataURL('image/png');
       
-      const sigData = {
+      const sigData: SignatureData = {
         type: 'draw',
         dataUrl,
         name: name || 'Signature',
@@ -169,7 +169,7 @@ export function SignatureCanvas({
         
         const dataUrl = canvas.toDataURL('image/png');
         
-        const sigData = {
+        const sigData: SignatureData = {
           type: 'type',
           dataUrl,
           name,
@@ -201,7 +201,7 @@ export function SignatureCanvas({
         
         const dataUrl = canvas.toDataURL('image/png');
         
-        const sigData = {
+        const sigData: SignatureData = {
           type: 'initials',
           dataUrl,
           name,

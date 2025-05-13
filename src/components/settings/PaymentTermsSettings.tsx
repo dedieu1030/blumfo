@@ -58,6 +58,11 @@ export function PaymentTermsSettings() {
       return;
     }
 
+    // Calculate daysAfterIssue based on delay
+    const daysAfterIssue = newTemplateDelay === "immediate" ? 0 : 
+      newTemplateDelay === "custom" ? 0 : 
+      parseInt(newTemplateDelay, 10);
+
     let updatedTemplates: PaymentTermTemplate[];
     
     if (editingTemplate) {
@@ -70,7 +75,8 @@ export function PaymentTermsSettings() {
               delay: newTemplateDelay,
               customDate: newTemplateDelay === "custom" ? newTemplateDate : undefined,
               termsText: newTemplateTerms,
-              isDefault: newTemplateDefault
+              isDefault: newTemplateDefault,
+              daysAfterIssue: daysAfterIssue,
             }
           : newTemplateDefault ? { ...t, isDefault: false } : t
       );
@@ -82,7 +88,8 @@ export function PaymentTermsSettings() {
         delay: newTemplateDelay,
         customDate: newTemplateDelay === "custom" ? newTemplateDate : undefined,
         termsText: newTemplateTerms,
-        isDefault: newTemplateDefault
+        isDefault: newTemplateDefault,
+        daysAfterIssue: daysAfterIssue,
       };
       
       // Si le nouveau modèle est défini par défaut, supprimer la définition par défaut des autres

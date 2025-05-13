@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -970,7 +969,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                 onClick={() => setSignatureDialogOpen(true)}
               >
                 {signatureData ? (
-                  <SignatureDisplay signatureData={signatureData} />
+                  <SignatureDisplay signature={invoice.signature} />
                 ) : (
                   <div className="h-24 flex items-center justify-center">
                     <p className="text-muted-foreground">Cliquez pour signer</p>
@@ -988,13 +987,11 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
                   <div className="flex space-x-4 mb-4">
                     <div className="w-full">
                       <SignatureCanvas 
-                        onSignatureChange={(sig) => {
-                          setSignatureData(sig);
-                          if (sig) {
-                            setSignatureDialogOpen(false);
-                          }
-                        }}
-                        signatureData={signatureData}
+                        onSave={handleSignatureSave}
+                        onClose={handleSignatureCancel}
+                        onSignatureChange={handleSignatureChange}
+                        signatureData={invoice.signature}
+                        userName={invoice.clientName}
                       />
                     </div>
                   </div>

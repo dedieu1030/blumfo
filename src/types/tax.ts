@@ -1,30 +1,4 @@
 
-export interface TaxRate {
-  id: string;
-  name: string;
-  rate: number;
-  description?: string;
-  isDefault?: boolean;
-}
-
-export interface RegionalTaxRate {
-  countryCode: string;
-  country: string;
-  rate: number;
-  standardName: string;
-  reducedRates?: { [key: string]: number };
-}
-
-export interface CustomTaxConfiguration {
-  name: string;
-  rate: number;
-  country: string;
-  countryName: string;
-  taxType: string;
-  mainRate: number;
-  additionalRates: { name: string; rate: number; }[];
-}
-
 export interface TaxZone {
   id: string;
   name: string;
@@ -34,56 +8,48 @@ export interface TaxZone {
 export interface TaxCountry {
   id: string;
   name: string;
-  code: string;
   countryCode: string;
-  taxSystem?: string;
   regions: TaxRegionData[];
 }
 
 export interface TaxRegionData {
   id: string;
   name: string;
-  code?: string;
-  standardRate: number;
-  reducedRates?: { name: string; rate: number }[];
-  totalRate?: number;
-  taxType?: string;
+  code: string;
+  taxType: string;
+  standardRate: number; // This is the standard rate
   vatStandardRate?: number;
   vatReducedRates?: number[];
   vatSuperReducedRate?: number;
-  vatParkingRate?: number;
-  gstRate?: number;
-  pstRate?: number;
-  qstRate?: number;
-  hstRate?: number;
-  stateTaxRate?: number;
-  localTaxRate?: number;
-  ivaRate?: number;
-  notes?: string;
+  totalRate: number;
 }
-
-export interface TaxPayload {
-  id?: string;
-  name: string;
-  rate: number;
-  isDefault?: boolean;
-}
-
-// Add missing TAX_TYPES constant
-export const TAX_TYPES = [
-  { id: 'vat-standard', name: 'TVA Standard' },
-  { id: 'vat-reduced', name: 'TVA Réduite' },
-  { id: 'vat-super-reduced', name: 'TVA Super Réduite' },
-  { id: 'vat-exempt', name: 'Exonéré de TVA' },
-  { id: 'gst', name: 'GST (Canada)' },
-  { id: 'hst', name: 'HST (Canada)' },
-  { id: 'sales-tax', name: 'Sales Tax (US)' },
-  { id: 'iva-standard', name: 'IVA Standard' }
-];
 
 export interface TaxConfiguration {
-  defaultTaxRate: string;
-  region: string;
-  country: string;
-  customTax?: CustomTaxConfiguration;
+  type: 'region' | 'custom';
+  regionKey?: string;  // Format: "zoneId:countryId:regionId"
+  customConfig?: CustomTaxConfiguration;
+  rate: number;
 }
+
+export interface CustomTaxConfiguration {
+  name: string;
+  rate: number;
+  country: string;
+  countryName: string;
+  taxType: string;
+  mainRate: number;
+  additionalRates: {
+    name: string;
+    rate: number;
+  }[];
+}
+
+export const TAX_TYPES = {
+  VAT: "VAT",
+  GST: "GST",
+  PST: "PST",
+  HST: "HST",
+  QST: "QST",
+  NONE: "NONE",
+  OTHER: "OTHER"
+};
