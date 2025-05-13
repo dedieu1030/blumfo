@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { Invoice } from "@/types/invoice";
 import { useTranslation } from "react-i18next";
-import { formatCurrency, formatPercentage } from "@/lib/utils";
+import { CurrencyFormat, PercentageFormat } from "@/components/ui/number-format";
 
 interface DashboardStatsProps {
   overdueInvoices: Invoice[];
@@ -33,27 +33,27 @@ export function DashboardStats({ overdueInvoices = [] }: DashboardStatsProps) {
   const stats = [
     {
       title: t("totalBilledThisMonth", "Total facturé ce mois"),
-      value: formatCurrency(thisMonthTotal),
-      change: formatPercentage(thisMonthPercentage),
+      value: thisMonthTotal,
+      change: thisMonthPercentage,
       increasing: true
     },
     {
       title: t("totalPaid", "Total payé"),
-      value: formatCurrency(totalPaid),
-      change: formatPercentage(paidPercentage),
+      value: totalPaid,
+      change: paidPercentage,
       increasing: true
     },
     {
       title: t("pending", "En attente"),
-      value: formatCurrency(totalPending),
-      change: formatPercentage(pendingPercentage),
+      value: totalPending,
+      change: pendingPercentage,
       increasing: true
     },
     {
       title: t("overdueInvoices", "Factures impayées"),
-      value: formatCurrency(totalOverdueAmount),
+      value: totalOverdueAmount,
       secondaryValue: `${overdueInvoices.length} ${t("invoices", "factures")}`,
-      change: formatPercentage(overduePercentage),
+      change: overduePercentage,
       increasing: overdueInvoices.length > 0
     }
   ];
@@ -68,7 +68,9 @@ export function DashboardStats({ overdueInvoices = [] }: DashboardStatsProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
+            <div className="text-2xl font-bold">
+              <CurrencyFormat value={stat.value} options={{ minimumFractionDigits: 0 }} />
+            </div>
             {stat.secondaryValue && (
               <p className="text-xs text-muted-foreground">{stat.secondaryValue}</p>
             )}
@@ -80,7 +82,14 @@ export function DashboardStats({ overdueInvoices = [] }: DashboardStatsProps) {
               ) : (
                 <ArrowDown className="mr-1 h-3 w-3" />
               )}
-              {stat.change} {t("sinceLastMonth", "depuis le mois dernier")}
+              <PercentageFormat 
+                value={stat.change / 100} 
+                options={{ 
+                  signDisplay: "always", 
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0
+                }} 
+              /> {t("sinceLastMonth", "depuis le mois dernier")}
             </p>
           </CardContent>
         </Card>

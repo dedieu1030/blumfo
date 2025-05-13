@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { CurrencyFormat } from "@/components/ui/number-format";
 
 const QuoteView = () => {
   const { id } = useParams<{ id: string }>();
@@ -135,8 +136,12 @@ const QuoteView = () => {
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.description}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">{item.unit_price.toFixed(2)} €</TableCell>
-                    <TableCell className="text-right">{item.total_price.toFixed(2)} €</TableCell>
+                    <TableCell className="text-right">
+                      <CurrencyFormat value={item.unit_price} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <CurrencyFormat value={item.total_price} />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -147,16 +152,16 @@ const QuoteView = () => {
             <div className="w-full md:w-1/3">
               <div className="flex justify-between py-2">
                 <span>Sous-total :</span>
-                <span>{quote.subtotal.toFixed(2)} €</span>
+                <span><CurrencyFormat value={quote.subtotal} /></span>
               </div>
               <div className="flex justify-between py-2">
                 <span>Taxes :</span>
-                <span>{quote.tax_amount.toFixed(2)} €</span>
+                <span><CurrencyFormat value={quote.tax_amount} /></span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between py-2 font-bold">
                 <span>Total :</span>
-                <span>{quote.total_amount.toFixed(2)} €</span>
+                <span><CurrencyFormat value={quote.total_amount} /></span>
               </div>
             </div>
           </div>

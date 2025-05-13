@@ -2,17 +2,10 @@
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/drawer";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { 
-  BarChart2, 
-  FileText, 
-  Users, 
-  Settings, 
-  PlusCircle,
-  Package,
-  LayoutTemplate
-} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
+import { Icon } from "@/components/ui/icon";
+import { IconName } from "@/components/ui/icon";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -28,13 +21,14 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
   };
   
   const navigationItems = [
-    { icon: BarChart2, name: t('dashboard'), path: "/" },
-    { icon: PlusCircle, name: t('invoicing'), path: "/invoicing" },
-    { icon: FileText, name: t('invoices'), path: "/invoices" },
-    { icon: LayoutTemplate, name: t('templates'), path: "/templates" },
-    { icon: Users, name: t('clients'), path: "/clients" },
-    { icon: Package, name: t('products'), path: "/products" },
-    { icon: Settings, name: t('settings'), path: "/settings" }
+    { icon: "PieChart" as IconName, name: t('dashboard'), path: "/" },
+    { icon: "CreditCard" as IconName, name: t('invoicing'), path: "/invoicing" },
+    { icon: "FileText" as IconName, name: t('invoices'), path: "/invoices" },
+    { icon: "FileEdit" as IconName, name: t('quotes'), path: "/quotes" },
+    { icon: "LayoutGrid" as IconName, name: t('templates'), path: "/templates" },
+    { icon: "Users" as IconName, name: t('clients'), path: "/clients" },
+    { icon: "Package" as IconName, name: t('products'), path: "/products" },
+    { icon: "Settings" as IconName, name: t('settings'), path: "/settings" }
   ];
 
   return (
@@ -60,7 +54,10 @@ export function MobileNavigation({ isOpen, onOpenChange }: MobileNavigationProps
                       : "text-foreground/80 hover:text-foreground hover:bg-accent/10"
                   }`}
                 >
-                  <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-primary" : "text-foreground/80"}`} />
+                  <Icon 
+                    name={item.icon} 
+                    className={`h-5 w-5 mr-3 ${isActive(item.path) ? "text-primary" : "text-foreground/80"}`} 
+                  />
                   {item.name}
                 </Link>
               ))}

@@ -1,27 +1,16 @@
-
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { formatCurrency as formatCurrencyUtil, formatPercentage as formatPercentageUtil } from "@/components/ui/number-format";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number, currency: string = 'EUR'): string {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency || 'EUR'
-  }).format(amount)
-}
+// Export the formatting functions from our new component for backward compatibility
+export const formatCurrency = formatCurrencyUtil;
+export const formatPercentage = formatPercentageUtil;
 
-export function formatPercentage(value: number): string {
-  const sign = value >= 0 ? '+' : '';
-  return `${sign}${new Intl.NumberFormat('fr-FR', {
-    style: 'percent',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(value / 100)}`;
-}
-
+// Keep the formatDate function
 export function formatDate(date: string | Date): string {
   if (!date) return '';
   

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { QuoteDialog } from "./QuoteDialog";
+import { CurrencyFormat } from "@/components/ui/number-format";
 
 interface QuoteListProps {
   limit?: number;
@@ -242,7 +242,9 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
                   <TableRow key={quote.id}>
                     <TableCell>{quote.quote_number}</TableCell>
                     <TableCell>{quote.client?.client_name || "N/A"}</TableCell>
-                    <TableCell>{quote.total_amount.toFixed(2)} €</TableCell>
+                    <TableCell>
+                      <CurrencyFormat value={quote.total_amount} />
+                    </TableCell>
                     <TableCell>{format(new Date(quote.issue_date), "dd/MM/yyyy")}</TableCell>
                     <TableCell>
                       <Badge 

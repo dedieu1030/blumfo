@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "./ui/button";
 import { Download, Send, Eye, Save, Loader2, CreditCard, ExternalLink, CheckCircle } from "lucide-react";
@@ -10,6 +9,7 @@ import { InvoiceReminder } from './InvoiceReminder';
 import { useTranslation } from "react-i18next";
 import { InvoiceMarkAsPaidDialog } from './InvoiceMarkAsPaidDialog';
 import { InvoicePaymentResult } from './InvoicePaymentResult';
+import { CurrencyFormat } from './ui/number-format';
 
 interface InvoiceActionsProps {
   invoiceData: InvoiceData;
