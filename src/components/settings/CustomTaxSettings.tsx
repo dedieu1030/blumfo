@@ -5,12 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Plus, Trash } from "lucide-react";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check, ChevronsUpDown, Plus, Search, Trash } from "lucide-react";
 import { cn, formatTaxRate } from "@/lib/utils";
-import { CustomTaxConfiguration, COUNTRIES, TAX_TYPES } from "@/types/tax";
+import { CustomTaxConfiguration, TAX_TYPES } from "@/types/tax";
+import { getFilteredCountries, getContinents, CountryData } from "@/data/countriesByContinent";
 
 interface CustomTaxSettingsProps {
   defaultValue: number | string;
@@ -34,15 +33,28 @@ export function CustomTaxSettings({
     additionalRates: defaultConfig?.additionalRates || []
   });
   
-  // État pour la recherche de pays
+  // État pour la sélection de pays
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [countries, setCountries] = useState<CountryData[]>([]);
+  const [continents, setContinents] = useState<string[]>([]);
+  const [filteredCountries, setFilteredCountries] = useState<CountryData[]>([]);
   
   // État pour le nouveau taux additionnel
   const [newRate, setNewRate] = useState<{name: string, rate: number}>({
     name: "",
     rate: 5
   });
+
+  // Chargement initial des pays filtrés
+  useEffect(() => {
+    const allCountries = getFilteredCountries();
+    const allContinents = getContinents();
+    
+    setCountries(allCountries);
+    setContinents(allContinents);
+    setFilteredCountries(allCountries);
+  }, []);
 
   // Effet pour mettre à jour l'état local quand les props changent
   useEffect(() => {
@@ -55,10 +67,19 @@ export function CustomTaxSettings({
   }, [defaultConfig, defaultValue]);
 
   // Filtrer les pays par la recherche
-  const filteredCountries = COUNTRIES.filter(country => 
-    country.name.toLowerCase().includes(searchValue.toLowerCase()) || 
-    country.code.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  useEffect(() => {
+    if (searchValue.trim() === "") {
+      setFilteredCountries(countries);
+      return;
+    }
+
+    const filtered = countries.filter(country => 
+      country.name.toLowerCase().includes(searchValue.toLowerCase()) || 
+      country.code.toLowerCase().includes(searchValue.toLowerCase())
+    );
+
+    setFilteredCountries(filtered);
+  }, [searchValue, countries]);
 
   // Mettre à jour le taux principal
   const handleMainRateChange = (value: number[]) => {
@@ -82,7 +103,7 @@ export function CustomTaxSettings({
 
   // Gérer la sélection du pays
   const handleCountrySelect = (countryCode: string) => {
-    const selectedCountry = COUNTRIES.find(c => c.code === countryCode);
+    const selectedCountry = countries.find(c => c.code === countryCode);
     if (selectedCountry) {
       const updatedConfig = {
         ...customTax,
@@ -92,7 +113,6 @@ export function CustomTaxSettings({
       setCustomTax(updatedConfig);
       onChange(customTax.mainRate, undefined, updatedConfig);
     }
-    setOpen(false);
   };
 
   // Gérer le changement de type de taxe
@@ -142,6 +162,11 @@ export function CustomTaxSettings({
     }
   };
 
+  // Gérer la recherche des pays
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
   return (
     <div className="space-y-6">
       {showLabel && (
@@ -152,48 +177,57 @@ export function CustomTaxSettings({
         {/* Sélection du pays */}
         <div className="space-y-2">
           <Label htmlFor="country-select">Pays</Label>
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between"
-              >
-                {customTax.country 
-                  ? customTax.countryName
-                  : "Sélectionner un pays..."}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command>
-                <CommandInput 
-                  placeholder="Rechercher un pays..." 
-                  value={searchValue}
-                  onValueChange={setSearchValue}
-                />
-                <CommandEmpty>Aucun pays trouvé.</CommandEmpty>
-                <CommandGroup className="max-h-64 overflow-y-auto">
-                  {filteredCountries.map(country => (
-                    <CommandItem
-                      key={country.code}
-                      value={country.code}
-                      onSelect={handleCountrySelect}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          customTax.country === country.code ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {country.name} ({country.code})
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <Select
+            value={customTax.country}
+            onValueChange={handleCountrySelect}
+          >
+            <SelectTrigger id="country-select" className="w-full">
+              <SelectValue placeholder="Sélectionner un pays..." />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              <div className="sticky top-0 p-2 bg-background z-10">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher un pays..."
+                    value={searchValue}
+                    onChange={handleSearchChange}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+              {continents.map((continent) => {
+                // Filtrer les pays par continent et par recherche
+                const continentCountries = filteredCountries.filter(
+                  country => country.continent === continent
+                );
+                
+                // Ne pas afficher le groupe s'il n'y a pas de pays correspondants
+                if (continentCountries.length === 0) return null;
+                
+                return (
+                  <SelectGroup key={continent}>
+                    <SelectLabel>{continent}</SelectLabel>
+                    {continentCountries.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{country.name}</span>
+                          <span className="text-muted-foreground text-xs ml-2">
+                            {country.code}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                );
+              })}
+              {filteredCountries.length === 0 && (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  Aucun pays trouvé
+                </div>
+              )}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Sélection du type de taxe */}
