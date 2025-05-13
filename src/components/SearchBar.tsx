@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Search, FileText, Users, Settings, Plus, X } from "lucide-react";
 import { 
@@ -170,7 +171,7 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
           sideOffset={isMobile ? 8 : 5}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <Command shouldFilter={false}>
+          <Command shouldFilter={false} className="CommandWrapper">
             <CommandList>
               <CommandEmpty>Aucun résultat trouvé pour "{searchTerm}".</CommandEmpty>
               
@@ -211,6 +212,12 @@ export function SearchBar({ placeholder = "Rechercher dans l'application..." }: 
                         </CommandItem>
                       ))}
                     </CommandGroup>
+                  )}
+
+                  {filteredInvoices.length === 0 && filteredClients.length === 0 && (
+                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      Aucun résultat trouvé pour "{searchTerm}"
+                    </div>
                   )}
                 </>
               ) : (
