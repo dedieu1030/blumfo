@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -81,6 +82,25 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       const userId = sessionData.session.user.id;
       console.log("ID utilisateur récupéré:", userId);
       
+      // Vérifier que la table companies existe d'abord
+      try {
+        const { error: tableCheckError } = await supabase
+          .from('companies')
+          .select('id')
+          .limit(1);
+          
+        if (tableCheckError) {
+          if (tableCheckError.message.includes('does not exist')) {
+            setAuthError("La table des entreprises n'existe pas. Veuillez configurer votre base de données.");
+            console.error("Erreur de vérification de la table companies:", tableCheckError);
+            setIsCompanyLoading(false);
+            return;
+          }
+        }
+      } catch (tableError) {
+        console.error("Erreur lors de la vérification de la table companies:", tableError);
+      }
+      
       // Vérifier que l'utilisateur a bien un ID
       if (!userId) {
         console.error("ID utilisateur non disponible");
@@ -110,20 +130,33 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         console.warn("Aucune entreprise trouvée pour l'utilisateur");
         setAuthError("Aucune entreprise trouvée pour votre compte. Veuillez créer une entreprise d'abord.");
         
-        // Vérifions si l'utilisateur existe bien dans la base de données - correction de l'erreur ici
-        try {
-          const { count, error: countError } = await supabase
-            .from('companies')
-            .select('*', { count: 'exact', head: true });
+        // Proposer à l'utilisateur de créer une entreprise
+        const createCompany = async () => {
+          try {
+            const { data: newCompany, error: createError } = await supabase
+              .from('companies')
+              .insert({
+                company_name: 'Mon Entreprise',
+                user_id: userId,
+              })
+              .select()
+              .single();
+              
+            if (createError) {
+              console.error("Erreur lors de la création d'une entreprise par défaut:", createError);
+              return;
+            }
             
-          console.log("Vérification des entreprises disponibles:", { 
-            count, 
-            error: countError 
-          });
-        } catch (countError) {
-          console.error("Erreur lors du comptage des entreprises:", countError);
-        }
+            console.log("Entreprise par défaut créée:", newCompany);
+            setCompanyId(newCompany.id);
+            setAuthError(null);
+          } catch (error) {
+            console.error("Exception lors de la création d'une entreprise:", error);
+          }
+        };
         
+        // Créer automatiquement une entreprise par défaut
+        await createCompany();
         setIsCompanyLoading(false);
         return;
       }
