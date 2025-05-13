@@ -35,21 +35,20 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const { isAuthenticated, loading: authLoading } = useAuth();
 
+  // Réinitialiser les états lorsque la modal s'ouvre
   useEffect(() => {
-    // Réinitialiser les erreurs à l'ouverture du formulaire
     if (open) {
+      // Réinitialisation des champs et des erreurs
+      setClientName("");
+      setEmail("");
+      setPhone("");
+      setAddress("");
       setAuthError(null);
-      
-      // S'assurer que l'authentification est complétée avant de tenter de récupérer l'entreprise
+
       if (!authLoading && isAuthenticated) {
-        // Attendre un court instant pour s'assurer que le contexte d'authentification est pleinement chargé
-        const timer = setTimeout(() => {
-          fetchUserCompany();
-        }, 500); // Délai de 500ms pour s'assurer que tout est bien initialisé
-        
-        return () => clearTimeout(timer);
+        fetchUserCompany();
       } else if (!authLoading && !isAuthenticated) {
-        setAuthError("Vous devez être connecté pour créer un client. Veuillez vous connecter.");
+        setAuthError("Vous devez être connecté pour créer un client");
       }
     }
   }, [open, authLoading, isAuthenticated]);
@@ -60,10 +59,8 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     setAuthError(null);
     
     try {
-      console.log("Tentative de récupération de l'entreprise...");
-      
       // Obtenir la session utilisateur courante
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error("Erreur lors de la récupération de la session:", sessionError);
@@ -72,23 +69,20 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         return;
       }
       
-      const userId = session?.user?.id;
-      
-      if (!userId) {
-        console.warn("Aucun utilisateur connecté lors de la récupération de l'entreprise");
-        setAuthError("Vous devez être connecté pour créer un client. Veuillez vous connecter.");
+      if (!sessionData.session || !sessionData.session.user) {
+        console.warn("Aucun utilisateur connecté");
+        setAuthError("Vous devez être connecté pour créer un client");
         setIsCompanyLoading(false);
         return;
       }
 
-      console.log("Utilisateur connecté avec ID:", userId);
-
-      // Récupérer l'entreprise associée à l'utilisateur
+      const userId = sessionData.session.user.id;
+      
+      // Récupérer l'entreprise associée à l'utilisateur (avec gestion des erreurs améliorée)
       const { data: companies, error: companiesError } = await supabase
         .from('companies')
         .select('id, company_name')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .eq('user_id', userId);
 
       if (companiesError) {
         console.error("Erreur lors de la récupération de l'entreprise:", companiesError);
@@ -97,8 +91,6 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         return;
       }
 
-      console.log("Entreprises trouvées:", companies?.length);
-
       if (!companies || companies.length === 0) {
         console.warn("Aucune entreprise trouvée pour l'utilisateur");
         setAuthError("Aucune entreprise trouvée pour votre compte. Veuillez créer une entreprise d'abord.");
@@ -106,8 +98,9 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         return;
       }
 
-      console.log("Entreprise sélectionnée:", companies[0].company_name, "ID:", companies[0].id);
+      // Sélection de la première entreprise par défaut
       setCompanyId(companies[0].id);
+      console.log("Entreprise récupérée avec succès:", companies[0].company_name, "ID:", companies[0].id);
     } catch (error: any) {
       console.error("Erreur lors de la récupération de l'entreprise:", error);
       setAuthError("Une erreur est survenue. Veuillez réessayer plus tard.");
@@ -147,11 +140,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
 
       if (error) {
         console.error("Erreur lors de la création du client:", error);
-        if (error.code === '42501') {
-          throw new Error("Vous n'avez pas les permissions nécessaires pour créer un client");
-        } else {
-          throw error;
-        }
+        throw error;
       }
 
       toast.success("Client créé avec succès");
