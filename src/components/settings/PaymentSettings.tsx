@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,9 +40,19 @@ export function PaymentSettings({ companyProfile }: PaymentSettingsProps) {
   
   // Chargement initial des données
   useEffect(() => {
-    setDefaultPaymentMethods(getDefaultPaymentMethods());
+    loadPaymentMethods();
     checkStripeConnectionStatus();
   }, []);
+  
+  // Load payment methods
+  const loadPaymentMethods = async () => {
+    try {
+      const methods = await getDefaultPaymentMethods();
+      setDefaultPaymentMethods(methods);
+    } catch (error) {
+      console.error("Error loading payment methods:", error);
+    }
+  };
   
   // Gestion des méthodes de paiement
   const handleSaveDefaultPaymentMethods = (methods: PaymentMethodDetails[]) => {

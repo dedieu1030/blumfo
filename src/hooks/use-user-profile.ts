@@ -35,7 +35,11 @@ export function useUserProfile() {
       }
 
       if (profile) {
-        // Conversion explicite pour que TypeScript soit content
+        // Convert to the proper UserProfile type
+        const notificationSettings = typeof profile.notification_settings === 'object' 
+          ? profile.notification_settings 
+          : { email: true, push: true, sms: false };
+          
         const typedProfile: UserProfile = {
           id: profile.id,
           username: profile.username,
@@ -45,9 +49,7 @@ export function useUserProfile() {
           phone: profile.phone,
           language: profile.language || 'fr',
           timezone: profile.timezone || 'Europe/Paris',
-          notification_settings: typeof profile.notification_settings === 'object' 
-            ? profile.notification_settings as { email: boolean; push: boolean; sms: boolean }
-            : { email: true, push: true, sms: false },
+          notification_settings: notificationSettings as any,
           created_at: profile.created_at,
           updated_at: profile.updated_at
         };
@@ -75,14 +77,20 @@ export function useUserProfile() {
         return;
       }
 
-      // Mise à jour du profil avec typage correct pour Supabase
+      // Prepare notification settings for database
+      const dbUpdates = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (updates.notification_settings) {
+        dbUpdates.notification_settings = updates.notification_settings;
+      }
+
+      // Mise à jour du profil
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-          notification_settings: updates.notification_settings || userProfile.notification_settings
-        })
+        .update(dbUpdates as any)
         .eq("id", user.id);
 
       if (updateError) {
@@ -105,7 +113,11 @@ export function useUserProfile() {
       }
 
       if (updatedProfile) {
-        // Conversion explicite comme ci-dessus
+        // Convert to the proper UserProfile type
+        const notificationSettings = typeof updatedProfile.notification_settings === 'object' 
+          ? updatedProfile.notification_settings 
+          : { email: true, push: true, sms: false };
+          
         const typedProfile: UserProfile = {
           id: updatedProfile.id,
           username: updatedProfile.username,
@@ -115,9 +127,7 @@ export function useUserProfile() {
           phone: updatedProfile.phone,
           language: updatedProfile.language || 'fr',
           timezone: updatedProfile.timezone || 'Europe/Paris',
-          notification_settings: typeof updatedProfile.notification_settings === 'object' 
-            ? updatedProfile.notification_settings as { email: boolean; push: boolean; sms: boolean }
-            : { email: true, push: true, sms: false },
+          notification_settings: notificationSettings as any,
           created_at: updatedProfile.created_at,
           updated_at: updatedProfile.updated_at
         };

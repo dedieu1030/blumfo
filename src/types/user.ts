@@ -17,4 +17,5 @@ export interface NotificationSettings {
   email: boolean;
   push: boolean;
   sms: boolean;
+  [key: string]: boolean;  // Add index signature for compatibility with Json
 }

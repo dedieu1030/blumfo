@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -24,9 +23,18 @@ export function PaymentTermsSettings() {
   const [newTemplateDefault, setNewTemplateDefault] = useState(false);
 
   useEffect(() => {
-    setPaymentTermTemplates(getPaymentTermTemplates());
+    loadPaymentTermTemplates();
   }, []);
-  
+
+  const loadPaymentTermTemplates = async () => {
+    try {
+      const templates = getPaymentTermTemplates();
+      setPaymentTermTemplates(templates);
+    } catch (error) {
+      console.error("Error loading payment term templates:", error);
+    }
+  };
+
   const openTermTemplateEditor = (template?: PaymentTermTemplate) => {
     if (template) {
       // Edition d'un modèle existant
