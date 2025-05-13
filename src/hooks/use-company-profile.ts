@@ -33,7 +33,24 @@ export function useCompanyProfile() {
         
         if (data) {
           // Construire l'objet CompanyProfile à partir des données Supabase
-          const taxConfig = data.tax_configuration as TaxConfiguration | null;
+          // Conversion sécurisée du tax_configuration de JSON à TaxConfiguration
+          let taxConfig: TaxConfiguration | null = null;
+          
+          if (data.tax_configuration) {
+            const taxConfigData = data.tax_configuration as Record<string, any>;
+            taxConfig = {
+              defaultTaxRate: taxConfigData.defaultTaxRate?.toString() || '20',
+              region: taxConfigData.region?.toString() || '',
+              country: taxConfigData.country?.toString() || '',
+              customTax: taxConfigData.customTax ? {
+                country: taxConfigData.customTax.country?.toString() || '',
+                countryName: taxConfigData.customTax.countryName?.toString() || '',
+                taxType: taxConfigData.customTax.taxType?.toString() || '',
+                mainRate: Number(taxConfigData.customTax.mainRate || 0),
+                additionalRates: taxConfigData.customTax.additionalRates || []
+              } : undefined
+            };
+          }
           
           const profile: CompanyProfile = {
             id: data.id,
@@ -48,8 +65,15 @@ export function useCompanyProfile() {
               defaultTaxRate: '20',
               region: ''
             },
-            // Autres champs existants
-            // ... garder le reste du code de conversion
+            // Autres champs requis par CompanyProfile avec des valeurs par défaut
+            businessType: 'individual',
+            vatNumber: '',
+            bankName: '',
+            bankAccount: '',
+            website: data.website || '',
+            logo: data.logo_url || '',
+            emailType: 'plain',
+            // Maintenir tout autre champ existant du profil
           };
           
           setCompanyProfile(profile);
@@ -72,19 +96,29 @@ export function useCompanyProfile() {
       localStorage.setItem('companyProfile', JSON.stringify(profile));
       
       // Préparer les données pour Supabase
+      // Convertir en format compatible avec le type Json de Supabase
       const companyData = {
         company_name: profile.name,
         address: profile.address,
         email: profile.email,
         phone: profile.phone,
-        // Convertir la configuration de taxe en format JSON pour Supabase
+        website: profile.website || '',
+        logo_url: profile.logo || '',
+        // Convertir la configuration de taxe en objet simple JSON pour Supabase
         tax_configuration: profile.taxConfiguration ? {
           defaultTaxRate: profile.taxConfiguration.defaultTaxRate,
           region: profile.taxConfiguration.region || '',
           country: profile.taxConfiguration.country || '',
-          customTax: profile.taxConfiguration.customTax
+          ...(profile.taxConfiguration.customTax ? {
+            customTax: {
+              country: profile.taxConfiguration.customTax.country,
+              countryName: profile.taxConfiguration.customTax.countryName,
+              taxType: profile.taxConfiguration.customTax.taxType,
+              mainRate: profile.taxConfiguration.customTax.mainRate,
+              additionalRates: profile.taxConfiguration.customTax.additionalRates || []
+            }
+          } : {})
         } : null
-        // Autres champs à synchroniser...
       };
       
       // Mettre à jour dans Supabase si un ID existe
