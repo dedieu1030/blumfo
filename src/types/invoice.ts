@@ -38,7 +38,7 @@ export interface InvoiceData {
   clientEmail?: string;
   clientAddress?: string;
   clientPhone?: string;
-  issueDate?: string;
+  issueDate?: string; // Ajout du champ manquant
   signature?: SignatureData;
   signatureDate?: string;
   subtotal?: number;
@@ -141,6 +141,11 @@ export interface SignatureData {
   dataUrl: string;
   signedBy?: string;
   signedDate?: string;
+  // Ajout des propriétés manquantes
+  type?: 'drawn' | 'initials';
+  name?: string;
+  initials?: string;
+  timestamp?: string;
 }
 
 export interface ReminderSchedule {
@@ -154,10 +159,11 @@ export interface ReminderSchedule {
 
 export interface ReminderTrigger {
   id: string;
-  triggerType: 'before_due' | 'after_due' | 'after_issue' | 'days_before_due';
+  triggerType: 'before_due' | 'after_due' | 'after_issue' | 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
   triggerValue: number;
   emailSubject?: string;
   emailBody?: string;
+  scheduleId?: string;
 }
 
 export interface PaymentTermTemplate {
@@ -187,6 +193,7 @@ export interface InvoiceNumberingConfig {
   resetAnnually?: boolean;
   nextNumber?: number;
   dateFormat?: string;
+  includeDate?: boolean;
 }
 
 export interface CurrencyInfo {
@@ -194,6 +201,7 @@ export interface CurrencyInfo {
   name: string;
   symbol: string;
   isDefault?: boolean;
+  symbolPosition?: string;
 }
 
 export type Currency = string;

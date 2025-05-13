@@ -1,4 +1,3 @@
-
 export interface CustomTaxConfiguration {
   name: string;
   rate: number;
@@ -33,3 +32,25 @@ export const TAX_TYPES = [
   { key: 'iva', label: 'IVA (Impuesto al Valor Agregado)' },
   { key: 'custom', label: 'Type de taxe personnalisé' },
 ];
+
+export interface TaxZone {
+  id: string;
+  name: string;
+  countryCode: string;
+  regions: TaxRegionData[];
+}
+
+export interface TaxCountry {
+  code: string;
+  name: string;
+  taxName: string;
+  defaultRate?: number;
+  regions?: TaxRegionData[];
+}
+
+export interface TaxRegionData {
+  code: string;
+  name: string;
+  taxRate: number;
+  additionalTaxes?: Array<{name: string, rate: number}>;
+}

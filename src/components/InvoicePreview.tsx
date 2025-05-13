@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -81,8 +80,11 @@ export function InvoicePreview({
   
   // Fonction pour préparer le QR code avec lien de paiement
   const getPaymentQRCode = () => {
-    const paymentMethods = invoiceData.paymentMethods || [];
-    const hasOnlinePayment = paymentMethods.some(pm => pm.type === 'card' && pm.enabled);
+    if (!invoiceData.paymentMethods) {
+      return null;
+    }
+    
+    const hasOnlinePayment = invoiceData.paymentMethods.some(pm => pm.type === 'card' && pm.enabled);
     
     if (!hasOnlinePayment) {
       return null;
