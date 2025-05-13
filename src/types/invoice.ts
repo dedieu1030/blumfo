@@ -56,10 +56,7 @@ export interface InvoiceData {
 
 import { CustomTaxConfiguration, TaxConfiguration } from './tax';
 
-export {
-  CustomTaxConfiguration,
-  TaxConfiguration
-};
+export type { CustomTaxConfiguration, TaxConfiguration } from './tax';
 
 export interface CompanyProfile {
   id?: string;
@@ -183,6 +180,7 @@ export interface CurrencyInfo {
   name: string;
   symbol: string;
   symbolPosition: 'before' | 'after';
+  decimalPlaces?: number;
 }
 
 export type Currency = string;

@@ -1,4 +1,3 @@
-
 import { PaymentTermTemplate, PaymentMethodDetails } from "@/types/invoice";
 import { InvoiceNumberingConfig, CurrencyInfo } from "@/types/invoice";
 
@@ -103,14 +102,16 @@ export const getPaymentTermTemplates = (): PaymentTermTemplate[] => {
       name: 'Standard - 30 jours',
       delay: '30',
       termsText: 'Paiement à 30 jours. Des pénalités de retard de 3 fois le taux d\'intérêt légal seront appliquées en cas de paiement après la date d\'échéance.',
-      isDefault: true
+      isDefault: true,
+      daysAfterIssue: 30
     },
     {
       id: '2',
       name: 'Paiement immédiat',
       delay: 'immediate',
       termsText: 'Paiement exigible à réception de la facture.',
-      isDefault: false
+      isDefault: false,
+      daysAfterIssue: 0
     }
   ];
   

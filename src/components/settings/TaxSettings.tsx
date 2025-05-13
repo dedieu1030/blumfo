@@ -21,23 +21,31 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   // Initialiser avec les valeurs existantes si disponibles
   useEffect(() => {
     if (companyProfile?.taxConfiguration) {
-      const { defaultTaxRate, region, customTax } = companyProfile.taxConfiguration;
-      setTaxRate(parseFloat(defaultTaxRate));
-      setTaxRegion(region);
+      const config = companyProfile.taxConfiguration;
       
-      // Make sure we handle the CustomTaxConfiguration correctly
-      if (customTax) {
-        // Ensure the CustomTaxConfiguration has all required fields
-        const completeCustomTax: CustomTaxConfiguration = {
-          name: customTax.name,
-          rate: customTax.rate,
-          country: customTax.country,
-          countryName: customTax.countryName,
-          taxType: customTax.taxType,
-          mainRate: customTax.mainRate || customTax.rate,
-          additionalRates: customTax.additionalRates || []
-        };
-        setCustomTax(completeCustomTax);
+      // Récupérer le taux de TVA
+      setTaxRate(config.rate !== undefined ? config.rate : 
+                (config.defaultTaxRate ? parseFloat(config.defaultTaxRate) : 20));
+      
+      // Récupérer la région
+      setTaxRegion(config.regionKey || config.region);
+      
+      // Récupérer la configuration personnalisée
+      if (config.customConfig || config.customTax) {
+        const custom = config.customConfig || config.customTax;
+        if (custom) {
+          // Ensure the CustomTaxConfiguration has all required fields
+          const completeCustomTax: CustomTaxConfiguration = {
+            name: custom.name,
+            rate: custom.rate,
+            country: custom.country,
+            countryName: custom.countryName,
+            taxType: custom.taxType,
+            mainRate: custom.mainRate || custom.rate,
+            additionalRates: custom.additionalRates || []
+          };
+          setCustomTax(completeCustomTax);
+        }
       }
     } else if (companyProfile?.taxRate) {
       // Utiliser le taux de TVA existant s'il n'y a pas encore de configuration complète
@@ -69,10 +77,15 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
     }
 
     const updatedConfiguration: TaxConfiguration = {
+      type: customTax ? 'custom' : 'region',
+      regionKey: taxRegion,
+      customConfig: customTax,
+      rate: taxRate,
+      // Rétrocompatibilité pour les fonctions existantes
       defaultTaxRate: taxRate.toString(),
       region: taxRegion || "",
-      country: companyProfile.country || "FR",  // Utiliser le pays du profil ou FR par défaut
-      customTax: customTax // Ajouter la configuration personnalisée
+      country: companyProfile.country || "FR",
+      customTax: customTax
     };
 
     const updatedProfile: CompanyProfile = {

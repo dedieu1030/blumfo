@@ -29,6 +29,11 @@ export interface TaxConfiguration {
   regionKey?: string;  // Format: "zoneId:countryId:regionId"
   customConfig?: CustomTaxConfiguration;
   rate: number;
+  // Rétrocompatibilité pour les fonctions existantes
+  defaultTaxRate?: string;
+  region?: string;
+  country?: string;
+  customTax?: CustomTaxConfiguration;
 }
 
 export interface CustomTaxConfiguration {

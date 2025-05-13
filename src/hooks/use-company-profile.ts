@@ -60,7 +60,9 @@ export const useCompanyProfile = () => {
         payoneer: profileData.payoneer || "",
         businessTypeCustom: profileData.businessTypeCustom,
         taxConfiguration: profileData.taxConfiguration || {
-          defaultTaxRate: profileData.taxRate?.toString() || "20",
+          type: 'region',
+          rate: profileData.taxRate || 0,
+          defaultTaxRate: (profileData.taxRate || 0).toString(),
           region: profileData.taxRegion || "",
           country: profileData.country || "FR"
         },
@@ -107,10 +109,13 @@ export const useCompanyProfile = () => {
       taxRate: taxRate,
       taxRegion: region,
       taxConfiguration: {
+        type: customTax ? 'custom' : 'region',
+        rate: taxRate,
         defaultTaxRate: taxRate.toString(),
         region: region,
         country: profile.country || "FR",
-        customTax: customTax
+        customTax: customTax,
+        customConfig: customTax
       }
     };
     

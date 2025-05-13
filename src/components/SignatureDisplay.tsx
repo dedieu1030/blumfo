@@ -1,47 +1,40 @@
 
-import React from 'react';
-import { SignatureData } from '@/types/invoice';
+import React from "react";
+import { SignatureData } from "@/types/invoice";
 
-interface SignatureDisplayProps {
+export interface SignatureDisplayProps {
   signature: SignatureData;
   className?: string;
-  signatureData?: SignatureData; // Support both property names
 }
 
-export function SignatureDisplay({ signature, signatureData, className }: SignatureDisplayProps) {
-  // Use either signature or signatureData prop, with signature taking precedence
-  const signatureToDisplay = signature || signatureData;
-  
-  if (!signatureToDisplay || !signatureToDisplay.dataUrl) {
-    return <p>No signature provided.</p>;
+export const SignatureDisplay: React.FC<SignatureDisplayProps> = ({
+  signature,
+  className = "",
+}) => {
+  if (!signature) return null;
+
+  if (signature.type === "draw" || signature.type === "type" || signature.type === "initials") {
+    return (
+      <div className={`signature-display ${className}`}>
+        <img
+          src={signature.dataUrl}
+          alt={`Signature de ${signature.name}`}
+          className="max-w-full h-auto"
+        />
+        <div className="signature-name text-sm mt-1 text-gray-700">
+          {signature.name}
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div className={className}>
-      {signatureToDisplay.type === 'draw' && (
-        <img src={signatureToDisplay.dataUrl} alt="Drawn Signature" style={{ maxHeight: '50px', maxWidth: '200px' }} />
-      )}
-      {signatureToDisplay.type === 'type' && (
-        <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '1.2em' }}>
-          {signatureToDisplay.name}
-        </div>
-      )}
-      {signatureToDisplay.type === 'initials' && signatureToDisplay.initials && (
-        <div style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          backgroundColor: '#f0f0f0',
-          color: '#333',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '1.2em',
-          fontWeight: 'bold'
-        }}>
-          {signatureToDisplay.initials.toUpperCase()}
-        </div>
-      )}
-    </div>
-  );
-}
+  return null;
+};
+
+// Ajout d'un adaptateur pour la rétrocompatibilité
+export const SignatureDisplayAdapter: React.FC<{signatureData: SignatureData, className?: string}> = ({
+  signatureData,
+  className
+}) => {
+  return <SignatureDisplay signature={signatureData} className={className} />;
+};
