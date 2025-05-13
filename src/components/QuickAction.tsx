@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { PlusCircle } from "lucide-react"
 
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { InvoiceDialog } from "@/components/invoice/invoice-dialog"
+import { InvoiceDialog } from "@/components/InvoiceDialog"
 
 export function QuickAction() {
   const [open, setOpen] = useState(false)
@@ -55,12 +56,12 @@ export function QuickAction() {
           </DialogClose>
         </DialogFooter>
       </DialogContent>
-    <InvoiceDialog 
-      open={invoiceDialogOpen} 
-      onOpenChange={setInvoiceDialogOpen} 
-      onGenerateInvoice={() => {}} // Ajout de la fonction vide requise par le type
-      isGenerating={false} // Ajout de la propriété requise par le type
-    />
+      <InvoiceDialog 
+        open={invoiceDialogOpen} 
+        onOpenChange={setInvoiceDialogOpen} 
+        onGenerateInvoice={() => {}} // Ajout de la fonction vide requise par le type
+        isGenerating={false} // Ajout de la propriété requise par le type
+      />
     </Dialog>
   );
 }
