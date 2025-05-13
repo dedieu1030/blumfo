@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "./ClientSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface NewClientFormProps {
   open: boolean;
@@ -31,25 +32,43 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [address, setAddress] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [isCompanyLoading, setIsCompanyLoading] = useState(false);
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   useEffect(() => {
     // Réinitialiser les erreurs à l'ouverture du formulaire
     if (open) {
       setAuthError(null);
-      // Récupérer l'entreprise de l'utilisateur connecté
-      fetchUserCompany();
+      
+      // S'assurer que l'authentification est complétée avant de tenter de récupérer l'entreprise
+      if (!authLoading && isAuthenticated) {
+        // Attendre un court instant pour s'assurer que le contexte d'authentification est pleinement chargé
+        const timer = setTimeout(() => {
+          fetchUserCompany();
+        }, 500); // Délai de 500ms pour s'assurer que tout est bien initialisé
+        
+        return () => clearTimeout(timer);
+      } else if (!authLoading && !isAuthenticated) {
+        setAuthError("Vous devez être connecté pour créer un client. Veuillez vous connecter.");
+      }
     }
-  }, [open]);
+  }, [open, authLoading, isAuthenticated]);
 
   // Fonction pour récupérer l'entreprise de l'utilisateur
   const fetchUserCompany = async () => {
+    setIsCompanyLoading(true);
+    setAuthError(null);
+    
     try {
+      console.log("Tentative de récupération de l'entreprise...");
+      
       // Obtenir la session utilisateur courante
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error("Erreur lors de la récupération de la session:", sessionError);
         setAuthError("Impossible de vérifier votre session. Veuillez vous reconnecter.");
+        setIsCompanyLoading(false);
         return;
       }
       
@@ -58,33 +77,42 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       if (!userId) {
         console.warn("Aucun utilisateur connecté lors de la récupération de l'entreprise");
         setAuthError("Vous devez être connecté pour créer un client. Veuillez vous connecter.");
+        setIsCompanyLoading(false);
         return;
       }
+
+      console.log("Utilisateur connecté avec ID:", userId);
 
       // Récupérer l'entreprise associée à l'utilisateur
       const { data: companies, error: companiesError } = await supabase
         .from('companies')
-        .select('id')
+        .select('id, company_name')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
       if (companiesError) {
         console.error("Erreur lors de la récupération de l'entreprise:", companiesError);
         setAuthError("Erreur lors de la récupération de votre entreprise. Veuillez réessayer.");
+        setIsCompanyLoading(false);
         return;
       }
+
+      console.log("Entreprises trouvées:", companies?.length);
 
       if (!companies || companies.length === 0) {
         console.warn("Aucune entreprise trouvée pour l'utilisateur");
         setAuthError("Aucune entreprise trouvée pour votre compte. Veuillez créer une entreprise d'abord.");
+        setIsCompanyLoading(false);
         return;
       }
 
+      console.log("Entreprise sélectionnée:", companies[0].company_name, "ID:", companies[0].id);
       setCompanyId(companies[0].id);
     } catch (error: any) {
       console.error("Erreur lors de la récupération de l'entreprise:", error);
       setAuthError("Une erreur est survenue. Veuillez réessayer plus tard.");
+    } finally {
+      setIsCompanyLoading(false);
     }
   };
 
@@ -167,6 +195,13 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
           </Alert>
         )}
 
+        {isCompanyLoading && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <span className="ml-2">Chargement des informations de votre entreprise...</span>
+          </div>
+        )}
+
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="client-name">Nom *</Label>
@@ -212,13 +247,16 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading || isCompanyLoading}>
             Annuler
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading || !!authError || !companyId}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isLoading || isCompanyLoading || !!authError || !companyId}
+          >
             {isLoading ? (
               <>
-                <span className="animate-spin h-4 w-4 mr-2 border-t-2 border-current rounded-full" />
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Traitement...
               </>
             ) : (
