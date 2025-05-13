@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, CreditCard, CheckCircle2 } from "lucide-react";
-import { Icons } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/hooks/use-toast";
 import { getAvailablePaymentMethods, PaymentMethod } from "@/services/paymentService";
 
@@ -65,12 +65,11 @@ export function PaymentMethodChooser({
     }
   };
 
-  // Mapper les codes d'icônes aux composants Lucide
+  // Afficher les icônes en utilisant le composant Icon ou une icône par défaut
   const getMethodIcon = (iconName: string | undefined) => {
     if (!iconName) return <CreditCard className="h-5 w-5" />;
     
-    const IconComponent = Icons[iconName as keyof typeof Icons];
-    return IconComponent ? <IconComponent className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />;
+    return <Icon name={iconName as any} className="h-5 w-5" />;
   };
 
   return (

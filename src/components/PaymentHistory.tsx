@@ -7,7 +7,7 @@ import { Loader2, CalendarIcon, CreditCard, Clock, CheckCircle2, XCircle, AlertT
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { getPaymentHistory } from "@/services/paymentService";
-import { Icons } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { CurrencyFormat } from "@/components/ui/number-format";
 
 interface PaymentHistoryProps {
@@ -65,8 +65,7 @@ export function PaymentHistory({ clientId, invoiceId }: PaymentHistoryProps) {
 
   const getMethodIcon = (method: Payment) => {
     if (method.payment_methods?.icon) {
-      const IconComponent = Icons[method.payment_methods.icon as keyof typeof Icons];
-      return IconComponent ? <IconComponent className="h-4 w-4 mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />;
+      return <Icon name={method.payment_methods.icon as any} className="h-4 w-4 mr-2" />;
     }
     return <CreditCard className="h-4 w-4 mr-2" />;
   };
