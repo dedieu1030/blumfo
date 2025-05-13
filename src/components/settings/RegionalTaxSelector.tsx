@@ -155,7 +155,7 @@ export function RegionalTaxSelector({
           ? `${selectedRegion.name}`
           : "Sélectionner une région fiscale"}
         {selectedRegion && (
-          <Badge className={`${getTaxRateColor(selectedRegion.totalRate)} ml-2 min-w-[40px] text-center`} variant="outline">
+          <Badge className={`${getTaxRateColor(selectedRegion.totalRate)} ml-2 px-2 min-w-[50px] text-center`} variant="outline">
             {formatTaxRate(selectedRegion.totalRate)}%
           </Badge>
         )}
@@ -219,7 +219,7 @@ export function RegionalTaxSelector({
                           onClick={() => handleSelectRegion(region)}
                         >
                           <span className="font-medium truncate mr-2 max-w-[65%]">{region.name}</span>
-                          <Badge className={`${getTaxRateColor(region.totalRate)} min-w-[40px] text-center`} variant="outline">
+                          <Badge className={`${getTaxRateColor(region.totalRate)} px-2 min-w-[50px] text-center`} variant="outline">
                             {formatTaxRate(region.totalRate)}%
                           </Badge>
                         </Button>
@@ -257,7 +257,7 @@ export function RegionalTaxSelector({
                 <p className="font-medium truncate">{selectedRegion.name}</p>
                 <p className="text-sm text-muted-foreground">{selectedRegion.code}</p>
               </div>
-              <Badge className={`${getTaxRateColor(selectedRegion.totalRate)} min-w-[40px] text-center`} variant="outline">
+              <Badge className={`${getTaxRateColor(selectedRegion.totalRate)} px-2 min-w-[50px] text-center`} variant="outline">
                 {formatTaxRate(selectedRegion.totalRate)}%
               </Badge>
               <Button variant="ghost" size="sm" onClick={openSelector}>
@@ -341,7 +341,7 @@ export function RegionalTaxSelector({
                           <span className="font-medium truncate">{region.name}</span>
                           <span className="text-xs text-muted-foreground truncate">{region.code}</span>
                         </div>
-                        <Badge className={`${getTaxRateColor(region.totalRate)} min-w-[45px] text-center`}>
+                        <Badge className={`${getTaxRateColor(region.totalRate)} px-2 min-w-[50px] text-center`}>
                           {formatTaxRate(region.totalRate)}%
                         </Badge>
                       </Button>

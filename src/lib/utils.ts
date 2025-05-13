@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { formatCurrency as formatCurrencyUtil, formatPercentage as formatPercentageUtil } from "@/components/ui/number-format";
@@ -16,7 +17,12 @@ export function formatTaxRate(rate: number): string {
   
   // Cas particulier pour le taux du Québec (14.975%)
   if (Math.abs(rate - 14.975) < 0.001) {
-    return "15";
+    return "14.98";
+  }
+  
+  // Cas particulier pour la TVQ du Québec (9.975%)
+  if (Math.abs(rate - 9.975) < 0.001) {
+    return "9.98";
   }
   
   // Check if the value is a whole number
