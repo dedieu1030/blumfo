@@ -28,6 +28,7 @@ interface QuoteListProps {
 export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListProps) => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editQuoteId, setEditQuoteId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
   const fetchQuotes = async () => {
     try {
       setLoading(true);
+      setError(null);
       console.log("Fetching quotes...");
       let query = supabase
         .from("devis")
@@ -53,6 +55,7 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
 
       if (error) {
         console.error("Error in Supabase query:", error);
+        setError("Erreur lors du chargement des devis");
         throw error;
       }
 
@@ -60,7 +63,7 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
       setQuotes(data as Quote[]);
     } catch (error) {
       console.error("Error fetching quotes:", error);
-      toast.error("Erreur lors du chargement des devis");
+      setError("Erreur lors du chargement des devis");
     } finally {
       setLoading(false);
     }
@@ -212,10 +215,26 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
                     )}
                   </TableRow>
                 ))
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={showActions ? 6 : 5} className="text-center py-8 text-destructive">
+                    {error}
+                    <div className="mt-2">
+                      <Button variant="outline" size="sm" onClick={fetchQuotes}>
+                        Réessayer
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : quotes.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={showActions ? 6 : 5} className="text-center py-8 text-gray-500">
                     Aucun devis trouvé
+                    <div className="mt-3">
+                      <Button variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
+                        Créer un devis
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -276,4 +295,3 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
     </>
   );
 };
-
