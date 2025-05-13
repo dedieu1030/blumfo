@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -142,20 +141,12 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
 
   const handleSubmit = async () => {
     if (!clientName) {
-      toast({
-        title: "Erreur",
-        description: "Le nom du client est requis",
-        variant: "destructive"
-      });
+      toast.error("Le nom du client est requis");
       return;
     }
 
     if (!companyId) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer un client sans entreprise associée",
-        variant: "destructive"
-      });
+      toast.error("Impossible de créer un client sans entreprise associée");
       console.error("Tentative de création de client sans company_id défini");
       return;
     }
@@ -189,11 +180,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         throw error;
       }
 
-      toast({
-        title: "Succès",
-        description: "Client créé avec succès",
-        variant: "success"
-      });
+      toast.success("Client créé avec succès");
       
       // Mapper les propriétés pour assurer la compatibilité
       const clientData: Client = {
@@ -214,11 +201,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error creating client:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Erreur lors de la création du client",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Erreur lors de la création du client");
     } finally {
       setIsLoading(false);
     }

@@ -36,11 +36,29 @@ export const useToast = () => {
 };
 
 // Export toast as a standalone function for simplicity
-export const toast = {
-  error: (message: string) => {
-    console.error(message);
-  },
-  success: (message: string) => {
-    console.log(message);
-  }
+export const toast = (props: Omit<ToastState, "id">) => {
+  console.log("Toast message:", props.description);
+  return {
+    id: Math.random().toString(36).slice(2, 9),
+    ...props,
+  };
+};
+
+// Add helper methods for common toast types
+toast.error = (message: string) => {
+  console.error(message);
+  return toast({ 
+    title: "Erreur", 
+    description: message,
+    variant: "destructive" 
+  });
+};
+
+toast.success = (message: string) => {
+  console.log(message);
+  return toast({ 
+    title: "Succès", 
+    description: message,
+    variant: "success" 
+  });
 };
