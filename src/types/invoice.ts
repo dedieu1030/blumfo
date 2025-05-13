@@ -86,7 +86,7 @@ export interface CompanyProfile {
   stripeAccountId?: string;
   createdAt?: string;
   updatedAt?: string;
-  // Nouvelles propriétés pour ProfileWizard et ProfileViewer
+  // Nouvelles propriétées pour ProfileWizard et ProfileViewer
   profileType?: 'personal' | 'business';
   profileSubtype?: string;
 }
@@ -94,21 +94,16 @@ export interface CompanyProfile {
 export interface PaymentTermTemplate {
   id: string;
   name: string;
-  termsText: string;
   delay: string;
   customDate?: string;
+  termsText: string;
   isDefault: boolean;
-  days_after_issue?: number;  // Added for compatibility
-  terms_text?: string;        // Added for compatibility
-  is_default?: boolean;       // Added for compatibility
 }
 
 export interface PaymentMethodDetails {
-  id: string;
-  name: string;
-  type?: string;
+  type: string;
   enabled: boolean;
-  // Add any other properties that might be required
+  details?: string | Record<string, any>; // Support both string and object details
 }
 
 // Payment method types
@@ -202,8 +197,8 @@ export interface InvoiceNumberingConfig {
 
 export interface CurrencyInfo {
   code: string;
-  symbol: string;
   name: string;
+  symbol: string;
   decimalPlaces: number;
   symbolPosition: 'before' | 'after';
   position?: 'before' | 'after'; // Added for backward compatibility
@@ -221,9 +216,3 @@ export interface SignatureData {
 }
 
 import { TaxConfiguration } from "./tax";
-
-export interface Currency {
-  code: string;
-  symbol: string;
-  name: string;
-}

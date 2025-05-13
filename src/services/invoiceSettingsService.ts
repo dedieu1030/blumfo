@@ -1,3 +1,4 @@
+
 import { InvoiceNumberingConfig, PaymentMethodDetails, PaymentTermTemplate, Currency } from '@/types/invoice';
 
 export const availableCurrencies: Currency[] = [
@@ -71,57 +72,40 @@ export const saveDefaultPaymentTerm = (term: string, customDate?: string): void 
 };
 
 // Fonctions de gestion des modèles de conditions de paiement
-export const getPaymentTermTemplates = (): PaymentTermTemplate[] => {
+export const getPaymentTermTemplates = async (): Promise<PaymentTermTemplate[]> => {
   const savedTemplates = localStorage.getItem('paymentTermTemplates');
   if (savedTemplates) {
     try {
-      const parsed = JSON.parse(savedTemplates);
-      return parsed.map((template: any) => ({
-        id: template.id,
-        name: template.name,
-        termsText: template.terms_text || template.termsText,
-        delay: template.delay,
-        customDate: template.customDate,
-        isDefault: template.is_default || template.isDefault || false,
-        days_after_issue: template.days_after_issue,
-        terms_text: template.terms_text || template.termsText,
-        is_default: template.is_default || template.isDefault || false
-      }));
+      return JSON.parse(savedTemplates);
     } catch (error) {
       console.error("Error parsing payment term templates:", error);
     }
   }
   
   // Templates par défaut
-  const defaultTemplates: PaymentTermTemplate[] = [
+  const defaultTemplates = [
     {
       id: "immediate",
       name: "Paiement immédiat",
-      termsText: "Paiement à réception de facture",
-      delay: "immediate",
-      isDefault: false,
-      days_after_issue: 0,
       terms_text: "Paiement à réception de facture",
+      days_after_issue: 0,
+      delay: "immediate",
       is_default: false
     },
     {
       id: "15days",
       name: "15 jours",
-      termsText: "Paiement à 15 jours",
-      delay: "15",
-      isDefault: false,
-      days_after_issue: 15,
       terms_text: "Paiement à 15 jours",
+      days_after_issue: 15,
+      delay: "15",
       is_default: false
     },
     {
       id: "30days",
       name: "30 jours",
-      termsText: "Paiement à 30 jours",
-      delay: "30",
-      isDefault: true,
-      days_after_issue: 30,
       terms_text: "Paiement à 30 jours",
+      days_after_issue: 30,
+      delay: "30",
       is_default: true
     }
   ];
@@ -130,46 +114,37 @@ export const getPaymentTermTemplates = (): PaymentTermTemplate[] => {
   return defaultTemplates;
 };
 
-export const savePaymentTermTemplates = (templates: PaymentTermTemplate[]): void => {
+export const savePaymentTermTemplates = async (templates: PaymentTermTemplate[]): Promise<void> => {
   localStorage.setItem('paymentTermTemplates', JSON.stringify(templates));
 };
 
 // Fonctions de gestion des méthodes de paiement
-export const getDefaultPaymentMethods = (): PaymentMethodDetails[] => {
+export const getDefaultPaymentMethods = async (): Promise<PaymentMethodDetails[]> => {
   const savedMethods = localStorage.getItem('paymentMethods');
   if (savedMethods) {
     try {
-      const parsed = JSON.parse(savedMethods);
-      return parsed.map((method: any) => ({
-        id: method.id,
-        name: method.name,
-        enabled: method.enabled,
-        type: method.type || method.id // Use id as type if not specified
-      }));
+      return JSON.parse(savedMethods);
     } catch (error) {
       console.error("Error parsing payment methods:", error);
     }
   }
   
   // Méthodes de paiement par défaut
-  const defaultMethods: PaymentMethodDetails[] = [
+  const defaultMethods = [
     {
       id: "bank_transfer",
       name: "Virement bancaire",
-      enabled: true,
-      type: "bank_transfer"
+      enabled: true
     },
     {
       id: "credit_card",
       name: "Carte de crédit",
-      enabled: true,
-      type: "credit_card"
+      enabled: true
     },
     {
       id: "paypal",
       name: "PayPal",
-      enabled: false,
-      type: "paypal"
+      enabled: false
     }
   ];
   
@@ -177,6 +152,6 @@ export const getDefaultPaymentMethods = (): PaymentMethodDetails[] => {
   return defaultMethods;
 };
 
-export const saveDefaultPaymentMethods = (methods: PaymentMethodDetails[]): void => {
+export const saveDefaultPaymentMethods = async (methods: PaymentMethodDetails[]): Promise<void> => {
   localStorage.setItem('paymentMethods', JSON.stringify(methods));
 };

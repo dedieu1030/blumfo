@@ -1,54 +1,42 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useAuth } from "@/context/AuthContext";
-import { UserProfileForm } from "@/components/user/UserProfileForm";
-import { UserProfile } from "@/types/user";
 
-const ProfileEdit = () => {
+import React from 'react';
+import { Header } from '@/components/Header';
+import { UserProfileForm } from '@/components/user/UserProfileForm';
+import { MobileNavigation } from '@/components/MobileNavigation';
+import { useState } from 'react';
+import { UserProfile } from '@/types/user';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+
+export default function ProfileEdit() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const { userProfile, updateUserProfile } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<Partial<UserProfile>>({});
 
-  useEffect(() => {
-    if (userProfile) {
-      setProfile(userProfile);
-    }
-  }, [userProfile]);
-
-  const handleSaveProfile = async (updatedProfile: UserProfile) => {
-    await updateUserProfile(updatedProfile);
-    setIsEditing(false);
-    navigate("/settings?tab=profile");
+  const handleSave = (updatedProfile: UserProfile) => {
+    toast({
+      title: "Success",
+      description: "Profile updated successfully",
+    });
+    navigate('/profile');
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Mon Profil</CardTitle>
-        <CardDescription>
-          Gérez les informations de votre profil et vos préférences
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isEditing ? (
-          <UserProfileForm 
-            profile={profile} 
-            onSave={handleSaveProfile} 
-            editMode={true}
-          />
-        ) : (
-          <div className="space-y-4">
-            <p>Nom complet: {profile.full_name}</p>
-            <p>Email: {profile.email}</p>
-            <Button onClick={() => setIsEditing(true)}>Modifier</Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
+    <>
+      <Header
+        title="Modifier mon profil"
+        description="Mettez à jour vos informations personnelles"
+        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+      />
 
-export default ProfileEdit;
+      <div className="container mx-auto px-4 py-8">
+        <UserProfileForm onSave={handleSave} />
+      </div>
+
+      <MobileNavigation
+        isOpen={isMobileMenuOpen}
+        onOpenChange={setIsMobileMenuOpen}
+      />
+    </>
+  );
+}

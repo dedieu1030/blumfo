@@ -137,8 +137,8 @@ export function UserProfileForm({ profile, onSave, editMode }: UserProfileFormPr
           <div>
             <Label htmlFor="language">Langue</Label>
             <LanguageSelector
-              currentLanguage={formData.language || "fr"}
-              onLanguageChange={handleLanguageChange}
+              value={formData.language || "fr"}
+              onChange={handleLanguageChange}
               disabled={!editMode}
             />
           </div>
