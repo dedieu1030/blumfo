@@ -1,163 +1,31 @@
-export interface InvoiceData {
-  invoiceNumber: string;
-  invoiceDate: string;
-  dueDate: string;
-  billTo: string;
-  billToEmail: string;
-  billToAddress: string;
-  shipTo: string;
-  shipToEmail: string;
-  shipToAddress: string;
-  amount: number;
-  balance: number;
-  status: 'paid' | 'unpaid' | 'draft' | 'pending';
-  total: number;  // Ajout de la propriété manquante
-  totalAmount: number;
-  items?: InvoiceItem[];
-  paymentMethods?: PaymentMethodDetails[];
-  issuerInfo?: {
-    name: string;
-    address: string;
-    email: string;
-    phone: string;
-    website?: string;
-    bankName?: string;
-    accountHolder?: string;
-    bankAccount?: string;
-    paypal?: string;
-    emailType?: string;
-    businessType?: string;
-    termsAndConditions?: string;
-    thankYouMessage?: string;
-    defaultCurrency?: string;
-    taxRate?: number;
-  };
-  notes?: string;
-  clientName?: string;
-  clientEmail?: string;
-  clientAddress?: string;
-  clientPhone?: string;
-  issueDate?: string; // Ajout du champ manquant
-  signature?: SignatureData;
-  signatureDate?: string;
-  subtotal?: number;
-  taxRate?: number;
-  taxAmount?: number;
-  discount?: DiscountInfo;
-  introText?: string;
-  conclusionText?: string;
-  footerText?: string;
-  paymentDelay?: string;
-  customPaymentTerms?: string;
-  paymentTermsId?: string;
-  templateId?: string;
-  serviceLines?: ServiceLine[];
-}
+// Re-export types correctly with 'export type'
+export type { Tax } from './tax';
+export type { User } from './user';
 
-import { CustomTaxConfiguration, TaxConfiguration } from './tax';
-
-export type { CustomTaxConfiguration, TaxConfiguration } from './tax';
-
-export interface CompanyProfile {
-  id?: string;
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  emailType: 'personal' | 'professional' | 'company';
-  accountHolder: string;
-  bankAccount: string;
-  bankName: string;
-  taxRate: number;
-  taxRegion?: string;
-  country?: string;
-  thankYouMessage: string;
-  termsAndConditions: string;
-  defaultCurrency: string;
-  businessType: string;
-  businessTypeCustom?: string;
-  paypal?: string;
-  payoneer?: string;
-  website?: string;
-  stripeAccountId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  taxConfiguration?: TaxConfiguration;
-  profileType?: 'personal' | 'business';
-  profileSubtype?: string;
-}
-
+// Invoice-related types
 export interface InvoiceItem {
   id: string;
+  name: string;
   description: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  tva?: string | number;
-  discount?: DiscountInfo;
-}
-
-export interface ServiceLine {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
+  unit_price: number;
+  tax_rate?: number;
+  tax_amount?: number;
+  discount_rate?: number;
+  discount_amount?: number;
   total: number;
-  totalPrice: number;
-  tva?: string | number;
-  discount?: DiscountInfo;
+  product_id?: string;
+  service_id?: string;
 }
 
-export type PaymentMethod = 'card' | 'transfer' | 'paypal' | 'check' | 'cash' | 'payoneer' | 'other';
-
-export interface PaymentMethodDetails {
-  type: PaymentMethod;
-  enabled: boolean;
-  details?: string;
-}
-
-export interface DiscountInfo {
-  type: 'percentage' | 'fixed';
-  value: number;
-  amount?: number;
-  description?: string;
-}
-
-export interface SignatureData {
-  type: "draw" | "type" | "initials";
-  dataUrl: string;
+export interface CurrencyInfo {
+  code: string;
+  symbol: string;
   name: string;
-  initials?: string;
-  fontFamily?: string;
-  timestamp: string;
-}
-
-export interface ReminderSchedule {
-  id: string;
-  name: string;
-  enabled: boolean;
-  isDefault: boolean;
-  triggers: ReminderTrigger[];
-}
-
-export interface ReminderTrigger {
-  id: string;
-  triggerType: 'before_due' | 'after_due' | 'after_issue' | 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
-  triggerValue: number;
-  emailSubject: string;
-  emailBody: string;
-  scheduleId?: string;
-}
-
-export interface PaymentTermTemplate {
-  id: string;
-  name: string;
-  delay: string;
-  termsText: string;
-  isDefault: boolean;
-  daysAfterIssue: number;
-  customDate?: string;
-  description?: string;
+  symbolPosition: 'before' | 'after';
+  decimalSeparator: string;
+  thousandSeparator: string;
+  decimalPlaces: number;
 }
 
 export interface InvoiceNumberingConfig {
@@ -171,33 +39,26 @@ export interface InvoiceNumberingConfig {
   digits: number;
   nextNumber: number;
   pattern: string;
-  resetPeriod: string;
+  resetPeriod: 'never' | 'monthly' | 'yearly' | 'quarterly';
+  resetAnnually?: boolean;
   lastReset: string;
-  resetAnnually: boolean;
 }
 
-export interface CurrencyInfo {
-  code: string;
-  name: string;
-  symbol: string;
-  symbolPosition: 'before' | 'after';
-  decimalPlaces?: number;
-}
-
-export type Currency = string;
-
-export interface Invoice {
+export interface PaymentTermTemplate {
   id: string;
-  invoice_number: string;
-  number?: string;
-  client: string | { client_name: string; [key: string]: any };
-  client_name?: string;
-  date: string;
-  issue_date?: string;
-  due_date?: string;
-  dueDate?: string;
-  amount: string;
-  total_amount?: number;
-  status: 'paid' | 'pending' | 'draft' | 'overdue';
-  paymentUrl?: string;
+  name: string;
+  delay: string;
+  daysAfterIssue: number;
+  termsText: string;
+  isDefault: boolean;
+  customDate?: string;
+}
+
+export interface SignatureData {
+  type: 'draw' | 'type' | 'initials';
+  dataUrl: string;
+  name?: string;
+  initials?: string;
+  fontFamily?: string;
+  timestamp: string;
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,24 +14,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import { PaymentTermTemplate } from "@/types/invoice";
 import { toast } from "sonner";
+import { getDefaultPaymentTerms } from "@/services/invoiceSettingsService";
 
-interface PaymentTermsSettingsProps {
+export interface PaymentTermsSettingsProps {
   onSave: (templates: PaymentTermTemplate[]) => void;
-  initialTemplates: PaymentTermTemplate[];
+  initialTemplates?: PaymentTermTemplate[];
 }
 
-export function PaymentTermsSettings({ onSave, initialTemplates }: PaymentTermsSettingsProps) {
-  const [templates, setTemplates] = useState<PaymentTermTemplate[]>(initialTemplates);
+export function PaymentTermsSettings({ onSave, initialTemplates = [] }: PaymentTermsSettingsProps) {
+  const [templates, setTemplates] = useState<PaymentTermTemplate[]>(initialTemplates.length > 0 ? initialTemplates : getDefaultPaymentTerms());
   const [templateName, setTemplateName] = useState("");
   const [templateDelay, setTemplateDelay] = useState("");
   const [templateCustomDate, setTemplateCustomDate] = useState("");
@@ -38,7 +40,9 @@ export function PaymentTermsSettings({ onSave, initialTemplates }: PaymentTermsS
   const [isCustomDate, setIsCustomDate] = useState(false);
 
   useEffect(() => {
-    setTemplates(initialTemplates);
+    if (initialTemplates && initialTemplates.length > 0) {
+      setTemplates(initialTemplates);
+    }
   }, [initialTemplates]);
 
   const addTemplate = () => {
@@ -95,7 +99,6 @@ export function PaymentTermsSettings({ onSave, initialTemplates }: PaymentTermsS
     setIsCustomDate(false);
 
     toast({
-      title: "Modèle enregistré",
       description: `Le modèle "${templateName}" a été créé avec succès`
     });
   };
@@ -103,7 +106,6 @@ export function PaymentTermsSettings({ onSave, initialTemplates }: PaymentTermsS
   const handleSave = () => {
     onSave(templates);
     toast({
-      title: "Conditions enregistrées",
       description: "Les conditions de paiement ont été mises à jour"
     });
   };

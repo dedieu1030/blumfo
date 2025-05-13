@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -65,6 +64,16 @@ export default function Settings() {
     toast({
       title: "Profil créé",
       description: "Votre profil a été créé avec succès."
+    });
+  };
+
+  // Add new function to handle payment terms saving
+  const handleSavePaymentTerms = (templates: PaymentTermTemplate[]) => {
+    localStorage.setItem('paymentTerms', JSON.stringify(templates));
+    
+    toast({
+      title: "Conditions de paiement mises �� jour",
+      description: "Vos modifications ont été enregistrées avec succès."
     });
   };
 
@@ -151,7 +160,10 @@ export default function Settings() {
         </TabsContent>
         
         <TabsContent value="payment-terms">
-          <PaymentTermsSettings />
+          <PaymentTermsSettings 
+            onSave={handleSavePaymentTerms} 
+            initialTemplates={getDefaultPaymentTerms()} 
+          />
         </TabsContent>
         
         <TabsContent value="payment">

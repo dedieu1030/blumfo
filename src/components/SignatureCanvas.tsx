@@ -13,10 +13,17 @@ export interface SignatureCanvasProps {
   onClose?: () => void;
   signature?: SignatureData;
   userName?: string;
+  initialData?: SignatureData;  // Added this prop for compatibility
 }
 
 // Create the main SignatureCanvas component
-export const SignatureCanvas = ({ onSave, onClose, signature, userName }: SignatureCanvasProps) => {
+export const SignatureCanvas = ({ 
+  onSave, 
+  onClose, 
+  signature, 
+  userName,
+  initialData  // Use this or signature
+}: SignatureCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [signaturePad, setSignaturePad] = useState<SignaturePad | null>(null);
   const [signatureType, setSignatureType] = useState<"draw" | "type" | "initials">("draw");
@@ -24,6 +31,9 @@ export const SignatureCanvas = ({ onSave, onClose, signature, userName }: Signat
   const [fontFamily, setFontFamily] = useState("Dancing Script");
   const [initials, setInitials] = useState('');
   const [initialsFont, setInitialsFont] = useState("Arial");
+
+  // Use initialData if provided, otherwise use signature
+  const initialSignature = initialData || signature;
 
   // Initialize signature pad
   useEffect(() => {
@@ -47,21 +57,21 @@ export const SignatureCanvas = ({ onSave, onClose, signature, userName }: Signat
       setSignaturePad(pad);
 
       // Load existing signature if provided
-      if (signature && signature.type === "draw" && signature.dataUrl) {
-        pad.fromDataURL(signature.dataUrl);
+      if (initialSignature && initialSignature.type === "draw" && initialSignature.dataUrl) {
+        pad.fromDataURL(initialSignature.dataUrl);
       }
     }
     
     // If initial signature was provided and it's not draw type, set appropriate values
-    if (signature) {
-      if (signature.type === "type") {
+    if (initialSignature) {
+      if (initialSignature.type === "type") {
         setSignatureType("type");
-        setTypedName(signature.name || '');
-        setFontFamily(signature.fontFamily || 'Dancing Script');
-      } else if (signature.type === "initials") {
+        setTypedName(initialSignature.name || '');
+        setFontFamily(initialSignature.fontFamily || 'Dancing Script');
+      } else if (initialSignature.type === "initials") {
         setSignatureType("initials");
-        setInitials(signature.initials || '');
-        setInitialsFont(signature.fontFamily || 'Arial');
+        setInitials(initialSignature.initials || '');
+        setInitialsFont(initialSignature.fontFamily || 'Arial');
       }
     }
     
