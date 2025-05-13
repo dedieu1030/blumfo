@@ -72,7 +72,11 @@ export function useCompanyProfile() {
             bankAccount: '',
             website: data.website || '',
             logo: data.logo_url || '',
-            emailType: 'plain',
+            emailType: 'professional', // Fixed value: Using a valid value from the enum
+            termsAndConditions: '',
+            thankYouMessage: '',
+            defaultCurrency: 'EUR',
+            accountHolder: '',
             // Maintenir tout autre champ existant du profil
           };
           
