@@ -30,27 +30,13 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   useEffect(() => {
-    // Réinitialiser les erreurs et les données à l'ouverture du formulaire
+    // Réinitialiser les erreurs à l'ouverture du formulaire
     if (open) {
       setAuthError(null);
-      setDebugInfo(null);
     }
   }, [open]);
-
-  // Fonction pour vérifier la session utilisateur courante
-  const checkUserSession = async () => {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      console.log("Session check:", session ? "Session active" : "Pas de session", error ? `Erreur: ${error.message}` : "Pas d'erreur");
-      return { session, error };
-    } catch (err) {
-      console.error("Erreur lors de la vérification de session:", err);
-      return { session: null, error: err };
-    }
-  };
 
   const handleSubmit = async () => {
     if (!clientName) {
@@ -60,17 +46,14 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
 
     setIsLoading(true);
     setAuthError(null);
-    setDebugInfo(null);
 
     try {
-      // Vérifier la session utilisateur
-      const { session, error: sessionError } = await checkUserSession();
+      // Obtenir la session utilisateur courante
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error("Erreur lors de la récupération de la session:", sessionError);
-        setAuthError("Impossible de vérifier votre session. Veuillez vous reconnecter.");
-        setDebugInfo({ type: "session_error", details: sessionError });
-        return;
+        throw new Error("Impossible de vérifier votre session. Veuillez vous reconnecter.");
       }
       
       const userId = session?.user?.id;
@@ -78,48 +61,28 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       if (!userId) {
         console.warn("Aucun utilisateur connecté lors de la création du client");
         setAuthError("Vous devez être connecté pour créer un client. Veuillez vous connecter.");
-        // Pour le débogage temporaire, permettre la création du client même sans utilisateur connecté
-        // Décommenter la ligne ci-dessous pour les tests
-        // const tempUserId = "00000000-0000-0000-0000-000000000000";
-        // toast.info("Mode test: Utilisation d'un ID temporaire");
         return;
       }
 
       // Log pour débogage
       console.log("Création de client avec user ID:", userId);
       
-      const clientData = {
-        client_name: clientName,
-        email: email || null,
-        phone: phone || null,
-        address: address || null,
-        company_id: userId
-      };
-      
-      console.log("Données du client à insérer:", clientData);
-      
       const { data, error } = await supabase
         .from('clients')
-        .insert(clientData)
+        .insert({
+          client_name: clientName,
+          email: email || null,
+          phone: phone || null,
+          address: address || null,
+          company_id: userId
+        })
         .select()
         .single();
 
       if (error) {
         console.error("Erreur lors de la création du client:", error);
-        setDebugInfo({ 
-          type: "insert_error", 
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        
         if (error.code === '42501') {
           throw new Error("Vous n'avez pas les permissions nécessaires pour créer un client");
-        } else if (error.code === '23503') {
-          throw new Error("Erreur de référence: L'utilisateur n'existe pas dans la base de données");
-        } else if (error.code === '23505') {
-          throw new Error("Un client avec ces informations existe déjà");
         } else {
           throw error;
         }
@@ -128,14 +91,14 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       toast.success("Client créé avec succès");
       
       // Mapper les propriétés pour assurer la compatibilité
-      const clientResponse: Client = {
+      const clientData: Client = {
         ...data,
         name: data.client_name,
         user_id: data.company_id
       };
       
       // Pass the new client back to parent component
-      onClientCreated(clientResponse);
+      onClientCreated(clientData);
       
       // Reset form fields
       setClientName("");
@@ -164,15 +127,6 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
             <AlertCircle className="h-4 w-4 mr-2" />
             <AlertDescription>{authError}</AlertDescription>
           </Alert>
-        )}
-
-        {debugInfo && (
-          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs">
-            <details>
-              <summary className="font-medium cursor-pointer">Informations de débogage</summary>
-              <pre className="mt-2 whitespace-pre-wrap">{JSON.stringify(debugInfo, null, 2)}</pre>
-            </details>
-          </div>
         )}
 
         <div className="grid gap-4 py-4">
