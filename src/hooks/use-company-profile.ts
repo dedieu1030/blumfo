@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { CompanyProfile } from '@/types/invoice';
 import { supabase } from '@/integrations/supabase/client';
+import { TaxConfiguration } from '@/types/tax';
 
 export function useCompanyProfile() {
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
@@ -32,6 +33,8 @@ export function useCompanyProfile() {
         
         if (data) {
           // Construire l'objet CompanyProfile à partir des données Supabase
+          const taxConfig = data.tax_configuration as TaxConfiguration | null;
+          
           const profile: CompanyProfile = {
             id: data.id,
             name: data.company_name,
@@ -39,9 +42,12 @@ export function useCompanyProfile() {
             email: data.email || '',
             phone: data.phone || '',
             // Conversion du tax_configuration en structure attendue par le front-end
-            taxRate: data.tax_configuration?.defaultTaxRate ? parseFloat(data.tax_configuration.defaultTaxRate) : 20,
-            taxRegion: data.tax_configuration?.region || '',
-            taxConfiguration: data.tax_configuration,
+            taxRate: taxConfig?.defaultTaxRate ? parseFloat(taxConfig.defaultTaxRate) : 20,
+            taxRegion: taxConfig?.region || '',
+            taxConfiguration: taxConfig || {
+              defaultTaxRate: '20',
+              region: ''
+            },
             // Autres champs existants
             // ... garder le reste du code de conversion
           };
@@ -71,12 +77,13 @@ export function useCompanyProfile() {
         address: profile.address,
         email: profile.email,
         phone: profile.phone,
-        // Stocker la configuration de taxe dans le champ JSONB
-        tax_configuration: profile.taxConfiguration || {
-          defaultTaxRate: profile.taxRate.toString(),
-          region: profile.taxRegion || '',
-          customTax: profile.taxConfiguration?.customTax
-        }
+        // Convertir la configuration de taxe en format JSON pour Supabase
+        tax_configuration: profile.taxConfiguration ? {
+          defaultTaxRate: profile.taxConfiguration.defaultTaxRate,
+          region: profile.taxConfiguration.region || '',
+          country: profile.taxConfiguration.country || '',
+          customTax: profile.taxConfiguration.customTax
+        } : null
         // Autres champs à synchroniser...
       };
       
