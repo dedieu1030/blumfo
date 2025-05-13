@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CompanyProfile } from "@/types/invoice";
+import { CompanyProfile, PaymentTermTemplate } from "@/types/invoice";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
 import { ProfileWizard } from "@/components/profile/ProfileWizard";
@@ -14,6 +15,7 @@ import { Plus } from "lucide-react";
 import { PaymentSettings } from "@/components/settings/PaymentSettings";
 import { PaymentTermsSettings } from "@/components/settings/PaymentTermsSettings";
 import { TaxSettings } from "@/components/settings/TaxSettings";
+import { getDefaultPaymentTerms } from "@/services/invoiceSettingsService";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -72,7 +74,7 @@ export default function Settings() {
     localStorage.setItem('paymentTerms', JSON.stringify(templates));
     
     toast({
-      title: "Conditions de paiement mises �� jour",
+      title: "Conditions de paiement mises à jour",
       description: "Vos modifications ont été enregistrées avec succès."
     });
   };

@@ -3,17 +3,17 @@ import { PaymentTermTemplate, CurrencyInfo, InvoiceNumberingConfig } from "@/typ
 
 // Define available currencies
 export const availableCurrencies = [
-  { code: 'EUR', symbol: '€', name: 'Euro', symbolPosition: 'after', decimalSeparator: ',', thousandSeparator: ' ', decimalPlaces: 2 },
-  { code: 'USD', symbol: '$', name: 'US Dollar', symbolPosition: 'before', decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'GBP', symbol: '£', name: 'British Pound Sterling', symbolPosition: 'before', decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', symbolPosition: 'before', decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'AUD', symbol: 'AU$', name: 'Australian Dollar', symbolPosition: 'before', decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', symbolPosition: 'before', decimalSeparator: '.', thousandSeparator: "'", decimalPlaces: 2 },
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen', symbolPosition: 'before', decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 0 },
-  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', symbolPosition: 'before', decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'INR', symbol: '₹', name: 'Indian Rupee', symbolPosition: 'before', decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
-  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', symbolPosition: 'before', decimalSeparator: ',', thousandSeparator: '.', decimalPlaces: 2 },
-  { code: 'RUB', symbol: '₽', name: 'Russian Ruble', symbolPosition: 'after', decimalSeparator: ',', thousandSeparator: ' ', decimalPlaces: 2 },
+  { code: 'EUR', symbol: '€', name: 'Euro', symbolPosition: 'after' as const, decimalSeparator: ',', thousandSeparator: ' ', decimalPlaces: 2 },
+  { code: 'USD', symbol: '$', name: 'US Dollar', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
+  { code: 'GBP', symbol: '£', name: 'British Pound Sterling', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
+  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
+  { code: 'AUD', symbol: 'AU$', name: 'Australian Dollar', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: "'", decimalPlaces: 2 },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 0 },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee', symbolPosition: 'before' as const, decimalSeparator: '.', thousandSeparator: ',', decimalPlaces: 2 },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', symbolPosition: 'before' as const, decimalSeparator: ',', thousandSeparator: '.', decimalPlaces: 2 },
+  { code: 'RUB', symbol: '₽', name: 'Russian Ruble', symbolPosition: 'after' as const, decimalSeparator: ',', thousandSeparator: ' ', decimalPlaces: 2 },
 ];
 
 export const getCurrencyInfo = (currencyCode: string): CurrencyInfo => {
