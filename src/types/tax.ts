@@ -11,7 +11,7 @@ export interface TaxRegionData {
   name: string;
   code: string;
   taxType: "gst" | "gst-pst" | "gst-qst" | "hst" | "sales-tax" | "no-tax" | 
-           "iva-standard" | "iva-reduced" | "iva-zero" | "iva-exempt" |
+           "iva-standard" | "iva-reduced" | "iva-zero" | "iva-exempt" | "iva-special" |
            "vat-standard" | "vat-reduced" | "vat-super-reduced" | "vat-parking" | "vat-exempt";
   gstRate?: number;
   pstRate?: number;
