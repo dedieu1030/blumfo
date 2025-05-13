@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar";
 import { SearchBar } from "./components/SearchBar";
 import Dashboard from "./pages/Dashboard";
-import { Invoicing } from "./pages/Invoicing";
+import Invoicing from "./pages/Invoicing";
 import Invoices from "./pages/Invoices";
 import Quotes from "./pages/Quotes";
 import Clients from "./pages/Clients";
