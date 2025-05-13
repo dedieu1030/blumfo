@@ -167,7 +167,6 @@ export type Database = {
           id: string
           logo_url: string | null
           phone: string | null
-          tax_configuration: Json | null
           tps_number: string | null
           tvq_number: string | null
           updated_at: string | null
@@ -182,7 +181,6 @@ export type Database = {
           id?: string
           logo_url?: string | null
           phone?: string | null
-          tax_configuration?: Json | null
           tps_number?: string | null
           tvq_number?: string | null
           updated_at?: string | null
@@ -197,7 +195,6 @@ export type Database = {
           id?: string
           logo_url?: string | null
           phone?: string | null
-          tax_configuration?: Json | null
           tps_number?: string | null
           tvq_number?: string | null
           updated_at?: string | null

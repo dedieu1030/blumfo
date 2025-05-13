@@ -10,7 +10,6 @@ import { useSearchParams } from "react-router-dom";
 import { ProfileWizard } from "@/components/profile/ProfileWizard";
 import { ProfileViewer } from "@/components/profile/ProfileViewer";
 import { Plus } from "lucide-react";
-import { useCompanyProfile } from "@/hooks/use-company-profile";
 
 // Import des composants de paramètres
 import { PaymentSettings } from "@/components/settings/PaymentSettings";
@@ -24,78 +23,50 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  // État du profil en utilisant le hook personnalisé
-  const { companyProfile, loading, error, fetchProfile, saveProfile } = useCompanyProfile();
+  // État du profil
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-  // Surveillance du chargement du profil
+  // Récupérer les données du profil d'entreprise
   useEffect(() => {
-    if (companyProfile) {
-      setHasProfile(true);
+    const savedProfile = localStorage.getItem('companyProfile');
+    if (savedProfile) {
+      try {
+        const profileData = JSON.parse(savedProfile);
+        setCompanyProfile(profileData);
+        setHasProfile(true);
+      } catch (e) {
+        console.error("Erreur lors du parsing du profil d'entreprise", e);
+      }
     }
-  }, [companyProfile]);
+  }, []);
 
   // Function to handle profile updates
-  const handleProfileUpdate = async (updatedProfile: CompanyProfile) => {
-    const result = await saveProfile(updatedProfile);
+  const handleProfileUpdate = (updatedProfile: CompanyProfile) => {
+    setCompanyProfile(updatedProfile);
+    localStorage.setItem('companyProfile', JSON.stringify(updatedProfile));
     
-    if (result.success) {
-      toast({
-        title: "Profil mis à jour",
-        description: "Vos modifications ont été enregistrées avec succès."
-      });
-    } else {
-      toast({
-        title: "Erreur",
-        description: result.error || "Une erreur est survenue lors de la mise à jour du profil",
-        variant: "destructive"
-      });
-    }
+    toast({
+      title: "Profil mis à jour",
+      description: "Vos modifications ont été enregistrées avec succès."
+    });
   };
 
   // Function to handle profile creation/save
-  const handleSaveProfile = async (profile: CompanyProfile) => {
-    const result = await saveProfile(profile);
+  const handleSaveProfile = (profile: CompanyProfile) => {
+    setCompanyProfile(profile);
+    setHasProfile(true);
+    setIsCreatingProfile(false);
+    setIsEditingProfile(false);
+    localStorage.setItem('companyProfile', JSON.stringify(profile));
     
-    if (result.success) {
-      setHasProfile(true);
-      setIsCreatingProfile(false);
-      setIsEditingProfile(false);
-      
-      toast({
-        title: "Profil créé",
-        description: "Votre profil a été créé avec succès."
-      });
-    } else {
-      toast({
-        title: "Erreur",
-        description: result.error || "Une erreur est survenue lors de la création du profil",
-        variant: "destructive"
-      });
-    }
+    toast({
+      title: "Profil créé",
+      description: "Votre profil a été créé avec succès."
+    });
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-destructive">Une erreur s'est produite</h2>
-          <p className="text-gray-500 mt-2">{error}</p>
-          <Button onClick={fetchProfile} className="mt-4">Réessayer</Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
