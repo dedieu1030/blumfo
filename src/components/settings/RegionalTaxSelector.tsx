@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -18,7 +17,7 @@ import { taxRegionsData } from "@/data/taxData";
 
 interface RegionalTaxSelectorProps {
   defaultValue: number | string;
-  onChange: (value: number) => void;
+  onChange: (value: number, regionKey?: string) => void; // Mise à jour pour accepter regionKey comme second paramètre optionnel
   showLabel?: boolean;
   defaultRegion?: string;
 }
@@ -47,7 +46,7 @@ export function RegionalTaxSelector({
         const region = country.regions.find(r => r.id === regionId);
         if (region) {
           setSelectedRegion(region);
-          onChange(region.totalRate);
+          onChange(region.totalRate, `${country.id}:${region.id}`);
         }
       }
     }
@@ -82,7 +81,7 @@ export function RegionalTaxSelector({
   const handleSelectRegion = (regionData: TaxRegionData) => {
     setSelectedRegion(regionData);
     setSelectedOption("region");
-    onChange(regionData.totalRate);
+    onChange(regionData.totalRate, `${selectedCountry}:${regionData.id}`);
     setIsSheetOpen(false);
   };
 
@@ -94,7 +93,7 @@ export function RegionalTaxSelector({
       // La valeur sera gérée par le TaxRateSelector
     } else if (value === "region" && selectedRegion) {
       // Utiliser la valeur de la région sélectionnée
-      onChange(selectedRegion.totalRate);
+      onChange(selectedRegion.totalRate, `${selectedCountry}:${selectedRegion.id}`);
     }
   };
 

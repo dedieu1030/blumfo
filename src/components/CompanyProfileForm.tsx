@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -175,10 +174,10 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
   const emailTypeOptions = getEmailTypeOptions();
 
   // Gestion du changement de région fiscale
-  const handleTaxRegionChange = (taxRate: number, regionKey?: string) => {
+  const handleTaxRegionChange = (value: number, regionKey?: string) => {
     setFormData(prev => ({
       ...prev,
-      taxRate: taxRate,
+      taxRate: value,
       taxRegion: regionKey || prev.taxRegion
     }));
   };
@@ -356,7 +355,7 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
                 <RegionalTaxSelector
                   defaultValue={Number(formData.taxRate)}
                   defaultRegion={formData.taxRegion || undefined}
-                  onChange={(value, regionKey) => handleTaxRegionChange(value, regionKey)}
+                  onChange={handleTaxRegionChange}
                 />
               </div>
               <div className="space-y-2">

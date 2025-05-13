@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -282,7 +281,7 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
             <RegionalTaxSelector
               defaultValue={Number(formData.taxRate)}
               defaultRegion={formData.taxRegion || undefined}
-              onChange={(value, regionKey) => handleTaxRegionChange(value, regionKey)}
+              onChange={handleTaxRegionChange}
             />
           </div>
           <div className="space-y-2">
