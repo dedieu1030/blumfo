@@ -5,7 +5,7 @@ import { RegionalTaxSelector } from "./RegionalTaxSelector";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { TaxConfiguration } from "@/types/tax";
+import { CustomTaxConfiguration, TaxConfiguration } from "@/types/tax";
 
 interface TaxSettingsProps {
   companyProfile: CompanyProfile | null;
@@ -16,13 +16,15 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   const { toast } = useToast();
   const [taxRate, setTaxRate] = useState<number>(20); // Taux par défaut: 20%
   const [taxRegion, setTaxRegion] = useState<string | undefined>(undefined);
+  const [customTax, setCustomTax] = useState<CustomTaxConfiguration | undefined>(undefined);
   
   // Initialiser avec les valeurs existantes si disponibles
   useEffect(() => {
     if (companyProfile?.taxConfiguration) {
-      const { defaultTaxRate, region } = companyProfile.taxConfiguration;
+      const { defaultTaxRate, region, customTax } = companyProfile.taxConfiguration;
       setTaxRate(parseFloat(defaultTaxRate));
       setTaxRegion(region);
+      setCustomTax(customTax);
     } else if (companyProfile?.taxRate) {
       // Utiliser le taux de TVA existant s'il n'y a pas encore de configuration complète
       setTaxRate(companyProfile.taxRate);
@@ -31,9 +33,14 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   }, [companyProfile]);
 
   // Gérer le changement de taux de TVA
-  const handleTaxRateChange = (value: number, regionKey?: string) => {
+  const handleTaxRateChange = (
+    value: number, 
+    regionKey?: string, 
+    customConfig?: CustomTaxConfiguration
+  ) => {
     setTaxRate(value);
     setTaxRegion(regionKey);
+    setCustomTax(customConfig);
   };
 
   // Enregistrer les paramètres de TVA
@@ -50,7 +57,8 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
     const updatedConfiguration: TaxConfiguration = {
       defaultTaxRate: taxRate.toString(),
       region: taxRegion,
-      country: companyProfile.country || "FR"  // Utiliser le pays du profil ou FR par défaut
+      country: companyProfile.country || "FR",  // Utiliser le pays du profil ou FR par défaut
+      customTax: customTax // Ajouter la configuration personnalisée
     };
 
     const updatedProfile: CompanyProfile = {
@@ -82,6 +90,7 @@ export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
             defaultValue={taxRate}
             onChange={handleTaxRateChange}
             defaultRegion={taxRegion}
+            defaultCustomTax={customTax}
           />
         </div>
 

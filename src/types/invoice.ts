@@ -57,27 +57,35 @@ export interface DiscountInfo {
 
 export interface CompanyProfile {
   id?: string;
+  userId?: string;
   name: string;
   address: string;
   email: string;
   emailType: 'personal' | 'professional' | 'company';
   phone: string;
+  bankAccount: string;
+  bankName: string;
+  accountHolder?: string;
   taxRate: number;
   taxRegion?: string; // Format: "countryId:regionId"
-  defaultCurrency: string;
-  businessType?: 'company' | 'individual' | 'lawyer' | 'freelancer' | 'other';
+  taxConfiguration?: TaxConfiguration; // Nouveau champ pour la configuration fiscale
+  businessType: string;
   businessTypeCustom?: string;
+  registrationNumber?: string;
+  vatNumber?: string;
+  defaultCurrency: string;
+  country?: string; // Pays de l'entreprise
   termsAndConditions: string;
-  thankYouMessage?: string;
-  bankName?: string;
-  bankAccount?: string;
-  accountHolder?: string;
+  thankYouMessage: string;
+  logo?: string;
+  logoUrl?: string;
+  color?: string;
   paypal?: string;
   payoneer?: string;
-  profileType?: 'personal' | 'business';
-  profileSubtype?: string;
-  country?: string; // Pays de l'entreprise
-  taxConfiguration?: import("./tax").TaxConfiguration; // Configuration fiscale
+  stripeConnected?: boolean;
+  stripeAccountId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PaymentTermTemplate {
@@ -203,3 +211,5 @@ export interface SignatureData {
   name?: string;
   timestamp?: string;
 }
+
+import { TaxConfiguration } from "./tax";

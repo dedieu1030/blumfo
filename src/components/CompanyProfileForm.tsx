@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { CompanyProfile } from "@/types/invoice";
 import { RegionalTaxSelector } from "@/components/settings/RegionalTaxSelector";
+import { CustomTaxConfiguration } from "@/types/tax";
 
 interface CompanyProfileFormProps {
   initialData?: Partial<CompanyProfile>;
@@ -37,6 +39,9 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
   });
 
   const [showCustomBusinessType, setShowCustomBusinessType] = useState(formData.businessType === "other");
+  const [customTax, setCustomTax] = useState<CustomTaxConfiguration | undefined>(
+    initialData?.taxConfiguration?.customTax
+  );
 
   useEffect(() => {
     if (initialData) {
@@ -47,6 +52,11 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
       }
       setFormData(updatedData);
       setShowCustomBusinessType(initialData.businessType === "other");
+      
+      // Initialiser la configuration de taxe personnalisée
+      if (initialData.taxConfiguration?.customTax) {
+        setCustomTax(initialData.taxConfiguration.customTax);
+      }
     }
   }, [initialData]);
 
@@ -77,6 +87,13 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
       taxRate: formData.taxRate as number,
       taxRegion: formData.taxRegion || '',  // Include the tax region
       defaultCurrency: formData.defaultCurrency || 'EUR',
+      // Inclure la configuration de taxe si disponible
+      taxConfiguration: formData.taxRegion || customTax ? {
+        defaultTaxRate: formData.taxRate?.toString() || "20",
+        region: formData.taxRegion || '',
+        country: formData.country || "FR",
+        customTax: customTax
+      } : undefined,
       ...formData
     } as CompanyProfile;
     
@@ -173,13 +190,20 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
   const labels = getLabels();
   const emailTypeOptions = getEmailTypeOptions();
 
-  // Gestion du changement de région fiscale
-  const handleTaxRegionChange = (value: number, regionKey?: string) => {
+  // Gestion du changement de région fiscale ou de taxe personnalisée
+  const handleTaxRegionChange = (
+    value: number, 
+    regionKey?: string,
+    customConfig?: CustomTaxConfiguration
+  ) => {
     setFormData(prev => ({
       ...prev,
       taxRate: value,
       taxRegion: regionKey || prev.taxRegion
     }));
+    
+    // Mettre à jour la configuration de taxe personnalisée
+    setCustomTax(customConfig);
   };
 
   return (
@@ -351,10 +375,11 @@ export function CompanyProfileForm({ initialData, onSave }: CompanyProfileFormPr
             <h3 className="text-lg font-medium mb-4">Paramètres de facturation</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 md:col-span-2">
-                {/* Remplacer TaxRateSelector par RegionalTaxSelector */}
+                {/* RegionalTaxSelector avec support pour les taxes personnalisées */}
                 <RegionalTaxSelector
                   defaultValue={Number(formData.taxRate)}
                   defaultRegion={formData.taxRegion || undefined}
+                  defaultCustomTax={customTax}
                   onChange={handleTaxRegionChange}
                 />
               </div>

@@ -1,15 +1,17 @@
+
 import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Globe, Settings, Search, ArrowLeft } from "lucide-react";
-import { TaxZone, TaxCountry, TaxRegionData } from "@/types/tax";
+import { TaxZone, TaxCountry, TaxRegionData, CustomTaxConfiguration } from "@/types/tax";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TaxRateSelector } from "./TaxRateSelector";
+import { CustomTaxSettings } from "./CustomTaxSettings";
 import { formatTaxRate } from "@/lib/utils";
 
 // Récupération des données de taxe depuis le fichier de données
@@ -20,22 +22,25 @@ type NavigationLevel = "zones" | "countries" | "regions";
 
 interface RegionalTaxSelectorProps {
   defaultValue: number | string;
-  onChange: (value: number, regionKey?: string) => void;
+  onChange: (value: number, regionKey?: string, customConfig?: CustomTaxConfiguration) => void;
   showLabel?: boolean;
   defaultRegion?: string;
+  defaultCustomTax?: CustomTaxConfiguration;
 }
 
 export function RegionalTaxSelector({
   defaultValue = 20,
   onChange,
   showLabel = true,
-  defaultRegion
+  defaultRegion,
+  defaultCustomTax
 }: RegionalTaxSelectorProps) {
   const isMobile = useIsMobile();
   const [selectedOption, setSelectedOption] = useState<string>("region");
   const [selectedRegion, setSelectedRegion] = useState<TaxRegionData | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [customTaxConfig, setCustomTaxConfig] = useState<CustomTaxConfiguration | undefined>(defaultCustomTax);
   
   // État pour la navigation hiérarchique
   const [navigationLevel, setNavigationLevel] = useState<NavigationLevel>("zones");
@@ -58,17 +63,22 @@ export function RegionalTaxSelector({
           const region = country.regions.find(r => r.id === regionId);
           if (region) {
             setSelectedRegion(region);
+            setSelectedOption("region");
             onChange(region.totalRate, `${zoneId}:${countryId}:${regionId}`);
           }
         }
       }
+    } else if (defaultCustomTax) {
+      // Si une configuration de taxe personnalisée est fournie
+      setSelectedOption("custom");
+      setCustomTaxConfig(defaultCustomTax);
     }
-  }, [defaultRegion, onChange]);
+  }, [defaultRegion, defaultCustomTax, onChange]);
 
   // Déterminer le mode actif (TVA régionale ou personnalisée)
   useEffect(() => {
     // Si une valeur spécifique est définie et qu'aucune région n'est sélectionnée
-    if (defaultValue !== undefined && !selectedRegion) {
+    if (defaultValue !== undefined && !selectedRegion && !defaultCustomTax) {
       const numValue = typeof defaultValue === 'string' ? parseFloat(defaultValue) || 0 : defaultValue;
       
       // Vérifier si la valeur correspond à une région connue
@@ -92,7 +102,7 @@ export function RegionalTaxSelector({
         setSelectedOption("custom");
       }
     }
-  }, [defaultValue, selectedRegion]);
+  }, [defaultValue, selectedRegion, defaultCustomTax]);
 
   // Fonction pour gérer la sélection d'une zone fiscale
   const handleSelectZone = (zone: TaxZone) => {
@@ -125,7 +135,13 @@ export function RegionalTaxSelector({
     
     if (value === "custom") {
       // Garder la même valeur mais passer en mode personnalisé
-      // La valeur sera gérée par le TaxRateSelector
+      // La valeur sera gérée par le CustomTaxSettings
+      if (customTaxConfig) {
+        onChange(customTaxConfig.mainRate, undefined, customTaxConfig);
+      } else {
+        const defaultRate = typeof defaultValue === 'string' ? parseFloat(defaultValue) || 20 : defaultValue;
+        onChange(defaultRate, undefined);
+      }
     } else if (value === "region" && selectedRegion) {
       // Utiliser la valeur de la région sélectionnée
       if (selectedZone && selectedCountry) {
@@ -202,6 +218,12 @@ export function RegionalTaxSelector({
   const openSelector = () => {
     setIsSheetOpen(true);
     resetNavigation();
+  };
+
+  // Gérer les changements de configuration de taxe personnalisée
+  const handleCustomTaxChange = (value: number, _: string | undefined, customConfig?: CustomTaxConfiguration) => {
+    setCustomTaxConfig(customConfig);
+    onChange(value, undefined, customConfig);
   };
 
   // Rendu pour la version mobile
@@ -492,9 +514,10 @@ export function RegionalTaxSelector({
           
           {selectedOption === "custom" && (
             <div className="ml-6 mt-2">
-              <TaxRateSelector 
+              <CustomTaxSettings
                 defaultValue={defaultValue}
-                onChange={onChange}
+                defaultConfig={customTaxConfig}
+                onChange={handleCustomTaxChange}
                 showLabel={false}
               />
             </div>
