@@ -46,11 +46,11 @@ export interface TaxConfiguration {
   customTax?: CustomTaxConfiguration; // Nouvelle propriété pour la taxe personnalisée
 }
 
-// Nouvelle interface pour la configuration de taxe personnalisée
+// Interface pour la configuration de taxe personnalisée
 export interface CustomTaxConfiguration {
-  country: string;      // Code du pays (ex: "NO")
+  country: string;      // Code du pays (ex: "NO") 
   countryName: string;  // Nom du pays (ex: "Norvège")
-  taxType: string;      // Type de taxe (ex: "VAT", "GST", etc.)
+  taxType: string;      // Type de taxe personnalisé saisi par l'utilisateur
   mainRate: number;     // Taux principal
   additionalRates?: Array<{  // Taux additionnels optionnels
     name: string;  // Nom du taux (ex: "Réduit", "Super-réduit")
@@ -58,7 +58,7 @@ export interface CustomTaxConfiguration {
   }>;
 }
 
-// Liste des types de taxes disponibles pour la sélection
+// Liste des types de taxes disponibles pour la sélection (maintenue pour rétrocompatibilité)
 export const TAX_TYPES = [
   { id: "vat", name: "TVA (Value Added Tax)", countries: ["EU", "UK", "NO", "CH"] },
   { id: "gst", name: "GST (Goods and Services Tax)", countries: ["AU", "NZ", "CA"] },

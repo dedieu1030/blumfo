@@ -28,7 +28,7 @@ export function CustomTaxSettings({
   const [customTax, setCustomTax] = useState<CustomTaxConfiguration>({
     country: defaultConfig?.country || "",
     countryName: defaultConfig?.countryName || "",
-    taxType: defaultConfig?.taxType || "vat",
+    taxType: defaultConfig?.taxType || "",  // Modifié pour accepter un type personnalisé
     mainRate: typeof defaultValue === "string" ? parseFloat(defaultValue) || 20 : defaultValue,
     additionalRates: defaultConfig?.additionalRates || []
   });
@@ -45,6 +45,9 @@ export function CustomTaxSettings({
     name: "",
     rate: 5
   });
+
+  // État pour le type de taxe personnalisé
+  const [customTaxType, setCustomTaxType] = useState<string>(defaultConfig?.taxType || "");
 
   // Chargement initial des pays filtrés
   useEffect(() => {
@@ -63,6 +66,7 @@ export function CustomTaxSettings({
         ...defaultConfig,
         mainRate: typeof defaultValue === "string" ? parseFloat(defaultValue) || 20 : defaultValue
       });
+      setCustomTaxType(defaultConfig.taxType || "");
     }
   }, [defaultConfig, defaultValue]);
 
@@ -116,7 +120,10 @@ export function CustomTaxSettings({
   };
 
   // Gérer le changement de type de taxe
-  const handleTaxTypeChange = (value: string) => {
+  const handleTaxTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCustomTaxType(value);
+    
     const updatedConfig = { ...customTax, taxType: value };
     setCustomTax(updatedConfig);
     onChange(customTax.mainRate, undefined, updatedConfig);
@@ -230,24 +237,16 @@ export function CustomTaxSettings({
           </Select>
         </div>
 
-        {/* Sélection du type de taxe */}
+        {/* Saisie du type de taxe personnalisé */}
         <div className="space-y-2">
           <Label htmlFor="tax-type">Type de taxe</Label>
-          <Select
-            value={customTax.taxType}
-            onValueChange={handleTaxTypeChange}
-          >
-            <SelectTrigger id="tax-type" className="w-full">
-              <SelectValue placeholder="Sélectionner un type de taxe" />
-            </SelectTrigger>
-            <SelectContent>
-              {TAX_TYPES.map(taxType => (
-                <SelectItem key={taxType.id} value={taxType.id}>
-                  {taxType.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            id="tax-type"
+            placeholder="Entrez un nom pour ce type de taxe (ex: TVA, GST, etc.)"
+            value={customTaxType}
+            onChange={handleTaxTypeChange}
+            className="w-full"
+          />
         </div>
 
         {/* Taux principal */}
