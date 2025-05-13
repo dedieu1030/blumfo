@@ -1,3 +1,4 @@
+
 import { DashboardStats } from "@/components/DashboardStats";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { QuickAction } from "@/components/QuickAction";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText, FilePlus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { QuoteList } from "@/components/QuoteList";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Icon } from "@/components/ui/icon";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -20,6 +22,7 @@ const Dashboard = () => {
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState("invoices");
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -123,94 +126,107 @@ const Dashboard = () => {
         overdueInvoices={overdueInvoices}
       />
 
-      {isMobile ? (
-        // Version mobile avec tabs pour améliorer l'expérience utilisateur
-        <div className="mt-6">
-          <Tabs defaultValue="invoices" className="w-full">
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="invoices">{t("recentInvoices", "Factures récentes")}</TabsTrigger>
-              <TabsTrigger value="quotes">{t("recentQuotes", "Devis récents")}</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="invoices" className="space-y-1">
-              <div className="flex items-center justify-between py-2">
-                <h3 className="text-sm font-medium">{t("last5Invoices", "Les 5 dernières factures")}</h3>
-                <Link to="/invoices">
-                  <Button variant="link" size="sm" className="h-8 p-0 text-primary">
-                    {t("viewAll", "Voir tout")} <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-              <InvoiceList 
-                invoices={recentInvoices}
-                limit={5}
-                showActions={false}
-              />
-            </TabsContent>
-            
-            <TabsContent value="quotes" className="space-y-1">
-              <div className="flex items-center justify-between py-2">
-                <h3 className="text-sm font-medium">{t("last5Quotes", "Les 5 derniers devis")}</h3>
-                <Link to="/quotes">
-                  <Button variant="link" size="sm" className="h-8 p-0 text-primary">
-                    {t("viewAll", "Voir tout")} <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-              <QuoteList 
-                limit={5}
-                showActions={false}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      ) : (
-        // Version desktop avec deux colonnes
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-xl">Factures récentes</CardTitle>
-                <CardDescription>Les 5 dernières factures créées</CardDescription>
-              </div>
-              <Link to="/invoices">
-                <Button variant="ghost" size="sm" className="gap-1">
-                  <FileText className="h-4 w-4" /> Toutes les factures
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <InvoiceList 
-                invoices={recentInvoices}
-                limit={5}
-                showActions={false}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-xl">Devis récents</CardTitle>
-                <CardDescription>Les 5 derniers devis créés</CardDescription>
-              </div>
-              <Link to="/quotes">
-                <Button variant="ghost" size="sm" className="gap-1">
-                  <FilePlus className="h-4 w-4" /> Tous les devis
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <QuoteList 
-                limit={5}
-                showActions={false}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Utilisation du système d'onglets pour tous les types d'appareils */}
+      <div className="mt-6">
+        <Tabs defaultValue="invoices" className="w-full">
+          <TabsList className="grid grid-cols-2 mb-4">
+            <TabsTrigger 
+              value="invoices"
+              onClick={() => setActiveTab("invoices")}
+            >
+              {t("recentInvoices", "Factures récentes")}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="quotes"
+              onClick={() => setActiveTab("quotes")}
+            >
+              {t("recentQuotes", "Devis récents")}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="invoices" className="space-y-1">
+            {isMobile ? (
+              <>
+                <div className="flex items-center justify-between py-2">
+                  <h3 className="text-sm font-medium">{t("last5Invoices", "Les 5 dernières factures")}</h3>
+                  <Link to="/invoices">
+                    <Button variant="link" size="sm" className="h-8 p-0 text-primary">
+                      {t("viewAll", "Voir tout")} <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
+                <InvoiceList 
+                  invoices={recentInvoices}
+                  limit={5}
+                  showActions={false}
+                />
+              </>
+            ) : (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl">Factures récentes</CardTitle>
+                    <CardDescription>Les 5 dernières factures créées</CardDescription>
+                  </div>
+                  <Link to="/invoices">
+                    <Button variant="ghost" size="sm" className="gap-1">
+                      <Icon name="FileText" className="h-4 w-4" /> Toutes les factures
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent>
+                  <InvoiceList 
+                    invoices={recentInvoices}
+                    limit={5}
+                    showActions={false}
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="quotes" className="space-y-1">
+            {isMobile ? (
+              <>
+                <div className="flex items-center justify-between py-2">
+                  <h3 className="text-sm font-medium">{t("last5Quotes", "Les 5 derniers devis")}</h3>
+                  <Link to="/quotes">
+                    <Button variant="link" size="sm" className="h-8 p-0 text-primary">
+                      {t("viewAll", "Voir tout")} <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
+                <QuoteList 
+                  limit={5}
+                  showActions={false}
+                />
+              </>
+            ) : (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl">Devis récents</CardTitle>
+                    <CardDescription>Les 5 derniers devis créés</CardDescription>
+                  </div>
+                  <Link to="/quotes">
+                    <Button variant="ghost" size="sm" className="gap-1">
+                      <Icon name="FileEdit" className="h-4 w-4" /> Tous les devis
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent>
+                  <QuoteList 
+                    limit={5}
+                    showActions={false}
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
