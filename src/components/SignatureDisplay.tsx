@@ -1,27 +1,32 @@
+
 import React from 'react';
 import { SignatureData } from '@/types/invoice';
 
 interface SignatureDisplayProps {
   signature: SignatureData;
   className?: string;
+  signatureData?: SignatureData; // Add this to support both property names
 }
 
-export function SignatureDisplay({ signature, className }: SignatureDisplayProps) {
-  if (!signature || !signature.dataUrl) {
+export function SignatureDisplay({ signature, signatureData, className }: SignatureDisplayProps) {
+  // Use either signature or signatureData prop, with signature taking precedence
+  const signatureToDisplay = signature || signatureData;
+  
+  if (!signatureToDisplay || !signatureToDisplay.dataUrl) {
     return <p>No signature provided.</p>;
   }
 
   return (
     <div className={className}>
-      {signature.type === 'draw' && (
-        <img src={signature.dataUrl} alt="Drawn Signature" style={{ maxHeight: '50px', maxWidth: '200px' }} />
+      {signatureToDisplay.type === 'draw' && (
+        <img src={signatureToDisplay.dataUrl} alt="Drawn Signature" style={{ maxHeight: '50px', maxWidth: '200px' }} />
       )}
-      {signature.type === 'type' && (
+      {signatureToDisplay.type === 'type' && (
         <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '1.2em' }}>
-          {signature.name}
+          {signatureToDisplay.name}
         </div>
       )}
-      {signature.type === 'initials' && signature.initials && (
+      {signatureToDisplay.type === 'initials' && signatureToDisplay.initials && (
         <div style={{
           width: '40px',
           height: '40px',
@@ -34,7 +39,7 @@ export function SignatureDisplay({ signature, className }: SignatureDisplayProps
           fontSize: '1.2em',
           fontWeight: 'bold'
         }}>
-          {signature.initials.toUpperCase()}
+          {signatureToDisplay.initials.toUpperCase()}
         </div>
       )}
     </div>

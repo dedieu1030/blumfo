@@ -54,22 +54,12 @@ export interface InvoiceData {
   serviceLines?: ServiceLine[];
 }
 
-export interface CustomTaxConfiguration {
-  name: string;
-  rate: number;
-  country?: string;
-  countryName?: string;
-  taxType?: string;
-  mainRate?: number;
-  additionalRates?: Array<{name: string, rate: number}>;
-}
+import { CustomTaxConfiguration, TaxConfiguration } from './tax';
 
-export interface TaxConfiguration {
-  defaultTaxRate: string;
-  region: string; // Cette propriété doit être obligatoire
-  country: string;
-  customTax?: CustomTaxConfiguration;
-}
+export {
+  CustomTaxConfiguration,
+  TaxConfiguration
+};
 
 export interface CompanyProfile {
   id?: string;
@@ -167,7 +157,7 @@ export interface PaymentTermTemplate {
   delay: string;
   termsText: string;
   isDefault: boolean;
-  daysAfterIssue?: number;
+  daysAfterIssue: number;
   customDate?: string;
   description?: string;
 }

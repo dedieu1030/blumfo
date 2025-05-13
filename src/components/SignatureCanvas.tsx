@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import SignaturePad from 'signature_pad';
 import { Button } from "@/components/ui/button";
@@ -5,17 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignatureData } from '@/types/invoice';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SignatureCanvasProps {
   onSave: (signatureData: SignatureData) => void;
   onClose: () => void;
   initialData?: SignatureData;
+  // Add these to support component usage in other files
+  onSignatureChange?: (data: SignatureData) => void;
+  signatureData?: SignatureData;
+  userName?: string;
 }
 
-export function SignatureCanvas({ onSave, onClose, initialData }: SignatureCanvasProps) {
-  const [activeTab, setActiveTab] = useState<string>(initialData?.type || 'draw');
-  const [name, setName] = useState<string>(initialData?.name || '');
-  const [initials, setInitials] = useState<string>(initialData?.initials || '');
+export function SignatureCanvas({ 
+  onSave, 
+  onClose, 
+  initialData, 
+  onSignatureChange, 
+  signatureData, 
+  userName 
+}: SignatureCanvasProps) {
+  const [activeTab, setActiveTab] = useState<string>(initialData?.type || signatureData?.type || 'draw');
+  const [name, setName] = useState<string>(initialData?.name || signatureData?.name || userName || '');
+  const [initials, setInitials] = useState<string>(initialData?.initials || signatureData?.initials || '');
   const [fontFamily, setFontFamily] = useState<string>('Sacramento');
   const [isValid, setIsValid] = useState<boolean>(false);
   
@@ -69,8 +82,11 @@ export function SignatureCanvas({ onSave, onClose, initialData }: SignatureCanva
       });
 
       // If we have initial data and it's a signature, render it
-      if (initialData && initialData.type === 'draw' && initialData.dataUrl) {
-        signaturePadRef.current.fromDataURL(initialData.dataUrl);
+      if ((initialData || signatureData) && (initialData?.type === 'draw' || signatureData?.type === 'draw')) {
+        const dataUrl = initialData?.dataUrl || signatureData?.dataUrl;
+        if (dataUrl && signaturePadRef.current) {
+          signaturePadRef.current.fromDataURL(dataUrl);
+        }
       }
     }
 
@@ -81,7 +97,7 @@ export function SignatureCanvas({ onSave, onClose, initialData }: SignatureCanva
         signaturePadRef.current = null;
       }
     };
-  }, [initialData]);
+  }, [initialData, signatureData]);
 
   // Check if signature is valid
   useEffect(() => {
@@ -121,12 +137,18 @@ export function SignatureCanvas({ onSave, onClose, initialData }: SignatureCanva
     if (activeTab === 'draw' && signaturePadRef.current && !signaturePadRef.current.isEmpty()) {
       const dataUrl = signaturePadRef.current.toDataURL('image/png');
       
-      onSave({
+      const sigData = {
         type: 'draw',
         dataUrl,
         name: name || 'Signature',
         timestamp: new Date().toISOString()
-      });
+      };
+      
+      // Call both handlers if provided
+      if (onSignatureChange) {
+        onSignatureChange(sigData);
+      }
+      onSave(sigData);
     } else if (activeTab === 'type' && name.trim()) {
       // Create a canvas to render the typed signature
       const canvas = document.createElement('canvas');
@@ -147,12 +169,17 @@ export function SignatureCanvas({ onSave, onClose, initialData }: SignatureCanva
         
         const dataUrl = canvas.toDataURL('image/png');
         
-        onSave({
+        const sigData = {
           type: 'type',
           dataUrl,
           name,
           timestamp: new Date().toISOString()
-        });
+        };
+        
+        if (onSignatureChange) {
+          onSignatureChange(sigData);
+        }
+        onSave(sigData);
       }
     } else if (activeTab === 'initials' && initials.trim()) {
       // Create a canvas to render the initials
@@ -174,13 +201,18 @@ export function SignatureCanvas({ onSave, onClose, initialData }: SignatureCanva
         
         const dataUrl = canvas.toDataURL('image/png');
         
-        onSave({
+        const sigData = {
           type: 'initials',
           dataUrl,
           name,
           initials,
           timestamp: new Date().toISOString()
-        });
+        };
+        
+        if (onSignatureChange) {
+          onSignatureChange(sigData);
+        }
+        onSave(sigData);
       }
     }
   };

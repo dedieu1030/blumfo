@@ -1,31 +1,16 @@
-
 import { useState, useEffect } from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Globe, Settings, Search, ArrowLeft } from "lucide-react";
-import { TaxZone, TaxCountry, TaxRegionData, CustomTaxConfiguration } from "@/types/tax";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { TaxRateSelector } from "./TaxRateSelector";
-import { CustomTaxSettings } from "./CustomTaxSettings";
-import { formatTaxRate } from "@/lib/utils";
-
-// Récupération des données de taxe depuis le fichier de données
-import { taxZonesData } from "@/data/taxData";
-
-// Définir les niveaux de navigation possibles
-type NavigationLevel = "zones" | "countries" | "regions";
+import { getTaxRateByRegion, taxZonesData } from "@/data/taxData";
+import { CustomTaxConfiguration } from "@/types/tax";
+import CustomTaxSettings from "./CustomTaxSettings";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TaxZone, TaxCountry, TaxRegionData } from "@/types/tax";
 
 interface RegionalTaxSelectorProps {
-  defaultValue: number | string;
-  onChange: (value: number, regionKey?: string, customConfig?: CustomTaxConfiguration) => void;
-  showLabel?: boolean;
+  defaultValue?: number;
   defaultRegion?: string;
   defaultCustomTax?: CustomTaxConfiguration;
+  onChange: (value: number, regionKey?: string, customConfig?: CustomTaxConfiguration) => void;
+  showLabel?: boolean;
 }
 
 export function RegionalTaxSelector({

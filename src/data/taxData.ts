@@ -1,4 +1,3 @@
-
 import { TaxZone, TaxCountry, TaxRegionData } from "@/types/tax";
 
 // Données des zones fiscales
@@ -10,6 +9,7 @@ export const taxZonesData: TaxZone[] = [
       {
         id: "fr",
         name: "France",
+        code: "FR",
         countryCode: "FR",
         regions: [
           {
@@ -19,6 +19,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 20,
             totalRate: 20,
+            standardRate: 20  // Add standardRate
           },
           {
             id: "fr-intermediate",
@@ -27,6 +28,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [10],
             totalRate: 10,
+            standardRate: 10  // Add standardRate
           },
           {
             id: "fr-reduced",
@@ -35,6 +37,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [5.5],
             totalRate: 5.5,
+            standardRate: 5.5  // Add standardRate
           },
           {
             id: "fr-super-reduced",
@@ -43,6 +46,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-super-reduced",
             vatSuperReducedRate: 2.1,
             totalRate: 2.1,
+            standardRate: 2.1  // Add standardRate
           },
           {
             id: "fr-exempt",
@@ -50,6 +54,7 @@ export const taxZonesData: TaxZone[] = [
             code: "FR-EXE",
             taxType: "vat-exempt",
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           }
         ]
       },
@@ -65,6 +70,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 19,
             totalRate: 19,
+            standardRate: 19  // Add standardRate
           },
           {
             id: "de-reduced",
@@ -73,6 +79,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [7],
             totalRate: 7,
+            standardRate: 7  // Add standardRate
           },
           {
             id: "de-exempt",
@@ -80,6 +87,7 @@ export const taxZonesData: TaxZone[] = [
             code: "DE-EXE",
             taxType: "vat-exempt",
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           }
         ]
       },
@@ -95,6 +103,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 21,
             totalRate: 21,
+            standardRate: 21  // Add standardRate
           },
           {
             id: "es-reduced",
@@ -103,6 +112,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [10],
             totalRate: 10,
+            standardRate: 10  // Add standardRate
           },
           {
             id: "es-super-reduced",
@@ -111,6 +121,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-super-reduced",
             vatSuperReducedRate: 4,
             totalRate: 4,
+            standardRate: 4  // Add standardRate
           },
           {
             id: "es-exempt",
@@ -118,6 +129,7 @@ export const taxZonesData: TaxZone[] = [
             code: "ES-EXE",
             taxType: "vat-exempt",
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           },
           {
             id: "es-canary",
@@ -126,6 +138,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 7,
             totalRate: 7,
+            standardRate: 7  // Add standardRate
           }
         ]
       },
@@ -141,6 +154,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 22,
             totalRate: 22,
+            standardRate: 22  // Add standardRate
           },
           {
             id: "it-reduced-10",
@@ -149,6 +163,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [10],
             totalRate: 10,
+            standardRate: 10  // Add standardRate
           },
           {
             id: "it-reduced-5",
@@ -157,6 +172,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [5],
             totalRate: 5,
+            standardRate: 5  // Add standardRate
           },
           {
             id: "it-super-reduced",
@@ -165,6 +181,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-super-reduced",
             vatSuperReducedRate: 4,
             totalRate: 4,
+            standardRate: 4  // Add standardRate
           },
           {
             id: "it-exempt",
@@ -172,6 +189,7 @@ export const taxZonesData: TaxZone[] = [
             code: "IT-EXE",
             taxType: "vat-exempt",
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           }
         ]
       },
@@ -187,6 +205,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 21,
             totalRate: 21,
+            standardRate: 21  // Add standardRate
           },
           {
             id: "be-reduced-12",
@@ -195,6 +214,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [12],
             totalRate: 12,
+            standardRate: 12  // Add standardRate
           },
           {
             id: "be-reduced-6",
@@ -203,6 +223,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [6],
             totalRate: 6,
+            standardRate: 6  // Add standardRate
           },
           {
             id: "be-exempt",
@@ -210,6 +231,7 @@ export const taxZonesData: TaxZone[] = [
             code: "BE-EXE",
             taxType: "vat-exempt",
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           }
         ]
       },
@@ -225,6 +247,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 21,
             totalRate: 21,
+            standardRate: 21  // Add standardRate
           },
           {
             id: "nl-reduced",
@@ -233,6 +256,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [9],
             totalRate: 9,
+            standardRate: 9  // Add standardRate
           }
         ]
       },
@@ -248,6 +272,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 8.1,
             totalRate: 8.1,
+            standardRate: 8.1  // Add standardRate
           },
           {
             id: "ch-reduced",
@@ -256,6 +281,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [2.6],
             totalRate: 2.6,
+            standardRate: 2.6  // Add standardRate
           },
           {
             id: "ch-special",
@@ -264,6 +290,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-parking",
             vatParkingRate: 3.8,
             totalRate: 3.8,
+            standardRate: 3.8  // Add standardRate
           },
           {
             id: "ch-exempt",
@@ -271,6 +298,7 @@ export const taxZonesData: TaxZone[] = [
             code: "CH-EXE",
             taxType: "vat-exempt",
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           }
         ]
       },
@@ -286,6 +314,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-standard",
             vatStandardRate: 20,
             totalRate: 20,
+            standardRate: 20  // Add standardRate
           },
           {
             id: "uk-reduced",
@@ -294,6 +323,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [5],
             totalRate: 5,
+            standardRate: 5  // Add standardRate
           },
           {
             id: "uk-zero",
@@ -302,6 +332,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "vat-reduced",
             vatReducedRates: [0],
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           },
           {
             id: "uk-exempt",
@@ -309,6 +340,7 @@ export const taxZonesData: TaxZone[] = [
             code: "GB-EXE",
             taxType: "vat-exempt",
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           }
         ]
       }
@@ -330,6 +362,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "gst",
             gstRate: 5,
             totalRate: 5,
+            standardRate: 5  // Add standardRate
           },
           {
             id: "ca-bc",
@@ -339,6 +372,7 @@ export const taxZonesData: TaxZone[] = [
             gstRate: 5,
             pstRate: 7,
             totalRate: 12,
+            standardRate: 12  // Add standardRate
           },
           {
             id: "ca-mb",
@@ -348,6 +382,7 @@ export const taxZonesData: TaxZone[] = [
             gstRate: 5,
             pstRate: 7,
             totalRate: 12,
+            standardRate: 12  // Add standardRate
           },
           {
             id: "ca-nb",
@@ -356,6 +391,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "hst",
             hstRate: 15,
             totalRate: 15,
+            standardRate: 15  // Add standardRate
           },
           {
             id: "ca-nl",
@@ -364,6 +400,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "hst",
             hstRate: 15,
             totalRate: 15,
+            standardRate: 15  // Add standardRate
           },
           {
             id: "ca-ns",
@@ -372,6 +409,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "hst",
             hstRate: 14,
             totalRate: 14,
+            standardRate: 14  // Add standardRate
           },
           {
             id: "ca-nt",
@@ -380,6 +418,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "gst",
             gstRate: 5,
             totalRate: 5,
+            standardRate: 5  // Add standardRate
           },
           {
             id: "ca-nu",
@@ -388,6 +427,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "gst",
             gstRate: 5,
             totalRate: 5,
+            standardRate: 5  // Add standardRate
           },
           {
             id: "ca-on",
@@ -396,6 +436,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "hst",
             hstRate: 13,
             totalRate: 13,
+            standardRate: 13  // Add standardRate
           },
           {
             id: "ca-pe",
@@ -404,6 +445,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "hst",
             hstRate: 15,
             totalRate: 15,
+            standardRate: 15  // Add standardRate
           },
           {
             id: "ca-qc",
@@ -413,6 +455,7 @@ export const taxZonesData: TaxZone[] = [
             gstRate: 5,
             qstRate: 9.975,
             totalRate: 14.975,
+            standardRate: 14.975  // Add standardRate
           },
           {
             id: "ca-sk",
@@ -422,6 +465,7 @@ export const taxZonesData: TaxZone[] = [
             gstRate: 5,
             pstRate: 6,
             totalRate: 11,
+            standardRate: 11  // Add standardRate
           },
           {
             id: "ca-yt",
@@ -430,6 +474,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "gst",
             gstRate: 5,
             totalRate: 5,
+            standardRate: 5  // Add standardRate
           }
         ]
       },
@@ -455,6 +500,7 @@ export const taxZonesData: TaxZone[] = [
             stateTaxRate: 4,
             localTaxRate: 4.875,
             totalRate: 8.875,
+            standardRate: 8.875  // Add standardRate
           },
           {
             id: "us-tx",
@@ -464,6 +510,7 @@ export const taxZonesData: TaxZone[] = [
             stateTaxRate: 6.25,
             localTaxRate: 2,
             totalRate: 8.25,
+            standardRate: 8.25  // Add standardRate
           },
           {
             id: "us-fl",
@@ -473,6 +520,7 @@ export const taxZonesData: TaxZone[] = [
             stateTaxRate: 6,
             localTaxRate: 2.5,
             totalRate: 8.5,
+            standardRate: 8.5  // Add standardRate
           },
           {
             id: "us-or",
@@ -504,6 +552,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "iva-standard",
             ivaRate: 16,
             totalRate: 16,
+            standardRate: 16  // Add standardRate
           },
           {
             id: "mx-border",
@@ -512,6 +561,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "iva-reduced",
             ivaRate: 8,
             totalRate: 8,
+            standardRate: 8  // Add standardRate
           },
           {
             id: "mx-zero",
@@ -520,6 +570,7 @@ export const taxZonesData: TaxZone[] = [
             taxType: "iva-zero",
             ivaRate: 0,
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           },
           {
             id: "mx-exempt",
@@ -527,6 +578,7 @@ export const taxZonesData: TaxZone[] = [
             code: "MX-EXE",
             taxType: "iva-exempt",
             totalRate: 0,
+            standardRate: 0  // Add standardRate
           },
           {
             id: "mx-ish",
@@ -535,7 +587,8 @@ export const taxZonesData: TaxZone[] = [
             taxType: "iva-special",
             ivaRate: 3,
             totalRate: 3,
-            notes: "Taux moyen, varie entre 2% et 5% selon les États"
+            notes: "Taux moyen, varie entre 2% et 5% selon les États",
+            standardRate: 3  // Add standardRate
           }
         ]
       }
@@ -546,11 +599,22 @@ export const taxZonesData: TaxZone[] = [
 // Pour la rétrocompatibilité
 export const taxRegionsData = taxZonesData.flatMap(zone => 
   zone.countries.map(country => {
+    // Add standardRate to each region if missing
+    const regionsWithStandardRate = country.regions.map(region => {
+      if (!region.standardRate && region.totalRate !== undefined) {
+        return {
+          ...region,
+          standardRate: region.totalRate
+        };
+      }
+      return region;
+    });
+
     return {
       id: country.id,
       name: country.name,
       countryCode: country.countryCode,
-      regions: country.regions
+      regions: regionsWithStandardRate
     };
   })
 );
@@ -582,7 +646,7 @@ export const getTaxRateByRegion = (regionKey: string): number => {
   if (!country) return 20;
   
   const region = country.regions.find(r => r.id === regionId);
-  return region ? region.totalRate : 20;
+  return region ? region.totalRate || region.standardRate : 20;
 };
 
 // Fonction pour obtenir les options de taxe par pays
@@ -600,7 +664,7 @@ export const getTaxOptionsForCountry = (countryKey: string) => {
   return country.regions.map(region => ({
     id: `${zoneId}:${countryId}:${region.id}`,
     name: region.name,
-    rate: region.totalRate,
+    rate: region.totalRate || region.standardRate,
     code: region.code
   }));
 };
@@ -614,5 +678,5 @@ export const getTaxRateForRegion = (zoneId: string, countryId: string, regionId:
   if (!country) return 20;
   
   const region = country.regions.find(r => r.id === regionId);
-  return region ? region.totalRate : 20;
+  return region ? (region.totalRate || region.standardRate) : 20;
 };

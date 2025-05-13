@@ -110,7 +110,7 @@ export function QuoteSignatureComponent({ quote, quoteId, onSuccess, readOnly = 
         <CardContent className="space-y-4">
           <div className="border rounded-md p-4 bg-gray-50">
             <SignatureDisplay 
-              signatureData={existingSignature.signature_data as SignatureData} 
+              signature={existingSignature.signature_data as SignatureData} 
               className="flex justify-center" 
             />
           </div>
@@ -152,6 +152,8 @@ export function QuoteSignatureComponent({ quote, quoteId, onSuccess, readOnly = 
               onSignatureChange={handleSignatureChange}
               signatureData={signatureData}
               userName={signerName}
+              onSave={() => {}}
+              onClose={() => {}}
             />
           </div>
           
