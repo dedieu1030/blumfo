@@ -30,7 +30,7 @@ import { useNavigate } from "react-router-dom";
 import { InvoiceDialog } from "@/components/InvoiceDialog";
 import { useTranslation } from "react-i18next";
 
-function Invoicing() {
+export default function Invoicing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -469,5 +469,3 @@ function Invoicing() {
     </>
   );
 }
-
-export default Invoicing;

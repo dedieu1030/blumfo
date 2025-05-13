@@ -1,146 +1,113 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { UserProfile } from "@/types/user";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { UserProfile } from '@/types/user';
+import { toast } from 'sonner';
 
 export function useUserProfile() {
-  const [userProfile, setUserProfile] = useState<Partial<UserProfile>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const fetchUserProfile = async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setError("User not authenticated");
-        setLoading(false);
-        return;
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching user profile:", profileError);
-        setError(profileError.message);
-        setLoading(false);
-        return;
-      }
-
-      if (profile) {
-        // Conversion explicite pour que TypeScript soit content
-        const typedProfile: UserProfile = {
-          id: profile.id,
-          username: profile.username,
-          full_name: profile.full_name,
-          avatar_url: profile.avatar_url,
-          email: profile.email,
-          phone: profile.phone,
-          language: profile.language || 'fr',
-          timezone: profile.timezone || 'Europe/Paris',
-          notification_settings: typeof profile.notification_settings === 'object' 
-            ? profile.notification_settings as { email: boolean; push: boolean; sms: boolean }
-            : { email: true, push: true, sms: false },
-          created_at: profile.created_at,
-          updated_at: profile.updated_at
-        };
-        
-        setUserProfile(typedProfile);
-      }
-    } catch (err) {
-      console.error("Error in fetchUserProfile:", err);
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateUserProfile = async (updates: Partial<UserProfile>) => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setError("User not authenticated");
-        setLoading(false);
-        return;
-      }
-
-      // Mise à jour du profil avec typage correct pour Supabase
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-          notification_settings: updates.notification_settings || userProfile.notification_settings
-        })
-        .eq("id", user.id);
-
-      if (updateError) {
-        console.error("Error updating profile:", updateError);
-        setError(updateError.message);
-        return;
-      }
-
-      // Récupérer le profil mis à jour
-      const { data: updatedProfile, error: fetchError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (fetchError) {
-        console.error("Error fetching updated profile:", fetchError);
-        setError(fetchError.message);
-        return;
-      }
-
-      if (updatedProfile) {
-        // Conversion explicite comme ci-dessus
-        const typedProfile: UserProfile = {
-          id: updatedProfile.id,
-          username: updatedProfile.username,
-          full_name: updatedProfile.full_name,
-          avatar_url: updatedProfile.avatar_url,
-          email: updatedProfile.email,
-          phone: updatedProfile.phone,
-          language: updatedProfile.language || 'fr',
-          timezone: updatedProfile.timezone || 'Europe/Paris',
-          notification_settings: typeof updatedProfile.notification_settings === 'object' 
-            ? updatedProfile.notification_settings as { email: boolean; push: boolean; sms: boolean }
-            : { email: true, push: true, sms: false },
-          created_at: updatedProfile.created_at,
-          updated_at: updatedProfile.updated_at
-        };
-        
-        setUserProfile(typedProfile);
-      }
-    } catch (err) {
-      console.error("Error in updateUserProfile:", err);
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    fetchUserProfile();
+    async function fetchProfile() {
+      try {
+        setLoading(true);
+        
+        // Vérifier si l'utilisateur est connecté via Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) {
+          setLoading(false);
+          return;
+        }
+        
+        const userId = session.user.id;
+        
+        // Récupérer le profil de l'utilisateur
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+          
+        if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
+          throw error;
+        }
+        
+        if (data) {
+          setProfile(data as UserProfile);
+        }
+      } catch (err: any) {
+        console.error('Erreur lors du chargement du profil:', err);
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchProfile();
+    
+    // Configurer un listener pour les changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event) => {
+        if (event === 'SIGNED_IN') {
+          fetchProfile();
+        } else if (event === 'SIGNED_OUT') {
+          setProfile(null);
+        }
+      }
+    );
+    
+    return () => subscription.unsubscribe();
   }, []);
 
-  return {
-    userProfile,
-    loading,
-    error,
-    fetchUserProfile,
-    updateUserProfile
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    try {
+      setLoading(true);
+      
+      // Vérifier si l'utilisateur est connecté
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        toast.error('Vous devez être connecté pour mettre à jour votre profil');
+        return { success: false };
+      }
+      
+      const userId = session.user.id;
+      
+      // S'assurer que les champs requis sont présents
+      if (!updates.email && profile?.email) {
+        updates.email = profile.email;
+      }
+      
+      if (!updates.full_name && profile?.full_name) {
+        updates.full_name = profile.full_name;
+      }
+      
+      // Mise à jour du timestamp
+      updates.updated_at = new Date().toISOString();
+      
+      // Mettre à jour le profil
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', userId)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      setProfile(data as UserProfile);
+      toast.success('Profil mis à jour avec succès');
+      return { success: true, data };
+    } catch (err: any) {
+      console.error('Erreur lors de la mise à jour du profil:', err);
+      setError(err);
+      toast.error(err.message || 'Erreur lors de la mise à jour du profil');
+      return { success: false, error: err };
+    } finally {
+      setLoading(false);
+    }
   };
+
+  return { profile, loading, error, updateProfile };
 }

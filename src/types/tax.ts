@@ -1,3 +1,4 @@
+
 export interface TaxZone {
   id: string;
   name: string;
@@ -57,7 +58,7 @@ export interface CustomTaxConfiguration {
   }>;
 }
 
-// Liste des types de taxes disponibles pour la sélection
+// Liste des types de taxes disponibles pour la sélection (maintenue pour rétrocompatibilité)
 export const TAX_TYPES = [
   { id: "vat", name: "TVA (Value Added Tax)", countries: ["EU", "UK", "NO", "CH"] },
   { id: "gst", name: "GST (Goods and Services Tax)", countries: ["AU", "NZ", "CA"] },
