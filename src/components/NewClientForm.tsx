@@ -30,13 +30,63 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
     // Réinitialiser les erreurs à l'ouverture du formulaire
     if (open) {
       setAuthError(null);
+      // Récupérer l'entreprise de l'utilisateur connecté
+      fetchUserCompany();
     }
   }, [open]);
+
+  // Fonction pour récupérer l'entreprise de l'utilisateur
+  const fetchUserCompany = async () => {
+    try {
+      // Obtenir la session utilisateur courante
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Erreur lors de la récupération de la session:", sessionError);
+        setAuthError("Impossible de vérifier votre session. Veuillez vous reconnecter.");
+        return;
+      }
+      
+      const userId = session?.user?.id;
+      
+      if (!userId) {
+        console.warn("Aucun utilisateur connecté lors de la récupération de l'entreprise");
+        setAuthError("Vous devez être connecté pour créer un client. Veuillez vous connecter.");
+        return;
+      }
+
+      // Récupérer l'entreprise associée à l'utilisateur
+      const { data: companies, error: companiesError } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (companiesError) {
+        console.error("Erreur lors de la récupération de l'entreprise:", companiesError);
+        setAuthError("Erreur lors de la récupération de votre entreprise. Veuillez réessayer.");
+        return;
+      }
+
+      if (!companies || companies.length === 0) {
+        console.warn("Aucune entreprise trouvée pour l'utilisateur");
+        setAuthError("Aucune entreprise trouvée pour votre compte. Veuillez créer une entreprise d'abord.");
+        return;
+      }
+
+      setCompanyId(companies[0].id);
+    } catch (error: any) {
+      console.error("Erreur lors de la récupération de l'entreprise:", error);
+      setAuthError("Une erreur est survenue. Veuillez réessayer plus tard.");
+    }
+  };
 
   const handleSubmit = async () => {
     if (!clientName) {
@@ -44,28 +94,16 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       return;
     }
 
+    if (!companyId) {
+      toast.error("Impossible de créer un client sans entreprise associée");
+      return;
+    }
+
     setIsLoading(true);
     setAuthError(null);
 
     try {
-      // Obtenir la session utilisateur courante
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error("Erreur lors de la récupération de la session:", sessionError);
-        throw new Error("Impossible de vérifier votre session. Veuillez vous reconnecter.");
-      }
-      
-      const userId = session?.user?.id;
-      
-      if (!userId) {
-        console.warn("Aucun utilisateur connecté lors de la création du client");
-        setAuthError("Vous devez être connecté pour créer un client. Veuillez vous connecter.");
-        return;
-      }
-
-      // Log pour débogage
-      console.log("Création de client avec user ID:", userId);
+      console.log("Création de client avec company ID:", companyId);
       
       const { data, error } = await supabase
         .from('clients')
@@ -74,7 +112,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
           email: email || null,
           phone: phone || null,
           address: address || null,
-          company_id: userId
+          company_id: companyId
         })
         .select()
         .single();
@@ -177,7 +215,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Annuler
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading || !!authError}>
+          <Button onClick={handleSubmit} disabled={isLoading || !!authError || !companyId}>
             {isLoading ? (
               <>
                 <span className="animate-spin h-4 w-4 mr-2 border-t-2 border-current rounded-full" />
