@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -250,6 +251,7 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
       
       <div className="pt-4 border-t">
         <h3 className="text-lg font-medium mb-4">Informations bancaires</h3>
+        <p className="text-sm text-muted-foreground mb-4">Optionnel : vous pourrez compléter ces informations ultérieurement</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="bank-name">Nom de la banque</Label>
@@ -258,7 +260,6 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
               placeholder="Banque Nationale" 
               value={formData.bankName || ""}
               onChange={(e) => handleChange("bankName", e.target.value)}
-              required
             />
           </div>
           <div className="space-y-2">
@@ -268,7 +269,6 @@ export function BusinessProfileForm({ subtype, initialData, onSave, onBack }: Bu
               placeholder="FR76 1234 5678 9123 4567 8912 345" 
               value={formData.bankAccount || ""}
               onChange={(e) => handleChange("bankAccount", e.target.value)}
-              required
             />
           </div>
         </div>
