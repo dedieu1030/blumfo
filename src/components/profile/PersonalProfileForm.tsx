@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { PersonalProfileSubtype } from "./ProfileSubtypeSelector";
 import { CompanyProfile } from "@/types/invoice";
-import { TaxRateSelector } from "@/components/settings/TaxRateSelector";
+import { RegionalTaxSelector } from "@/components/settings/RegionalTaxSelector";
 
 interface PersonalProfileFormProps {
   subtype: PersonalProfileSubtype;
@@ -28,6 +28,7 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
     bankName: "",
     accountHolder: "",
     taxRate: 20, // Use numeric value for internal state
+    taxRegion: "", // Ajout du champ pour stocker la région fiscale
     termsAndConditions: "Paiement à réception de facture. Des pénalités de retard de 3 fois le taux d'intérêt légal seront appliquées en cas de paiement après la date d'échéance.",
     thankYouMessage: "Merci pour votre confiance",
     defaultCurrency: "EUR",
@@ -73,6 +74,15 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
     }
   };
 
+  // Gestion du changement de région fiscale
+  const handleTaxRegionChange = (value: number, regionKey?: string) => {
+    setFormData(prev => ({
+      ...prev,
+      taxRate: value,
+      taxRegion: regionKey || prev.taxRegion
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -84,6 +94,7 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
       phone: formData.phone || '',
       emailType: formData.emailType as 'personal' | 'professional' | 'company',
       taxRate: formData.taxRate as number,
+      taxRegion: formData.taxRegion || '',
       defaultCurrency: formData.defaultCurrency || 'EUR',
       ...formData
     } as CompanyProfile;
@@ -274,9 +285,10 @@ export function PersonalProfileForm({ subtype, initialData, onSave, onBack }: Pe
         <h3 className="text-lg font-medium mb-4">Paramètres de facturation</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 md:col-span-2">
-            <TaxRateSelector
+            <RegionalTaxSelector
               defaultValue={Number(formData.taxRate)}
-              onChange={(value) => handleChange("taxRate", value)}
+              defaultRegion={formData.taxRegion || undefined}
+              onChange={handleTaxRegionChange}
             />
           </div>
           <div className="space-y-2">
