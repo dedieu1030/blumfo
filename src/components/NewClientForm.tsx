@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "./ClientSelector";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface NewClientFormProps {
   open: boolean;
@@ -27,6 +29,14 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Réinitialiser les erreurs à l'ouverture du formulaire
+    if (open) {
+      setAuthError(null);
+    }
+  }, [open]);
 
   const handleSubmit = async () => {
     if (!clientName) {
@@ -35,12 +45,28 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     }
 
     setIsLoading(true);
+    setAuthError(null);
 
     try {
-      // Get the current user
-      const { data: { session } } = await supabase.auth.getSession();
+      // Obtenir la session utilisateur courante
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Erreur lors de la récupération de la session:", sessionError);
+        throw new Error("Impossible de vérifier votre session. Veuillez vous reconnecter.");
+      }
+      
       const userId = session?.user?.id;
+      
+      if (!userId) {
+        console.warn("Aucun utilisateur connecté lors de la création du client");
+        setAuthError("Vous devez être connecté pour créer un client. Veuillez vous connecter.");
+        return;
+      }
 
+      // Log pour débogage
+      console.log("Création de client avec user ID:", userId);
+      
       const { data, error } = await supabase
         .from('clients')
         .insert({
@@ -48,12 +74,19 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
           email: email || null,
           phone: phone || null,
           address: address || null,
-          company_id: userId || null
+          company_id: userId
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur lors de la création du client:", error);
+        if (error.code === '42501') {
+          throw new Error("Vous n'avez pas les permissions nécessaires pour créer un client");
+        } else {
+          throw error;
+        }
+      }
 
       toast.success("Client créé avec succès");
       
@@ -74,9 +107,9 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       setAddress("");
       
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating client:", error);
-      toast.error("Erreur lors de la création du client");
+      toast.error(error.message || "Erreur lors de la création du client");
     } finally {
       setIsLoading(false);
     }
@@ -88,6 +121,13 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         <DialogHeader>
           <DialogTitle>Nouveau client</DialogTitle>
         </DialogHeader>
+
+        {authError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
@@ -137,7 +177,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Annuler
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading}>
+          <Button onClick={handleSubmit} disabled={isLoading || !!authError}>
             {isLoading ? (
               <>
                 <span className="animate-spin h-4 w-4 mr-2 border-t-2 border-current rounded-full" />
