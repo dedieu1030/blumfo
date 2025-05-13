@@ -24,17 +24,25 @@ export function CustomTaxSettings({
   onChange,
   showLabel = true
 }: CustomTaxSettingsProps) {
-  // État principal pour la configuration de taxe personnalisée
+  // États principaux
   const [customTax, setCustomTax] = useState<CustomTaxConfiguration>({
     country: defaultConfig?.country || "",
     countryName: defaultConfig?.countryName || "",
-    taxType: defaultConfig?.taxType || "",  // Modifié pour accepter un type personnalisé
+    taxType: defaultConfig?.taxType || "",
     mainRate: typeof defaultValue === "string" ? parseFloat(defaultValue) || 20 : defaultValue,
     additionalRates: defaultConfig?.additionalRates || []
   });
   
+  // États pour l'interface utilisateur
+  const [step, setStep] = useState<"country" | "taxType" | "taxRate" | "additionalRates">(
+    defaultConfig?.country ? (
+      defaultConfig?.taxType ? (
+        "taxRate"
+      ) : "taxType"
+    ) : "country"
+  );
+  
   // État pour la sélection de pays
-  const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [countries, setCountries] = useState<CountryData[]>([]);
   const [continents, setContinents] = useState<string[]>([]);
@@ -45,9 +53,9 @@ export function CustomTaxSettings({
     name: "",
     rate: 5
   });
-
-  // État pour le type de taxe personnalisé
-  const [customTaxType, setCustomTaxType] = useState<string>(defaultConfig?.taxType || "");
+  
+  // États pour les interactions utilisateur
+  const [showAdditionalRateForm, setShowAdditionalRateForm] = useState(false);
 
   // Chargement initial des pays filtrés
   useEffect(() => {
@@ -66,7 +74,15 @@ export function CustomTaxSettings({
         ...defaultConfig,
         mainRate: typeof defaultValue === "string" ? parseFloat(defaultValue) || 20 : defaultValue
       });
-      setCustomTaxType(defaultConfig.taxType || "");
+      
+      // Définir l'étape en fonction des données existantes
+      if (defaultConfig.country) {
+        if (defaultConfig.taxType) {
+          setStep("taxRate");
+        } else {
+          setStep("taxType");
+        }
+      }
     }
   }, [defaultConfig, defaultValue]);
 
@@ -116,17 +132,29 @@ export function CustomTaxSettings({
       };
       setCustomTax(updatedConfig);
       onChange(customTax.mainRate, undefined, updatedConfig);
+      setStep("taxType"); // Passer à l'étape suivante
     }
   };
 
   // Gérer le changement de type de taxe
   const handleTaxTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setCustomTaxType(value);
     
     const updatedConfig = { ...customTax, taxType: value };
     setCustomTax(updatedConfig);
     onChange(customTax.mainRate, undefined, updatedConfig);
+  };
+
+  // Valider le type de taxe et passer à l'étape suivante
+  const handleTaxTypeConfirm = () => {
+    if (customTax.taxType.trim() !== '') {
+      setStep("taxRate");
+    }
+  };
+
+  // Confirmer le taux principal et passer aux taux additionnels
+  const handleMainRateConfirm = () => {
+    setStep("additionalRates");
   };
 
   // Ajouter un taux additionnel
@@ -142,8 +170,9 @@ export function CustomTaxSettings({
     setCustomTax(updatedConfig);
     onChange(customTax.mainRate, undefined, updatedConfig);
     
-    // Réinitialiser le formulaire
+    // Réinitialiser le formulaire et le masquer
     setNewRate({ name: "", rate: 5 });
+    setShowAdditionalRateForm(false);
   };
 
   // Supprimer un taux additionnel
@@ -181,7 +210,7 @@ export function CustomTaxSettings({
       )}
       
       <div className="space-y-4">
-        {/* Sélection du pays */}
+        {/* Étape 1: Sélection du pays */}
         <div className="space-y-2">
           <Label htmlFor="country-select">Pays</Label>
           <Select
@@ -235,112 +264,165 @@ export function CustomTaxSettings({
               )}
             </SelectContent>
           </Select>
+          {customTax.countryName && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Pays sélectionné: <span className="font-medium">{customTax.countryName}</span>
+            </p>
+          )}
         </div>
 
-        {/* Saisie du type de taxe personnalisé */}
-        <div className="space-y-2">
-          <Label htmlFor="tax-type">Type de taxe</Label>
-          <Input
-            id="tax-type"
-            placeholder="Entrez un nom pour ce type de taxe (ex: TVA, GST, etc.)"
-            value={customTaxType}
-            onChange={handleTaxTypeChange}
-            className="w-full"
-          />
-        </div>
-
-        {/* Taux principal */}
-        <div className="space-y-2 pt-4">
-          <Label htmlFor="main-tax-rate">Taux principal</Label>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <Slider
-                id="main-tax-rate-slider"
-                defaultValue={[customTax.mainRate]}
-                value={[customTax.mainRate]}
-                max={50}
-                step={0.1}
-                onValueChange={handleMainRateChange}
-              />
-            </div>
-            <div className="w-20">
+        {/* Étape 2: Saisie du type de taxe personnalisé */}
+        {step !== "country" && (
+          <div className="space-y-2">
+            <Label htmlFor="tax-type">Type de taxe</Label>
+            <div className="flex items-center space-x-2">
               <Input
-                id="main-tax-rate-input"
-                type="number"
-                value={customTax.mainRate}
-                min={0}
-                max={100}
-                step={0.1}
-                onChange={handleMainRateInputChange}
-                className="text-right"
+                id="tax-type"
+                placeholder="Entrez un nom pour ce type de taxe (ex: TVA, GST, etc.)"
+                value={customTax.taxType}
+                onChange={handleTaxTypeChange}
+                className="flex-1"
               />
+              {step === "taxType" && (
+                <Button 
+                  onClick={handleTaxTypeConfirm}
+                  disabled={!customTax.taxType.trim()}
+                  type="button"
+                >
+                  Suivant
+                </Button>
+              )}
             </div>
-            <span className="text-sm font-medium">%</span>
           </div>
-        </div>
+        )}
 
-        {/* Taux additionnels */}
-        <div className="space-y-4 pt-4">
-          <Label>Taux additionnels</Label>
-          
-          {/* Liste des taux additionnels */}
-          {customTax.additionalRates && customTax.additionalRates.length > 0 && (
-            <div className="space-y-2">
-              {customTax.additionalRates.map((rate, index) => (
-                <div key={index} className="flex items-center justify-between p-2 border rounded-md">
-                  <div className="flex-1">
-                    <p className="font-medium">{rate.name}</p>
+        {/* Étape 3: Taux principal */}
+        {step !== "country" && step !== "taxType" && (
+          <div className="space-y-2 pt-4 animate-in fade-in">
+            <Label htmlFor="main-tax-rate">Taux principal</Label>
+            <div className="flex items-center space-x-4">
+              <div className="flex-1">
+                <Slider
+                  id="main-tax-rate-slider"
+                  defaultValue={[customTax.mainRate]}
+                  value={[customTax.mainRate]}
+                  max={50}
+                  step={0.1}
+                  onValueChange={handleMainRateChange}
+                />
+              </div>
+              <div className="w-20">
+                <Input
+                  id="main-tax-rate-input"
+                  type="number"
+                  value={customTax.mainRate}
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  onChange={handleMainRateInputChange}
+                  className="text-right"
+                />
+              </div>
+              <span className="text-sm font-medium">%</span>
+              {step === "taxRate" && (
+                <Button 
+                  onClick={handleMainRateConfirm}
+                  type="button"
+                >
+                  Suivant
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Étape 4: Taux additionnels */}
+        {step === "additionalRates" && (
+          <div className="space-y-4 pt-4 animate-in fade-in">
+            <div className="flex items-center justify-between">
+              <Label>Taux additionnels</Label>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowAdditionalRateForm(!showAdditionalRateForm)}
+              >
+                {showAdditionalRateForm ? "Annuler" : (
+                  <>
+                    <Plus className="h-4 w-4 mr-1" /> 
+                    Ajouter un taux
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {/* Liste des taux additionnels */}
+            {customTax.additionalRates && customTax.additionalRates.length > 0 && (
+              <div className="space-y-2">
+                {customTax.additionalRates.map((rate, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 border rounded-md">
+                    <div className="flex-1">
+                      <p className="font-medium">{rate.name}</p>
+                    </div>
+                    <Badge variant="outline" className="px-2 min-w-[50px] text-center">
+                      {formatTaxRate(rate.rate)}%
+                    </Badge>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="ml-2" 
+                      onClick={() => handleDeleteRate(index)}
+                    >
+                      <Trash className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
-                  <Badge variant="outline" className="px-2 min-w-[50px] text-center">
-                    {formatTaxRate(rate.rate)}%
-                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Formulaire pour ajouter un taux */}
+            {showAdditionalRateForm && (
+              <div className="border p-3 rounded-md space-y-3 animate-in fade-in">
+                <h4 className="font-medium">Nouveau taux</h4>
+                <div className="flex items-end space-x-2">
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor="new-rate-name">Nom du taux</Label>
+                    <Input
+                      id="new-rate-name"
+                      placeholder="Ex: Taux réduit"
+                      value={newRate.name}
+                      onChange={handleNewRateNameChange}
+                    />
+                  </div>
+                  <div className="w-24 space-y-2">
+                    <Label htmlFor="new-rate-value">Taux (%)</Label>
+                    <Input
+                      id="new-rate-value"
+                      type="number"
+                      value={newRate.rate}
+                      min={0}
+                      max={100}
+                      step={0.1}
+                      onChange={handleNewRateValueChange}
+                      className="text-right"
+                    />
+                  </div>
                   <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="ml-2" 
-                    onClick={() => handleDeleteRate(index)}
+                    onClick={handleAddRate}
+                    disabled={newRate.name.trim() === ""}
                   >
-                    <Trash className="h-4 w-4 text-destructive" />
+                    Ajouter
                   </Button>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Formulaire pour ajouter un taux */}
-          <div className="flex items-end space-x-2">
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="new-rate-name">Nom du taux</Label>
-              <Input
-                id="new-rate-name"
-                placeholder="Ex: Taux réduit"
-                value={newRate.name}
-                onChange={handleNewRateNameChange}
-              />
-            </div>
-            <div className="w-24 space-y-2">
-              <Label htmlFor="new-rate-value">Taux (%)</Label>
-              <Input
-                id="new-rate-value"
-                type="number"
-                value={newRate.rate}
-                min={0}
-                max={100}
-                step={0.1}
-                onChange={handleNewRateValueChange}
-                className="text-right"
-              />
-            </div>
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={handleAddRate}
-              disabled={newRate.name.trim() === ""}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+              </div>
+            )}
+            
+            {!showAdditionalRateForm && customTax.additionalRates?.length === 0 && (
+              <div className="py-4 text-center text-sm text-muted-foreground border rounded-md">
+                Aucun taux additionnel défini
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
