@@ -1,361 +1,365 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import SignaturePad from 'signature_pad';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SignatureData } from "@/types/invoice";
-import { toast } from "sonner";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SignatureData } from '@/types/invoice';
 
-interface SignatureCanvasProps {
-  onSignatureChange: (signatureData: SignatureData | undefined) => void;
-  signatureData?: SignatureData;
-  userName?: string;
+export interface SignatureCanvasProps {
+  onSave: (signature: SignatureData) => void;
+  onClose: () => void;
+  initialData?: SignatureData;
 }
 
-export function SignatureCanvas({ onSignatureChange, signatureData, userName = "" }: SignatureCanvasProps) {
+export function SignatureCanvas({ onSave, onClose, initialData }: SignatureCanvasProps) {
+  const [activeTab, setActiveTab] = useState<string>(initialData?.type || 'draw');
+  const [name, setName] = useState<string>(initialData?.name || '');
+  const [initials, setInitials] = useState<string>(initialData?.initials || '');
+  const [fontFamily, setFontFamily] = useState<string>('Sacramento');
+  const [isValid, setIsValid] = useState<boolean>(false);
+  
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const signaturePadRef = useRef<SignaturePad | null>(null);
-  const [signatureType, setSignatureType] = useState<'drawn' | 'initials'>(signatureData?.type || 'drawn');
-  const [initials, setInitials] = useState(signatureData?.initials || '');
-  const [name, setName] = useState(signatureData?.name || userName);
-  const [canvasReady, setCanvasReady] = useState(false);
-  const [canvasInitialized, setCanvasInitialized] = useState(0); // Compteur pour forcer la réinitialisation
   
-  // Fonction améliorée pour initialiser le canvas avec la signature
-  const initializeCanvas = () => {
-    console.log("Tentative d'initialisation du canvas", {
-      canvasExists: !!canvasRef.current,
-      signatureType,
-      timestamp: new Date().toISOString()
-    });
-    
-    if (!canvasRef.current || signatureType !== 'drawn') {
-      console.log("Initialisation du canvas annulée - conditions non remplies");
-      return;
-    }
-    
-    const canvas = canvasRef.current;
-    
-    // Nettoyer l'ancienne instance si elle existe
-    if (signaturePadRef.current) {
-      console.log("Nettoyage de l'instance précédente de SignaturePad");
-      signaturePadRef.current.off();
-      signaturePadRef.current = null;
-    }
-    
-    // Ajuster la taille du canvas pour qu'il soit responsive
-    const parentWidth = canvas.parentElement?.clientWidth || 300;
-    canvas.width = parentWidth;
-    canvas.height = 200;
-    
-    // Effacer le contexte manuellement
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    
-    // Créer l'instance SignaturePad avec des options améliorées
-    try {
-      console.log("Création d'une nouvelle instance SignaturePad");
-      signaturePadRef.current = new SignaturePad(canvas, {
-        backgroundColor: 'rgb(255, 255, 255)',
-        penColor: 'rgb(0, 0, 0)',
-        minWidth: 0.5,
-        maxWidth: 2.5,
-        velocityFilterWeight: 0.7
-      });
-      
-      // Restaurer la signature existante si disponible
-      if (signatureData?.dataUrl && signatureType === 'drawn') {
-        try {
-          signaturePadRef.current.fromDataURL(signatureData.dataUrl);
-          console.log("Signature restaurée avec succès");
-        } catch (error) {
-          console.error("Erreur lors de la restauration de la signature:", error);
-        }
-      }
-      
-      setCanvasReady(true);
-      
-      console.log("Canvas initialisé avec succès", {
-        width: canvas.width,
-        height: canvas.height,
-        isEmpty: signaturePadRef.current.isEmpty(),
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Erreur lors de l'initialisation de SignaturePad:", error);
-      setCanvasReady(false);
-    }
+  const canvasDimensions = {
+    width: 600,
+    height: 200
   };
   
-  // Configuration et initialisation de SignaturePad au chargement initial
+  const fonts = [
+    { name: 'Sacramento', value: 'Sacramento' },
+    { name: 'Dancing Script', value: 'Dancing Script' },
+    { name: 'Pacifico', value: 'Pacifico' },
+    { name: 'Satisfy', value: 'Satisfy' },
+    { name: 'Caveat', value: 'Caveat' },
+    { name: 'Kalam', value: 'Kalam' },
+    { name: 'Allura', value: 'Allura' },
+    { name: 'Great Vibes', value: 'Great Vibes' },
+    { name: 'Tangerine', value: 'Tangerine' },
+    { name: 'Alex Brush', value: 'Alex Brush' }
+  ];
+
+  // Initialize signature pad when component mounts
   useEffect(() => {
-    console.log("Effet de montage du composant");
-    
-    // Retarder légèrement l'initialisation pour s'assurer que le DOM est prêt
-    const timerId = setTimeout(() => {
-      initializeCanvas();
-    }, 100);
-    
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      const devicePixelRatio = Math.max(window.devicePixelRatio || 1, 1);
+
+      // Set canvas dimensions with device pixel ratio for better quality
+      canvas.width = canvasDimensions.width * devicePixelRatio;
+      canvas.height = canvasDimensions.height * devicePixelRatio;
+      
+      // Scale canvas CSS width and height
+      canvas.style.width = `${canvasDimensions.width}px`;
+      canvas.style.height = `${canvasDimensions.height}px`;
+
+      // Scale canvas context
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.scale(devicePixelRatio, devicePixelRatio);
+      }
+
+      // Initialize signature pad
+      signaturePadRef.current = new SignaturePad(canvas, {
+        backgroundColor: 'rgba(255, 255, 255, 0)',
+        penColor: 'blue',
+        minWidth: 0.5,
+        maxWidth: 2.5,
+      });
+
+      // If we have initial data and it's a signature, render it
+      if (initialData && initialData.type === 'draw' && initialData.dataUrl) {
+        signaturePadRef.current.fromDataURL(initialData.dataUrl);
+      }
+    }
+
     return () => {
-      // Nettoyer le timer et l'instance SignaturePad
-      clearTimeout(timerId);
+      // Clean up signature pad
       if (signaturePadRef.current) {
-        console.log("Nettoyage de SignaturePad lors du démontage");
         signaturePadRef.current.off();
         signaturePadRef.current = null;
       }
-      setCanvasReady(false);
     };
-  }, []); // Exécuté uniquement au montage/démontage du composant
-  
-  // Réinitialiser le canvas lors du changement de type de signature ou de l'incrémentation du compteur
-  useEffect(() => {
-    console.log("Effet de changement de type ou de compteur", { signatureType, canvasInitialized });
-    
-    if (signatureType === 'drawn') {
-      // Retarder légèrement l'initialisation pour s'assurer que le DOM est prêt
-      const timerId = setTimeout(() => {
-        console.log("Réinitialisation du canvas après changement de type ou compteur");
-        initializeCanvas();
-      }, 100);
-      
-      return () => {
-        clearTimeout(timerId);
-      };
-    } else {
-      setCanvasReady(false);
-    }
-  }, [signatureType, canvasInitialized]);
-  
-  // Fonction pour redimensionner le canvas si la fenêtre change de taille
-  useEffect(() => {
-    const handleResize = () => {
-      console.log("Événement de redimensionnement détecté");
-      
-      if (canvasRef.current && signaturePadRef.current && signatureType === 'drawn') {
-        const canvas = canvasRef.current;
-        let data;
-        
-        try {
-          // Sauvegarder les données actuelles de signature
-          data = signaturePadRef.current.toData();
-          
-          // Ajuster la taille du canvas
-          const parentWidth = canvas.parentElement?.clientWidth || 300;
-          canvas.width = parentWidth;
-          canvas.height = 200;
-          
-          // Effacer le canvas (nécessaire après redimensionnement)
-          signaturePadRef.current.clear();
-          
-          // Restaurer les données seulement si elles existent
-          if (data && data.length > 0) {
-            signaturePadRef.current.fromData(data);
-          }
+  }, [initialData]);
 
-          console.log("Canvas redimensionné avec succès", { 
-            width: canvas.width, 
-            height: canvas.height,
-            dataPoints: data ? data.length : 0
-          });
-        } catch (error) {
-          console.error("Erreur lors du redimensionnement:", error);
-          // Forcer une réinitialisation en cas d'erreur
-          setCanvasInitialized(prev => prev + 1);
-        }
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [signatureType]);
-  
-  // Fonction pour sauvegarder la signature
-  const saveSignature = () => {
-    if (signatureType === 'drawn' && signaturePadRef.current) {
-      if (signaturePadRef.current.isEmpty()) {
-        toast.error("Veuillez dessiner une signature avant de sauvegarder");
-        onSignatureChange(undefined);
-        return;
-      }
+  // Check if signature is valid
+  useEffect(() => {
+    if (activeTab === 'draw') {
+      setIsValid(signaturePadRef.current ? !signaturePadRef.current.isEmpty() : false);
+    } else if (activeTab === 'type') {
+      setIsValid(name.trim().length > 0);
+    } else if (activeTab === 'initials') {
+      setIsValid(initials.trim().length > 0);
+    }
+  }, [activeTab, name, initials]);
+
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === 'draw' && signaturePadRef.current) {
+      signaturePadRef.current.clear();
+    }
+  };
+
+  // Handle clear button click
+  const handleClear = () => {
+    if (activeTab === 'draw' && signaturePadRef.current) {
+      signaturePadRef.current.clear();
+      setIsValid(false);
+    } else if (activeTab === 'type') {
+      setName('');
+      setIsValid(false);
+    } else if (activeTab === 'initials') {
+      setInitials('');
+      setIsValid(false);
+    }
+  };
+
+  // Handle save button click
+  const handleSave = () => {
+    if (activeTab === 'draw' && signaturePadRef.current && !signaturePadRef.current.isEmpty()) {
+      const dataUrl = signaturePadRef.current.toDataURL('image/png');
       
-      try {
-        const dataUrl = signaturePadRef.current.toDataURL('image/png');
-        const timestamp = new Date().toISOString();
+      onSave({
+        type: 'draw',
+        dataUrl,
+        name: name || 'Signature',
+        timestamp: new Date().toISOString()
+      });
+    } else if (activeTab === 'type' && name.trim()) {
+      // Create a canvas to render the typed signature
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      
+      canvas.width = canvasDimensions.width;
+      canvas.height = canvasDimensions.height;
+      
+      if (context) {
+        context.fillStyle = 'transparent';
+        context.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Créer l'objet de données de signature
-        const newSignatureData = {
-          type: 'drawn' as const,
+        context.font = `48px ${fontFamily}`;
+        context.fillStyle = 'blue';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(name, canvas.width / 2, canvas.height / 2);
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        onSave({
+          type: 'type',
           dataUrl,
           name,
-          timestamp
-        };
-        
-        // Enregistrer dans localStorage pour réutilisation future
-        const savedSignatures = JSON.parse(localStorage.getItem('savedSignatures') || '[]');
-        savedSignatures.push(newSignatureData);
-        localStorage.setItem('savedSignatures', JSON.stringify(savedSignatures));
-        
-        // Notifier le composant parent
-        onSignatureChange(newSignatureData);
-        toast.success("Signature sauvegardée");
-      } catch (error) {
-        console.error("Erreur lors de la sauvegarde de la signature:", error);
-        toast.error("Erreur lors de la sauvegarde de la signature");
+          timestamp: new Date().toISOString()
+        });
       }
-    } else if (signatureType === 'initials' && initials.trim()) {
-      const timestamp = new Date().toISOString();
+    } else if (activeTab === 'initials' && initials.trim()) {
+      // Create a canvas to render the initials
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
       
-      // Créer l'objet de données pour les initiales
-      const newSignatureData = {
-        type: 'initials' as const,
-        initials: initials.trim(),
-        name,
-        timestamp
-      };
+      canvas.width = 200;
+      canvas.height = 200;
       
-      // Enregistrer dans localStorage pour réutilisation future
-      const savedSignatures = JSON.parse(localStorage.getItem('savedSignatures') || '[]');
-      savedSignatures.push(newSignatureData);
-      localStorage.setItem('savedSignatures', JSON.stringify(savedSignatures));
-      
-      // Notifier le composant parent
-      onSignatureChange(newSignatureData);
-      toast.success("Initiales sauvegardées");
-    } else {
-      toast.error("Aucune signature ou initiales à sauvegarder");
-      onSignatureChange(undefined);
+      if (context) {
+        context.fillStyle = 'transparent';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        context.font = `72px ${fontFamily}`;
+        context.fillStyle = 'blue';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(initials, canvas.width / 2, canvas.height / 2);
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        onSave({
+          type: 'initials',
+          dataUrl,
+          name,
+          initials,
+          timestamp: new Date().toISOString()
+        });
+      }
     }
   };
-  
-  // Fonction pour effacer la signature
-  const clearSignature = () => {
-    if (signatureType === 'drawn' && signaturePadRef.current) {
-      signaturePadRef.current.clear();
-      console.log("Signature effacée");
-    } else if (signatureType === 'initials') {
-      setInitials('');
-    }
-    onSignatureChange(undefined);
-    toast.info("Signature effacée");
+
+  const renderTypedSignature = () => {
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <Label htmlFor="signature-name">Your Name</Label>
+            <Input 
+              id="signature-name"
+              placeholder="Type your full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="font-family">Font</Label>
+            <Select 
+              value={fontFamily} 
+              onValueChange={setFontFamily}
+            >
+              <SelectTrigger id="font-family" className="w-[180px]">
+                <SelectValue placeholder="Select Font" />
+              </SelectTrigger>
+              <SelectContent>
+                {fonts.map((font) => (
+                  <SelectItem 
+                    key={font.value} 
+                    value={font.value}
+                    style={{ fontFamily: font.value }}
+                  >
+                    {font.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div 
+          className="border rounded-md p-4 flex items-center justify-center min-h-[120px] bg-white"
+          style={{ 
+            fontFamily: fontFamily,
+            fontSize: '48px',
+            color: 'blue' 
+          }}
+        >
+          {name || 'Preview Signature'}
+        </div>
+      </div>
+    );
   };
-  
-  // Fonction améliorée pour gérer le changement de type de signature
-  const handleTypeChange = (value: string) => {
-    const newType = value as 'drawn' | 'initials';
-    console.log("Changement de type de signature", { oldType: signatureType, newType });
-    
-    setSignatureType(newType);
-    
-    // Réinitialiser la signature actuelle
-    onSignatureChange(undefined);
-    
-    // Si on passe aux initiales, on efface la signature dessinée
-    if (newType === 'initials' && signaturePadRef.current) {
-      signaturePadRef.current.clear();
-      setCanvasReady(false);
-    } else if (newType === 'drawn') {
-      // Incrémenter le compteur pour forcer une réinitialisation complète du canvas
-      setCanvasInitialized(prev => prev + 1);
-    }
+
+  const renderInitials = () => {
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <Label htmlFor="initials-input">Your Initials</Label>
+            <Input 
+              id="initials-input"
+              placeholder="Type your initials (e.g., JD)"
+              value={initials}
+              onChange={(e) => setInitials(e.target.value.slice(0, 3))}
+              maxLength={3}
+            />
+          </div>
+          <div className="flex-1">
+            <Label htmlFor="initials-name">Your Name</Label>
+            <Input 
+              id="initials-name"
+              placeholder="Type your full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="font-family-initials">Font</Label>
+            <Select 
+              value={fontFamily} 
+              onValueChange={setFontFamily}
+            >
+              <SelectTrigger id="font-family-initials" className="w-[180px]">
+                <SelectValue placeholder="Select Font" />
+              </SelectTrigger>
+              <SelectContent>
+                {fonts.map((font) => (
+                  <SelectItem 
+                    key={font.value} 
+                    value={font.value}
+                    style={{ fontFamily: font.value }}
+                  >
+                    {font.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div 
+          className="border rounded-md p-4 flex items-center justify-center min-h-[120px] bg-white"
+          style={{ 
+            fontFamily: fontFamily,
+            fontSize: '72px',
+            color: 'blue' 
+          }}
+        >
+          {initials || 'JD'}
+        </div>
+      </div>
+    );
   };
-  
-  // Sauvegarde automatique quand initials ou name changent
-  useEffect(() => {
-    if (signatureType === 'initials' && initials.trim() && name.trim()) {
-      console.log("Sauvegarde automatique des initiales:", initials);
-      saveSignature();
-    }
-  }, [initials, name]);
-  
+
   return (
-    <div className="space-y-4">
-      <Tabs value={signatureType} onValueChange={handleTypeChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="drawn">Signature dessinée</TabsTrigger>
-          <TabsTrigger value="initials">Initiales</TabsTrigger>
+    <div className="space-y-4 max-w-[650px]">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="draw">Draw Signature</TabsTrigger>
+          <TabsTrigger value="type">Type Signature</TabsTrigger>
+          <TabsTrigger value="initials">Initials</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="drawn" className="space-y-4">
-          <div className="border rounded-md bg-white">
-            <canvas 
-              ref={canvasRef} 
-              className="w-full touch-none" 
-              style={{ 
-                height: '200px', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '0.375rem',
-                cursor: 'crosshair',
-                touchAction: 'none'  // Ajout explicite de touchAction
-              }}
-              onTouchStart={(e) => e.preventDefault()}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="signature-name">Nom</Label>
-            <Input 
-              id="signature-name" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Votre nom complet" 
-            />
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button type="button" onClick={clearSignature} variant="outline">Effacer</Button>
-            <Button type="button" onClick={saveSignature}>Sauvegarder la signature</Button>
+        <TabsContent value="draw" className="space-y-4">
+          <div>
+            <Label htmlFor="signature-canvas">Draw your signature below</Label>
+            <div className="border rounded-md bg-white">
+              <canvas 
+                ref={canvasRef} 
+                id="signature-canvas"
+                className="touch-none w-full"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Use your mouse or finger to sign above
+            </p>
           </div>
         </TabsContent>
         
-        <TabsContent value="initials" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="initials-input">Vos initiales</Label>
-            <Input 
-              id="initials-input" 
-              value={initials} 
-              onChange={(e) => setInitials(e.target.value)}
-              placeholder="Entrez vos initiales (ex: JD)"
-              maxLength={5}
-              className="text-lg font-bold"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="initials-name">Nom complet</Label>
-            <Input 
-              id="initials-name" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Votre nom complet" 
-            />
-          </div>
-          
-          {initials && (
-            <div className="border p-4 rounded-md bg-gray-50 text-center">
-              <div className="text-3xl font-bold font-signature my-4">{initials}</div>
-              {name && <div className="text-sm text-muted-foreground">{name}</div>}
-            </div>
-          )}
+        <TabsContent value="type">
+          {renderTypedSignature()}
+        </TabsContent>
+        
+        <TabsContent value="initials">
+          {renderInitials()}
         </TabsContent>
       </Tabs>
-      
-      {signatureData && (
-        <div className="text-sm text-muted-foreground mt-2">
-          Signature {signatureData.type === 'drawn' ? 'dessinée' : 'par initiales'} 
-          {signatureData.timestamp && ` le ${new Date(signatureData.timestamp).toLocaleString()}`}
-        </div>
-      )}
 
-      <div className="text-xs text-muted-foreground italic">
-        Dessinez votre signature à l'aide de la souris ou du doigt sur l'écran tactile
+      <div className="flex justify-between">
+        <div>
+          <Button variant="outline" onClick={handleClear}>
+            Clear
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={!isValid}>
+            Save Signature
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
+

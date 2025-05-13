@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 import { ReminderSchedule, ReminderTrigger } from "@/types/invoice";
 import { useTranslation } from 'react-i18next';
 import { Editor } from "@monaco-editor/react";
@@ -173,7 +174,8 @@ Sincerely,
     amount: "100.00€",
     days: "5",
     company_name: "Votre Société",
-    client_name: "Client Exemple"
+    client_name: "Client Exemple",
+    payment_url: "https://example.com/payment"
   };
   
   return (

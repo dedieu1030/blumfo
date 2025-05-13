@@ -1,4 +1,3 @@
-
 export interface InvoiceData {
   invoiceNumber: string;
   invoiceDate: string;
@@ -138,70 +137,61 @@ export interface DiscountInfo {
 }
 
 export interface SignatureData {
+  type: 'draw' | 'type' | 'initials';
   dataUrl: string;
-  signedBy?: string;
-  signedDate?: string;
-  // Ajout des propriétés manquantes
-  type?: 'drawn' | 'initials';
-  name?: string;
+  name: string;
   initials?: string;
-  timestamp?: string;
+  timestamp: string;
 }
 
 export interface ReminderSchedule {
   id: string;
   name: string;
-  isDefault?: boolean;
+  enabled: boolean;
+  isDefault: boolean;
   triggers: ReminderTrigger[];
-  enabled?: boolean;
-  user_id?: string;
 }
 
 export interface ReminderTrigger {
   id: string;
   triggerType: 'before_due' | 'after_due' | 'after_issue' | 'days_before_due' | 'days_after_due' | 'days_after_previous_reminder';
   triggerValue: number;
-  emailSubject?: string;
-  emailBody?: string;
+  emailSubject: string;
+  emailBody: string;
   scheduleId?: string;
 }
 
 export interface PaymentTermTemplate {
   id: string;
   name: string;
-  description?: string;
-  daysAfterIssue: number;
-  isDefault?: boolean;
-  delay?: string;
+  delay: string;
+  termsText: string;
+  isDefault: boolean;
+  daysAfterIssue?: number;
   customDate?: string;
-  termsText?: string;
 }
 
 export interface InvoiceNumberingConfig {
   prefix: string;
-  startingNumber?: number;
-  includeYear?: boolean;
-  includeMonth?: boolean;
-  separator?: string;
-  digits?: number;
-  suffix?: string;
-  padding?: number;
-  pattern?: string;
-  resetPeriod?: string;
-  startNumber?: number;
-  lastReset?: string;
-  resetAnnually?: boolean;
-  nextNumber?: number;
-  dateFormat?: string;
-  includeDate?: boolean;
+  suffix: string;
+  startNumber: number;
+  padding: number;
+  separator: string;
+  includeDate: boolean;
+  dateFormat: string;
+  digits: number;
+  nextNumber: number;
+  pattern: string;
+  resetPeriod: string;
+  lastReset: string;
+  resetAnnually: boolean;
 }
 
 export interface CurrencyInfo {
   code: string;
   name: string;
   symbol: string;
-  isDefault?: boolean;
-  symbolPosition?: string;
+  symbolPosition?: 'before' | 'after';
 }
 
 export type Currency = string;
