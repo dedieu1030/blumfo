@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -17,7 +18,7 @@ import { taxRegionsData } from "@/data/taxData";
 
 interface RegionalTaxSelectorProps {
   defaultValue: number | string;
-  onChange: (value: number, regionKey?: string) => void; // Mise à jour pour accepter regionKey comme second paramètre optionnel
+  onChange: (value: number, regionKey?: string) => void;
   showLabel?: boolean;
   defaultRegion?: string;
 }
@@ -83,6 +84,12 @@ export function RegionalTaxSelector({
     setSelectedOption("region");
     onChange(regionData.totalRate, `${selectedCountry}:${regionData.id}`);
     setIsSheetOpen(false);
+  };
+
+  const handleCountryChange = (countryId: string) => {
+    setSelectedCountry(countryId);
+    setSelectedRegion(null);
+    setSearchValue("");
   };
 
   const handleOptionChange = (value: string) => {
@@ -213,36 +220,54 @@ export function RegionalTaxSelector({
     </div>
   );
 
-  // Rendu pour la version desktop (Select)
+  // Rendu pour la version desktop (Select en deux étapes)
   const renderDesktopSelector = () => (
-    <div className="space-y-2">
-      <Select
-        value={selectedRegion ? `${selectedRegion.id}` : ""}
-        onValueChange={(value) => {
-          if (!value) return;
-          
-          const [countryId, regionId] = value.split(":");
-          const country = taxRegions.find(c => c.id === countryId);
-          if (country) {
-            setSelectedCountry(country.id);
-            const region = country.regions.find(r => r.id === regionId);
-            if (region) {
-              handleSelectRegion(region);
-            }
-          }
-        }}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Sélectionnez une région fiscale" />
-        </SelectTrigger>
-        <SelectContent>
-          {taxRegions.map(country => (
-            <div key={country.id} className="mb-2">
-              <div className="px-2 py-1.5 text-sm font-semibold bg-muted/50">
-                {country.name}
-              </div>
-              {country.regions.map(region => (
-                <SelectItem key={region.id} value={`${country.id}:${region.id}`}>
+    <div className="space-y-4">
+      {/* Étape 1: Sélection du pays */}
+      <div>
+        <Label htmlFor="country-select" className="text-sm mb-1 block">Pays</Label>
+        <Select
+          value={selectedCountry || ""}
+          onValueChange={handleCountryChange}
+        >
+          <SelectTrigger id="country-select" className="w-full">
+            <SelectValue placeholder="Sélectionnez un pays" />
+          </SelectTrigger>
+          <SelectContent>
+            {taxRegions.map(country => (
+              <SelectItem key={country.id} value={country.id}>
+                <div className="flex items-center">
+                  <Flag className="mr-2 h-4 w-4" />
+                  {country.name}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Étape 2: Sélection de la région (visible uniquement quand un pays est sélectionné) */}
+      {selectedCountry && (
+        <div>
+          <Label htmlFor="region-select" className="text-sm mb-1 block">Région</Label>
+          <Select
+            value={selectedRegion ? selectedRegion.id : ""}
+            onValueChange={(regionId) => {
+              const country = taxRegions.find(c => c.id === selectedCountry);
+              if (country) {
+                const region = country.regions.find(r => r.id === regionId);
+                if (region) {
+                  handleSelectRegion(region);
+                }
+              }
+            }}
+          >
+            <SelectTrigger id="region-select" className="w-full">
+              <SelectValue placeholder="Sélectionnez une région" />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredRegions && filteredRegions.map(region => (
+                <SelectItem key={region.id} value={region.id}>
                   <div className="flex items-center justify-between w-full">
                     <span>{region.name}</span>
                     <Badge className={getTaxRateColor(region.totalRate)}>
@@ -251,10 +276,16 @@ export function RegionalTaxSelector({
                   </div>
                 </SelectItem>
               ))}
-            </div>
-          ))}
-        </SelectContent>
-      </Select>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {selectedRegion && (
+        <div className="text-sm text-muted-foreground">
+          Taux appliqué: {selectedRegion.totalRate}%
+        </div>
+      )}
     </div>
   );
 
@@ -281,12 +312,6 @@ export function RegionalTaxSelector({
           {selectedOption === "region" && (
             <div className="ml-6 mt-2">
               {isMobile ? renderMobileSelector() : renderDesktopSelector()}
-              
-              {selectedRegion && (
-                <div className="mt-2 text-sm text-muted-foreground">
-                  Taux appliqué: {selectedRegion.totalRate}%
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -317,3 +342,4 @@ export function RegionalTaxSelector({
 
 // Importation manquante pour la recherche
 import { Search } from "lucide-react";
+
