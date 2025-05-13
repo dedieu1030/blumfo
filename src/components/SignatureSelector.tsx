@@ -6,7 +6,7 @@ import { SignatureCanvas } from "./SignatureCanvas";
 import { SignatureDisplay } from "./SignatureDisplay";
 import { Card, CardContent } from "@/components/ui/card";
 import { SignatureData } from '@/types/invoice';
-import { NoSymbolIcon, PlusCircleIcon } from "lucide-react";
+import { XCircle, PlusCircle } from "lucide-react";
 
 interface SignatureSelectorProps {
   onSelect: (signature: SignatureData | null) => void;
@@ -104,13 +104,13 @@ export function SignatureSelector({ onSelect, selectedSignature }: SignatureSele
             onClick={handleClearSelection}
             className="text-destructive hover:bg-destructive/10"
           >
-            <NoSymbolIcon className="h-4 w-4 mr-1" />
+            <XCircle className="h-4 w-4 mr-1" />
             Remove
           </Button>
         </div>
       ) : (
         <Button variant="outline" onClick={handleOpenDialog} className="w-full">
-          <PlusCircleIcon className="h-4 w-4 mr-2" />
+          <PlusCircle className="h-4 w-4 mr-2" />
           Add Signature
         </Button>
       )}

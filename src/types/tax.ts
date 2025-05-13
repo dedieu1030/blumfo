@@ -47,6 +47,19 @@ export interface TaxRegionData {
   standardRate: number;
   reducedRates?: { name: string; rate: number }[];
   totalRate?: number;
+  taxType?: string;
+  vatStandardRate?: number;
+  vatReducedRates?: number[];
+  vatSuperReducedRate?: number;
+  vatParkingRate?: number;
+  gstRate?: number;
+  pstRate?: number;
+  qstRate?: number;
+  hstRate?: number;
+  stateTaxRate?: number;
+  localTaxRate?: number;
+  ivaRate?: number;
+  notes?: string;
 }
 
 export interface TaxPayload {
@@ -54,4 +67,23 @@ export interface TaxPayload {
   name: string;
   rate: number;
   isDefault?: boolean;
+}
+
+// Add missing TAX_TYPES constant
+export const TAX_TYPES = [
+  { id: 'vat-standard', name: 'TVA Standard' },
+  { id: 'vat-reduced', name: 'TVA Réduite' },
+  { id: 'vat-super-reduced', name: 'TVA Super Réduite' },
+  { id: 'vat-exempt', name: 'Exonéré de TVA' },
+  { id: 'gst', name: 'GST (Canada)' },
+  { id: 'hst', name: 'HST (Canada)' },
+  { id: 'sales-tax', name: 'Sales Tax (US)' },
+  { id: 'iva-standard', name: 'IVA Standard' }
+];
+
+export interface TaxConfiguration {
+  defaultTaxRate: string;
+  region: string;
+  country: string;
+  customTax?: CustomTaxConfiguration;
 }

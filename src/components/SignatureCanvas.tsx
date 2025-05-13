@@ -1,26 +1,13 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import SignaturePad from 'signature_pad';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignatureData } from '@/types/invoice';
 
-export interface SignatureCanvasProps {
-  onSave: (signature: SignatureData) => void;
+interface SignatureCanvasProps {
+  onSave: (signatureData: SignatureData) => void;
   onClose: () => void;
   initialData?: SignatureData;
 }
@@ -362,4 +349,3 @@ export function SignatureCanvas({ onSave, onClose, initialData }: SignatureCanva
     </div>
   );
 }
-

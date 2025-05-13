@@ -169,6 +169,7 @@ export interface PaymentTermTemplate {
   isDefault: boolean;
   daysAfterIssue?: number;
   customDate?: string;
+  description?: string;
 }
 
 export interface InvoiceNumberingConfig {
@@ -191,7 +192,7 @@ export interface CurrencyInfo {
   code: string;
   name: string;
   symbol: string;
-  symbolPosition?: 'before' | 'after';
+  symbolPosition: 'before' | 'after';
 }
 
 export type Currency = string;
