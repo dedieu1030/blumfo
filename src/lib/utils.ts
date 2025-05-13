@@ -14,13 +14,20 @@ export const formatPercentage = formatPercentageUtil;
 export function formatTaxRate(rate: number): string {
   if (rate === undefined || rate === null) return "-";
   
+  // Cas particulier pour le taux du Québec (14.975%)
+  if (Math.abs(rate - 14.975) < 0.001) {
+    return "15";
+  }
+  
   // Check if the value is a whole number
   if (Number.isInteger(rate)) {
     return rate.toString();
   }
   
-  // Otherwise round to 1 decimal place
-  return rate.toFixed(1);
+  // Pour les autres taux avec parties décimales
+  // Arrondir à 1 décimale si > 0.1, sinon afficher entier
+  const roundedValue = Math.abs(rate % 1) < 0.1 ? Math.round(rate) : Number(rate.toFixed(1));
+  return roundedValue.toString();
 }
 
 // Keep the formatDate function
