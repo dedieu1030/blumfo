@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Globe, Settings, Search, X, ArrowLeft } from "lucide-react";
-import { TaxRegion, TaxRegionData } from "@/types/tax";
+import { TaxZone, TaxCountry, TaxRegionData } from "@/types/tax";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,8 +13,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { TaxRateSelector } from "./TaxRateSelector";
 import { formatTaxRate } from "@/lib/utils";
 
-// Récupération des données de taxe depuis le fichier de types
-import { taxRegionsData } from "@/data/taxData";
+// Récupération des données de taxe depuis le fichier de données
+import { taxZonesData } from "@/data/taxData";
+
+// Définir les niveaux de navigation possibles
+type NavigationLevel = "zones" | "countries" | "regions";
 
 interface RegionalTaxSelectorProps {
   defaultValue: number | string;
@@ -34,26 +37,34 @@ export function RegionalTaxSelector({
   const [selectedRegion, setSelectedRegion] = useState<TaxRegionData | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [taxRegions] = useState<TaxRegion[]>(taxRegionsData);
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  
+  // État pour la navigation hiérarchique
+  const [navigationLevel, setNavigationLevel] = useState<NavigationLevel>("zones");
+  const [selectedZone, setSelectedZone] = useState<TaxZone | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<TaxCountry | null>(null);
   
   // Initialiser avec la région par défaut si fournie
   useEffect(() => {
     if (defaultRegion) {
-      const [countryId, regionId] = defaultRegion.split(":");
-      const country = taxRegions.find(c => c.id === countryId);
-      if (country) {
-        setSelectedCountry(country.id);
+      const [zoneId, countryId, regionId] = defaultRegion.split(":");
+      
+      const zone = taxZonesData.find(z => z.id === zoneId);
+      if (zone) {
+        setSelectedZone(zone);
         
-        // Pour les régions de l'UE, nous devons juste trouver la région dans le tableau des régions
-        const region = country.regions.find(r => r.id === regionId);
-        if (region) {
-          setSelectedRegion(region);
-          onChange(region.totalRate, `${country.id}:${region.id}`);
+        const country = zone.countries.find(c => c.id === countryId);
+        if (country) {
+          setSelectedCountry(country);
+          
+          const region = country.regions.find(r => r.id === regionId);
+          if (region) {
+            setSelectedRegion(region);
+            onChange(region.totalRate, `${zoneId}:${countryId}:${regionId}`);
+          }
         }
       }
     }
-  }, [defaultRegion, taxRegions, onChange]);
+  }, [defaultRegion, onChange]);
 
   // Déterminer le mode actif (TVA régionale ou personnalisée)
   useEffect(() => {
@@ -63,14 +74,17 @@ export function RegionalTaxSelector({
       
       // Vérifier si la valeur correspond à une région connue
       let found = false;
-      taxRegions.forEach(country => {
-        country.regions.forEach(region => {
-          if (Math.abs(region.totalRate - numValue) < 0.01) {
-            setSelectedCountry(country.id);
-            setSelectedRegion(region);
-            setSelectedOption("region");
-            found = true;
-          }
+      taxZonesData.forEach(zone => {
+        zone.countries.forEach(country => {
+          country.regions.forEach(region => {
+            if (Math.abs(region.totalRate - numValue) < 0.01) {
+              setSelectedZone(zone);
+              setSelectedCountry(country);
+              setSelectedRegion(region);
+              setSelectedOption("region");
+              found = true;
+            }
+          });
         });
       });
       
@@ -79,12 +93,31 @@ export function RegionalTaxSelector({
         setSelectedOption("custom");
       }
     }
-  }, [defaultValue, taxRegions, selectedRegion]);
+  }, [defaultValue, selectedRegion]);
 
-  const handleSelectRegion = (regionData: TaxRegionData) => {
-    setSelectedRegion(regionData);
+  // Fonction pour gérer la sélection d'une zone fiscale
+  const handleSelectZone = (zone: TaxZone) => {
+    setSelectedZone(zone);
+    setNavigationLevel("countries");
+    setSearchValue("");
+  };
+
+  // Fonction pour gérer la sélection d'un pays
+  const handleSelectCountry = (country: TaxCountry) => {
+    setSelectedCountry(country);
+    setNavigationLevel("regions");
+    setSearchValue("");
+  };
+
+  // Fonction pour gérer la sélection d'une région fiscale
+  const handleSelectRegion = (region: TaxRegionData) => {
+    setSelectedRegion(region);
     setSelectedOption("region");
-    onChange(regionData.totalRate, `${selectedCountry}:${regionData.id}`);
+    
+    if (selectedZone && selectedCountry) {
+      onChange(region.totalRate, `${selectedZone.id}:${selectedCountry.id}:${region.id}`);
+    }
+    
     setIsSheetOpen(false);
   };
 
@@ -96,20 +129,33 @@ export function RegionalTaxSelector({
       // La valeur sera gérée par le TaxRateSelector
     } else if (value === "region" && selectedRegion) {
       // Utiliser la valeur de la région sélectionnée
-      onChange(selectedRegion.totalRate, `${selectedCountry}:${selectedRegion.id}`);
+      if (selectedZone && selectedCountry) {
+        onChange(selectedRegion.totalRate, `${selectedZone.id}:${selectedCountry.id}:${selectedRegion.id}`);
+      }
     }
   };
 
   // Fonction pour fermer le sélecteur et réinitialiser l'état
   const closeSelector = () => {
     setIsSheetOpen(false);
-    setSelectedCountry(null);
+    resetNavigation();
+  };
+
+  // Fonction pour réinitialiser la navigation
+  const resetNavigation = () => {
+    setNavigationLevel("zones");
     setSearchValue("");
   };
 
-  // Fonction pour revenir à la sélection de pays
-  const backToCountries = () => {
-    setSelectedCountry(null);
+  // Fonction pour revenir au niveau précédent
+  const navigateBack = () => {
+    if (navigationLevel === "regions") {
+      setNavigationLevel("countries");
+      setSelectedCountry(null);
+    } else if (navigationLevel === "countries") {
+      setNavigationLevel("zones");
+      setSelectedZone(null);
+    }
     setSearchValue("");
   };
 
@@ -119,28 +165,44 @@ export function RegionalTaxSelector({
     return "bg-amber-100 text-amber-800 hover:bg-amber-200";
   };
 
-  // Définir le titre du pays
-  const getCountryTitle = (countryId: string) => {
-    const country = taxRegions.find(c => c.id === countryId);
-    return country ? country.name : "Sélectionner un pays";
+  // Obtenir le titre en fonction du niveau de navigation
+  const getNavigationTitle = () => {
+    if (navigationLevel === "regions" && selectedCountry) {
+      return selectedCountry.name;
+    } else if (navigationLevel === "countries" && selectedZone) {
+      return selectedZone.name;
+    } else {
+      return "Sélectionner une région fiscale";
+    }
   };
 
-  // Filtrer les régions par recherche
-  const filteredRegions = (countryId: string) => {
-    const country = taxRegions.find(c => c.id === countryId);
-    if (!country) return [];
+  // Filtrer les éléments par recherche
+  const getFilteredItems = () => {
+    const searchLower = searchValue.toLowerCase();
     
-    return country.regions.filter(region => 
-      searchValue === "" || 
-      region.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      region.code.toLowerCase().includes(searchValue.toLowerCase())
-    );
+    if (navigationLevel === "zones") {
+      return taxZonesData.filter(zone => 
+        searchValue === "" || zone.name.toLowerCase().includes(searchLower)
+      );
+    } else if (navigationLevel === "countries" && selectedZone) {
+      return selectedZone.countries.filter(country => 
+        searchValue === "" || country.name.toLowerCase().includes(searchLower)
+      );
+    } else if (navigationLevel === "regions" && selectedCountry) {
+      return selectedCountry.regions.filter(region => 
+        searchValue === "" || 
+        region.name.toLowerCase().includes(searchLower) ||
+        region.code.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return [];
   };
 
   // Ouvrir le sélecteur
   const openSelector = () => {
     setIsSheetOpen(true);
-    setSelectedCountry(null);
+    resetNavigation();
   };
 
   // Rendu pour la version mobile
@@ -165,12 +227,10 @@ export function RegionalTaxSelector({
         <SheetContent side="bottom" className="h-[85%] max-h-[85vh]">
           <SheetHeader>
             <SheetTitle className="pr-8 text-lg flex justify-between items-center">
-              {selectedCountry
-                ? getCountryTitle(selectedCountry)
-                : "Choisir une région fiscale"}
+              {getNavigationTitle()}
               
-              {selectedCountry && (
-                <Button variant="ghost" size="sm" onClick={backToCountries}>
+              {navigationLevel !== "zones" && (
+                <Button variant="ghost" size="sm" onClick={navigateBack}>
                   <ArrowLeft className="h-4 w-4 mr-1" /> Retour
                 </Button>
               )}
@@ -178,66 +238,76 @@ export function RegionalTaxSelector({
           </SheetHeader>
           
           <div className="py-4 space-y-4">
-            {!selectedCountry ? (
-              // Étape 1: Sélection du pays/région
-              <div className="space-y-2">
-                {taxRegions.map(country => (
-                  <Button
-                    key={country.id}
-                    variant="outline"
-                    className="w-full justify-start h-12 text-left"
-                    onClick={() => setSelectedCountry(country.id)}
-                  >
-                    <Globe className="mr-2 h-4 w-4" />
-                    {country.name}
-                  </Button>
-                ))}
-              </div>
-            ) : (
-              // Étape 2: Sélection de la région spécifique
-              <>
-                <div className="flex items-center space-x-2 sticky top-0 bg-background pt-2 pb-4 z-10">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Rechercher..."
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
+            {navigationLevel !== "zones" && (
+              <div className="flex items-center space-x-2 sticky top-0 bg-background pt-2 pb-4 z-10">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher..."
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    className="pl-8"
+                  />
                 </div>
-                
-                <ScrollArea className="h-[45vh]">
-                  <div className="space-y-2">
-                    {filteredRegions(selectedCountry).length > 0 ? (
-                      filteredRegions(selectedCountry).map(region => (
-                        <Button
-                          key={region.id}
-                          variant="outline"
-                          className="w-full justify-between h-14 text-left"
-                          onClick={() => handleSelectRegion(region)}
-                        >
-                          <span className="font-medium truncate mr-2 max-w-[65%]">{region.name}</span>
-                          <Badge className={`${getTaxRateColor(region.totalRate)} px-2 min-w-[50px] text-center`} variant="outline">
-                            {formatTaxRate(region.totalRate)}%
-                          </Badge>
-                        </Button>
-                      ))
-                    ) : (
-                      <div className="text-center py-4 text-muted-foreground">
-                        Aucune région trouvée
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </>
+              </div>
             )}
+            
+            <ScrollArea className="h-[45vh]">
+              <div className="space-y-2">
+                {getFilteredItems().length > 0 ? (
+                  navigationLevel === "zones" ? (
+                    // Affichage des zones fiscales
+                    getFilteredItems().map((zone) => (
+                      <Button
+                        key={zone.id}
+                        variant="outline"
+                        className="w-full justify-start h-12 text-left"
+                        onClick={() => handleSelectZone(zone as TaxZone)}
+                      >
+                        <Globe className="mr-2 h-4 w-4" />
+                        {(zone as TaxZone).name}
+                      </Button>
+                    ))
+                  ) : navigationLevel === "countries" ? (
+                    // Affichage des pays d'une zone
+                    getFilteredItems().map((country) => (
+                      <Button
+                        key={country.id}
+                        variant="outline"
+                        className="w-full justify-between h-12 text-left"
+                        onClick={() => handleSelectCountry(country as TaxCountry)}
+                      >
+                        <span className="font-medium">{(country as TaxCountry).name}</span>
+                        <span className="text-muted-foreground">{(country as TaxCountry).countryCode}</span>
+                      </Button>
+                    ))
+                  ) : (
+                    // Affichage des régions d'un pays
+                    getFilteredItems().map((region) => (
+                      <Button
+                        key={region.id}
+                        variant="outline"
+                        className="w-full justify-between h-14 text-left"
+                        onClick={() => handleSelectRegion(region as TaxRegionData)}
+                      >
+                        <span className="font-medium truncate mr-2 max-w-[65%]">{(region as TaxRegionData).name}</span>
+                        <Badge className={`${getTaxRateColor((region as TaxRegionData).totalRate)} px-2 min-w-[50px] text-center`} variant="outline">
+                          {formatTaxRate((region as TaxRegionData).totalRate)}%
+                        </Badge>
+                      </Button>
+                    ))
+                  )
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    Aucun résultat trouvé
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
           </div>
           
           <SheetFooter className="pt-4">
             <Button onClick={closeSelector} variant="default" className="w-full">
-              <X className="h-4 w-4 mr-2" />
               Fermer
             </Button>
           </SheetFooter>
@@ -280,85 +350,99 @@ export function RegionalTaxSelector({
         <SheetContent className="sm:max-w-md">
           <SheetHeader>
             <SheetTitle className="text-lg flex justify-between items-center">
-              {selectedCountry 
-                ? getCountryTitle(selectedCountry)
-                : "Sélectionner une région fiscale"}
+              {getNavigationTitle()}
               
-              {selectedCountry && (
-                <Button variant="ghost" size="sm" onClick={backToCountries}>
+              {navigationLevel !== "zones" && (
+                <Button variant="ghost" size="sm" onClick={navigateBack}>
                   <ArrowLeft className="h-4 w-4 mr-1" /> Retour
                 </Button>
               )}
             </SheetTitle>
             <SheetDescription>
-              {selectedCountry 
-                ? "Choisissez une région pour définir le taux de TVA"
-                : "Choisissez un pays ou une zone fiscale"}
+              {navigationLevel === "zones" 
+                ? "Choisissez une zone fiscale"
+                : navigationLevel === "countries"
+                ? "Sélectionnez un pays"
+                : "Choisissez une région pour définir le taux de TVA"}
             </SheetDescription>
           </SheetHeader>
           
           <div className="py-6 space-y-6">
-            {!selectedCountry ? (
-              // Étape 1: Selection du pays/zone
-              <div className="grid grid-cols-1 gap-3">
-                {taxRegions.map(country => (
-                  <Button
-                    key={country.id}
-                    variant="outline"
-                    className="w-full justify-between h-12 text-left"
-                    onClick={() => setSelectedCountry(country.id)}
-                  >
-                    <span className="font-medium">{country.name}</span>
-                    <Globe className="h-4 w-4 opacity-70" />
-                  </Button>
-                ))}
+            {navigationLevel !== "zones" && (
+              <div className="flex items-center space-x-2 pb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={navigationLevel === "countries" ? "Rechercher un pays..." : "Rechercher une région..."}
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
               </div>
-            ) : (
-              // Étape 2: Selection de la région spécifique
-              <>
-                <div className="flex items-center space-x-2 pb-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Rechercher une région..."
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-1">
-                  {filteredRegions(selectedCountry).length > 0 ? (
-                    filteredRegions(selectedCountry).map(region => (
-                      <Button
-                        key={region.id}
-                        variant="outline"
-                        className="w-full justify-between h-14 text-left"
-                        onClick={() => handleSelectRegion(region)}
-                      >
-                        <div className="flex flex-col items-start max-w-[65%]">
-                          <span className="font-medium truncate">{region.name}</span>
-                          <span className="text-xs text-muted-foreground truncate">{region.code}</span>
-                        </div>
-                        <Badge className={`${getTaxRateColor(region.totalRate)} px-2 min-w-[50px] text-center`}>
-                          {formatTaxRate(region.totalRate)}%
-                        </Badge>
-                      </Button>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      Aucune région trouvée
-                    </div>
-                  )}
-                </div>
-              </>
             )}
+            
+            <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+              {getFilteredItems().length > 0 ? (
+                navigationLevel === "zones" ? (
+                  // Affichage des zones fiscales
+                  getFilteredItems().map((zone) => (
+                    <Button
+                      key={zone.id}
+                      variant="outline"
+                      className="w-full justify-between h-12 text-left"
+                      onClick={() => handleSelectZone(zone as TaxZone)}
+                    >
+                      <span className="font-medium">{(zone as TaxZone).name}</span>
+                      <Globe className="h-4 w-4 opacity-70" />
+                    </Button>
+                  ))
+                ) : navigationLevel === "countries" ? (
+                  // Affichage des pays d'une zone
+                  getFilteredItems().map((country) => (
+                    <Button
+                      key={country.id}
+                      variant="outline"
+                      className="w-full justify-between h-12 text-left"
+                      onClick={() => handleSelectCountry(country as TaxCountry)}
+                    >
+                      <div className="flex items-center">
+                        <span className="font-medium">{(country as TaxCountry).name}</span>
+                      </div>
+                      <span className="text-xs font-medium bg-muted px-2 py-1 rounded">
+                        {(country as TaxCountry).countryCode}
+                      </span>
+                    </Button>
+                  ))
+                ) : (
+                  // Affichage des régions d'un pays
+                  getFilteredItems().map((region) => (
+                    <Button
+                      key={region.id}
+                      variant="outline"
+                      className="w-full justify-between h-14 text-left"
+                      onClick={() => handleSelectRegion(region as TaxRegionData)}
+                    >
+                      <div className="flex flex-col items-start max-w-[65%]">
+                        <span className="font-medium truncate">{(region as TaxRegionData).name}</span>
+                        <span className="text-xs text-muted-foreground truncate">{(region as TaxRegionData).code}</span>
+                      </div>
+                      <Badge className={`${getTaxRateColor((region as TaxRegionData).totalRate)} px-2 min-w-[50px] text-center`}>
+                        {formatTaxRate((region as TaxRegionData).totalRate)}%
+                      </Badge>
+                    </Button>
+                  ))
+                )
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  Aucun résultat trouvé
+                </div>
+              )}
+            </div>
           </div>
           
           <SheetFooter>
             <Button variant="default" onClick={closeSelector} className="w-full">
-              <X className="h-4 w-4 mr-2" />
               Fermer
             </Button>
           </SheetFooter>

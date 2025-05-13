@@ -1,5 +1,12 @@
 
-export interface TaxRegion {
+export interface TaxZone {
+  id: string;
+  name: string;
+  countryCode?: string;
+  countries: TaxCountry[];
+}
+
+export interface TaxCountry {
   id: string;
   name: string;
   countryCode: string;
@@ -27,6 +34,9 @@ export interface TaxRegionData {
   totalRate: number;               // Le taux principal utilisé par défaut
   notes?: string;
 }
+
+// Pour la rétrocompatibilité avec le code existant
+export interface TaxRegion extends TaxCountry {}
 
 // Structure pour stocker la configuration fiscale dans le profil de l'entreprise
 export interface TaxConfiguration {

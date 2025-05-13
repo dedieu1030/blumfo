@@ -1,82 +1,88 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { CompanyProfile } from "@/types/invoice";
+import { RegionalTaxSelector } from "./RegionalTaxSelector";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { CompanyProfile } from "@/types/invoice";
-import { RegionalTaxSelector } from "@/components/settings/RegionalTaxSelector";
+import { TaxConfiguration } from "@/types/tax";
 
 interface TaxSettingsProps {
   companyProfile: CompanyProfile | null;
-  onSave: (data: CompanyProfile) => void;
+  onSave: (updatedProfile: CompanyProfile) => void;
 }
 
 export function TaxSettings({ companyProfile, onSave }: TaxSettingsProps) {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<Partial<CompanyProfile>>({
-    taxRate: 20,
-    taxRegion: "",
-  });
-
+  const [taxRate, setTaxRate] = useState<number>(20); // Taux par défaut: 20%
+  const [taxRegion, setTaxRegion] = useState<string | undefined>(undefined);
+  
+  // Initialiser avec les valeurs existantes si disponibles
   useEffect(() => {
-    if (companyProfile) {
-      // Ensure taxRate is a number
-      const taxRate = typeof companyProfile.taxRate === 'string' 
-        ? parseFloat(companyProfile.taxRate)
-        : companyProfile.taxRate;
-      
-      setFormData({ 
-        taxRate,
-        taxRegion: companyProfile.taxRegion || ""
-      });
+    if (companyProfile?.taxConfiguration) {
+      const { defaultTaxRate, region } = companyProfile.taxConfiguration;
+      setTaxRate(parseFloat(defaultTaxRate));
+      setTaxRegion(region);
     }
   }, [companyProfile]);
 
-  const handleUpdate = async () => {
-    if (!companyProfile) return;
-    
-    onSave({
+  // Gérer le changement de taux de TVA
+  const handleTaxRateChange = (value: number, regionKey?: string) => {
+    setTaxRate(value);
+    setTaxRegion(regionKey);
+  };
+
+  // Enregistrer les paramètres de TVA
+  const handleSave = () => {
+    if (!companyProfile) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez d'abord créer un profil avant de configurer la TVA.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedConfiguration: TaxConfiguration = {
+      defaultTaxRate: taxRate.toString(),
+      region: taxRegion,
+      country: companyProfile.country || "FR"  // Utiliser le pays du profil ou FR par défaut
+    };
+
+    const updatedProfile: CompanyProfile = {
       ...companyProfile,
-      taxRate: formData.taxRate as number,
-      taxRegion: formData.taxRegion || ""
-    });
-    
+      taxConfiguration: updatedConfiguration,
+    };
+
+    onSave(updatedProfile);
+
     toast({
-      title: "Taux de TVA enregistré",
-      description: "Le taux de TVA a été mis à jour avec succès."
+      title: "Configuration de TVA enregistrée",
+      description: `Le taux de TVA par défaut est maintenant ${taxRate}%.`,
     });
   };
-  
-  // Gestion du changement de région fiscale
-  const handleTaxRegionChange = (value: number, regionKey?: string) => {
-    setFormData(prev => ({
-      ...prev,
-      taxRate: value,
-      taxRegion: regionKey || prev.taxRegion
-    }));
-  };
-  
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Taux de TVA par défaut</CardTitle>
+        <CardTitle>Configuration de la TVA</CardTitle>
         <CardDescription>
-          Ce taux sera appliqué par défaut à toutes vos factures.
+          Définissez le taux de TVA par défaut pour vos factures
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Utiliser le sélecteur de région fiscale */}
-        <RegionalTaxSelector
-          defaultValue={formData.taxRate || 20}
-          defaultRegion={formData.taxRegion || undefined}
-          onChange={handleTaxRegionChange}
-        />
-      </CardContent>
-      <CardFooter>
-        <Button onClick={handleUpdate}>
-          Enregistrer
+      <CardContent className="space-y-6">
+        <div>
+          <RegionalTaxSelector
+            defaultValue={taxRate}
+            onChange={handleTaxRateChange}
+            defaultRegion={taxRegion}
+          />
+        </div>
+
+        <Button onClick={handleSave} className="w-full">
+          Enregistrer les paramètres de TVA
         </Button>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 }
