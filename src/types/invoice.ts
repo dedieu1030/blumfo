@@ -86,6 +86,9 @@ export interface CompanyProfile {
   stripeAccountId?: string;
   createdAt?: string;
   updatedAt?: string;
+  // Nouvelles propriétées pour ProfileWizard et ProfileViewer
+  profileType?: 'personal' | 'business';
+  profileSubtype?: string;
 }
 
 export interface PaymentTermTemplate {

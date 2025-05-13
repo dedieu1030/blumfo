@@ -435,6 +435,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           bankName: "",
           accountHolder: "",
           taxRate: 20, // Ensure this is a number
+          businessType: "company", // Ajout de la propriété manquante
           termsAndConditions: "",
           thankYouMessage: "",
           defaultCurrency: "EUR"
@@ -555,6 +556,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
           bankName: "",
           accountHolder: "",
           taxRate: 20, // Ensure this is a number
+          businessType: "company", // Ajout de la propriété manquante
           termsAndConditions: "",
           thankYouMessage: "",
           defaultCurrency: "EUR"
@@ -1049,6 +1051,7 @@ export function InvoiceDialog({ open, onOpenChange, onGenerateInvoice, isGenerat
         bankName: "",
         accountHolder: "",
         taxRate: 20, // Ensure this is a number
+        businessType: "company", // Ajout de la propriété manquante
         termsAndConditions: "",
         thankYouMessage: "",
         defaultCurrency: "EUR"
