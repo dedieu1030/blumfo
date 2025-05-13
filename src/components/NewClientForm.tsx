@@ -33,7 +33,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [authError, setAuthError] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
 
   // Réinitialiser les états lorsque la modal s'ouvre
   useEffect(() => {
@@ -59,6 +59,9 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     setAuthError(null);
     
     try {
+      // Log pour vérifier si la fonction est appelée
+      console.log("Tentative de récupération de l'entreprise de l'utilisateur");
+      
       // Obtenir la session utilisateur courante
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
@@ -70,23 +73,36 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       }
       
       if (!sessionData.session || !sessionData.session.user) {
-        console.warn("Aucun utilisateur connecté");
+        console.warn("Aucun utilisateur connecté dans fetchUserCompany");
         setAuthError("Vous devez être connecté pour créer un client");
         setIsCompanyLoading(false);
         return;
       }
 
       const userId = sessionData.session.user.id;
+      console.log("ID utilisateur récupéré:", userId);
       
-      // Récupérer l'entreprise associée à l'utilisateur (avec gestion des erreurs améliorée)
+      // Vérifier que l'utilisateur a bien un ID
+      if (!userId) {
+        console.error("ID utilisateur non disponible");
+        setAuthError("Impossible d'identifier votre compte utilisateur");
+        setIsCompanyLoading(false);
+        return;
+      }
+      
+      // Récupérer l'entreprise associée à l'utilisateur avec plus de détails pour le debug
+      console.log("Exécution de la requête pour récupérer l'entreprise avec user_id =", userId);
+      
       const { data: companies, error: companiesError } = await supabase
         .from('companies')
-        .select('id, company_name')
+        .select('id, company_name, user_id')
         .eq('user_id', userId);
 
+      console.log("Résultat de la requête companies:", { data: companies, error: companiesError });
+      
       if (companiesError) {
-        console.error("Erreur lors de la récupération de l'entreprise:", companiesError);
-        setAuthError("Erreur lors de la récupération de votre entreprise. Veuillez réessayer.");
+        console.error("Erreur détaillée lors de la récupération de l'entreprise:", companiesError);
+        setAuthError(`Erreur lors de la récupération de votre entreprise: ${companiesError.message || 'Erreur inconnue'}`);
         setIsCompanyLoading(false);
         return;
       }
@@ -94,6 +110,17 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       if (!companies || companies.length === 0) {
         console.warn("Aucune entreprise trouvée pour l'utilisateur");
         setAuthError("Aucune entreprise trouvée pour votre compte. Veuillez créer une entreprise d'abord.");
+        
+        // Vérifions si l'utilisateur existe bien dans la base de données
+        const { data: userExists, error: userCheckError } = await supabase
+          .from('companies')
+          .select('count(*)', { count: 'exact' });
+          
+        console.log("Vérification des entreprises disponibles:", { 
+          count: userExists?.count, 
+          error: userCheckError 
+        });
+        
         setIsCompanyLoading(false);
         return;
       }
@@ -102,8 +129,8 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       setCompanyId(companies[0].id);
       console.log("Entreprise récupérée avec succès:", companies[0].company_name, "ID:", companies[0].id);
     } catch (error: any) {
-      console.error("Erreur lors de la récupération de l'entreprise:", error);
-      setAuthError("Une erreur est survenue. Veuillez réessayer plus tard.");
+      console.error("Exception non gérée lors de la récupération de l'entreprise:", error);
+      setAuthError(`Une erreur inattendue est survenue: ${error.message || 'Erreur inconnue'}`);
     } finally {
       setIsCompanyLoading(false);
     }
@@ -117,6 +144,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
 
     if (!companyId) {
       toast.error("Impossible de créer un client sans entreprise associée");
+      console.error("Tentative de création de client sans company_id défini");
       return;
     }
 
@@ -125,6 +153,12 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
 
     try {
       console.log("Création de client avec company ID:", companyId);
+      
+      // Vérification supplémentaire de l'authentification
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Session expirée, veuillez vous reconnecter");
+      }
       
       const { data, error } = await supabase
         .from('clients')
@@ -139,7 +173,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         .single();
 
       if (error) {
-        console.error("Erreur lors de la création du client:", error);
+        console.error("Détails de l'erreur lors de la création du client:", error);
         throw error;
       }
 
