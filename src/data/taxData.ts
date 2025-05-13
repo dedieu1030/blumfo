@@ -1,4 +1,3 @@
-
 import { TaxRegion } from "@/types/tax";
 
 // Données des régions fiscales
@@ -235,7 +234,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "ch-special",
-        name: "Taux Spécial (Hébergement)",
+        name: "Taux Hébergement",
         code: "CH-SPE",
         taxType: "vat-parking",
         vatParkingRate: 3.8,
@@ -270,7 +269,7 @@ export const taxRegionsData: TaxRegion[] = [
         taxType: "gst-qst",
         gstRate: 5,
         qstRate: 9.975,
-        totalRate: 14.975,
+        totalRate: 15,
       },
       {
         id: "ca-bc",
@@ -399,7 +398,7 @@ export const taxRegionsData: TaxRegion[] = [
     regions: [
       {
         id: "mx-standard",
-        name: "Taux Standard (IVA)",
+        name: "Taux Standard",
         code: "MX-STD",
         taxType: "iva-standard",
         ivaRate: 16,
@@ -407,16 +406,15 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "mx-border",
-        name: "Taux Frontalier (IVA)",
+        name: "Taux Frontalier",
         code: "MX-BOR",
         taxType: "iva-reduced",
         ivaRate: 8,
         totalRate: 8,
-        notes: "Applicable dans les zones frontalières"
       },
       {
         id: "mx-zero",
-        name: "Taux Zéro (IVA)",
+        name: "Taux Zéro",
         code: "MX-ZER",
         taxType: "iva-zero",
         ivaRate: 0,
@@ -424,7 +422,7 @@ export const taxRegionsData: TaxRegion[] = [
       },
       {
         id: "mx-exempt",
-        name: "Exonéré (IVA)",
+        name: "Exonéré",
         code: "MX-EXE",
         taxType: "iva-exempt",
         totalRate: 0,
