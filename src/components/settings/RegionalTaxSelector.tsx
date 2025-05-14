@@ -233,6 +233,7 @@ export function RegionalTaxSelector({
         variant="outline" 
         className="w-full justify-between"
         onClick={openSelector}
+        type="button"
       >
         {selectedRegion 
           ? `${selectedRegion.name}`
@@ -255,7 +256,7 @@ export function RegionalTaxSelector({
               {getNavigationTitle()}
               
               {navigationLevel !== "zones" && (
-                <Button variant="ghost" size="sm" onClick={navigateBack}>
+                <Button variant="ghost" size="sm" onClick={navigateBack} type="button">
                   <ArrowLeft className="h-4 w-4 mr-1" /> Retour
                 </Button>
               )}
@@ -288,6 +289,7 @@ export function RegionalTaxSelector({
                         variant="outline"
                         className="w-full justify-start h-12 text-left"
                         onClick={() => handleSelectZone(zone as TaxZone)}
+                        type="button"
                       >
                         <Globe className="mr-2 h-4 w-4" />
                         {(zone as TaxZone).name}
@@ -301,6 +303,7 @@ export function RegionalTaxSelector({
                         variant="outline"
                         className="w-full justify-between h-12 text-left"
                         onClick={() => handleSelectCountry(country as TaxCountry)}
+                        type="button"
                       >
                         <span className="font-medium">{(country as TaxCountry).name}</span>
                         <span className="text-muted-foreground">{(country as TaxCountry).countryCode}</span>
@@ -314,6 +317,7 @@ export function RegionalTaxSelector({
                         variant="outline"
                         className="w-full justify-between h-14 text-left"
                         onClick={() => handleSelectRegion(region as TaxRegionData)}
+                        type="button"
                       >
                         <span className="font-medium truncate mr-2 max-w-[65%]">{(region as TaxRegionData).name}</span>
                         <Badge className={`${getTaxRateColor((region as TaxRegionData).totalRate)} px-2 min-w-[50px] text-center`} variant="outline">
@@ -332,7 +336,7 @@ export function RegionalTaxSelector({
           </div>
           
           <SheetFooter className="pt-4">
-            <Button onClick={closeSelector} variant="default" className="w-full">
+            <Button onClick={closeSelector} variant="default" className="w-full" type="button">
               Fermer
             </Button>
           </SheetFooter>
@@ -355,7 +359,7 @@ export function RegionalTaxSelector({
               <Badge className={`${getTaxRateColor(selectedRegion.totalRate)} px-2 min-w-[50px] text-center`} variant="outline">
                 {formatTaxRate(selectedRegion.totalRate)}%
               </Badge>
-              <Button variant="ghost" size="sm" onClick={openSelector}>
+              <Button variant="ghost" size="sm" onClick={openSelector} type="button">
                 Changer
               </Button>
             </div>
@@ -364,6 +368,7 @@ export function RegionalTaxSelector({
               variant="outline"
               onClick={openSelector}
               className="w-full justify-center h-12"
+              type="button"
             >
               Sélectionner une région fiscale
             </Button>
@@ -378,7 +383,7 @@ export function RegionalTaxSelector({
               {getNavigationTitle()}
               
               {navigationLevel !== "zones" && (
-                <Button variant="ghost" size="sm" onClick={navigateBack}>
+                <Button variant="ghost" size="sm" onClick={navigateBack} type="button">
                   <ArrowLeft className="h-4 w-4 mr-1" /> Retour
                 </Button>
               )}
@@ -417,6 +422,7 @@ export function RegionalTaxSelector({
                       variant="outline"
                       className="w-full justify-between h-12 text-left"
                       onClick={() => handleSelectZone(zone as TaxZone)}
+                      type="button"
                     >
                       <span className="font-medium">{(zone as TaxZone).name}</span>
                       <Globe className="h-4 w-4 opacity-70" />
@@ -430,6 +436,7 @@ export function RegionalTaxSelector({
                       variant="outline"
                       className="w-full justify-between h-12 text-left"
                       onClick={() => handleSelectCountry(country as TaxCountry)}
+                      type="button"
                     >
                       <div className="flex items-center">
                         <span className="font-medium">{(country as TaxCountry).name}</span>
@@ -447,6 +454,7 @@ export function RegionalTaxSelector({
                       variant="outline"
                       className="w-full justify-between h-14 text-left"
                       onClick={() => handleSelectRegion(region as TaxRegionData)}
+                      type="button"
                     >
                       <div className="flex flex-col items-start max-w-[65%]">
                         <span className="font-medium truncate">{(region as TaxRegionData).name}</span>
@@ -467,7 +475,7 @@ export function RegionalTaxSelector({
           </div>
           
           <SheetFooter>
-            <Button variant="default" onClick={closeSelector} className="w-full">
+            <Button variant="default" onClick={closeSelector} className="w-full" type="button">
               Fermer
             </Button>
           </SheetFooter>
