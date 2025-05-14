@@ -22,3 +22,7 @@ export interface NotificationSettings {
   push: boolean;
   sms: boolean;
 }
+
+// Add EmailType enum for type safety
+export type EmailType = 'personal' | 'professional' | 'company';
+export type ProfileType = 'personal' | 'business';
