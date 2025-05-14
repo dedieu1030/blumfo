@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CompanyProfile, CompanyProfileRaw, EmailType, ProfileType } from '@/types/user';
@@ -105,12 +106,24 @@ export const useCompanyProfile = () => {
       }
 
       if (data) {
-        // Make a copy of the data to ensure we can safely modify it
-        const dataWithDefaults = {
-          ...data,
-          email_type: (data.email_type as EmailType) || 'professional',
-          profile_type: (data.profile_type as ProfileType) || 'business',
-          tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0
+        // Make sure we have a properly typed object by casting and adding missing properties
+        // TypeScript sometimes doesn't recognize properties in the returned data
+        const safeData = data as any;
+        
+        // Create a safe copy with all required properties
+        const dataWithDefaults: CompanyProfileRaw = {
+          ...safeData,
+          email_type: (safeData.email_type as EmailType) || 'professional',
+          profile_type: (safeData.profile_type as ProfileType) || 'business',
+          tax_rate: safeData.tax_rate !== undefined ? Number(safeData.tax_rate) : 0,
+          company_name: safeData.company_name || '',
+          address: safeData.address || '',
+          email: safeData.email || '',
+          phone: safeData.phone || '',
+          bank_account: safeData.bank_account || '',
+          bank_name: safeData.bank_name || '',
+          business_type: safeData.business_type || 'company',
+          account_holder: safeData.account_holder || ''
         };
         
         const mappedProfile = mapDatabaseToFrontend(dataWithDefaults);
@@ -171,12 +184,23 @@ export const useCompanyProfile = () => {
         return null;
       }
 
-      // Add missing properties to the database response to ensure it matches our expected structure
-      const dataWithDefaults = {
-        ...data,
-        email_type: (data.email_type as EmailType) || 'professional',
-        profile_type: (data.profile_type as ProfileType) || 'business',
-        tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0
+      // Cast and ensure the response has all expected fields
+      const safeData = data as any;
+      
+      // Create a safe copy with all required properties
+      const dataWithDefaults: CompanyProfileRaw = {
+        ...safeData,
+        email_type: (safeData.email_type as EmailType) || 'professional',
+        profile_type: (safeData.profile_type as ProfileType) || 'business',
+        tax_rate: safeData.tax_rate !== undefined ? Number(safeData.tax_rate) : 0,
+        company_name: safeData.company_name || '',
+        address: safeData.address || '',
+        email: safeData.email || '',
+        phone: safeData.phone || '',
+        bank_account: safeData.bank_account || '',
+        bank_name: safeData.bank_name || '',
+        business_type: safeData.business_type || 'company',
+        account_holder: safeData.account_holder || ''
       };
       
       const updatedProfile = mapDatabaseToFrontend(dataWithDefaults);

@@ -1,3 +1,4 @@
+
 export interface UserProfile {
   id: string;
   username?: string;
@@ -42,8 +43,8 @@ export interface CompanyProfileRaw {
   business_type_custom?: string;
   account_holder: string;
   profile_type: ProfileType;
+  tax_rate: number; // Explicitly defined as required, not optional
   taxRate?: number;
-  tax_rate: number; // Make sure tax_rate is required, not optional
   taxRegion?: string;
   termsAndConditions?: string;
   thankYouMessage?: string;
