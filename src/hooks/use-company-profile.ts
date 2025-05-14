@@ -94,7 +94,7 @@ function mapCompanyProfileToRaw(profile: CompanyProfile): CompanyProfileRaw {
     bank_account: profile.bankAccount,
     bank_name: profile.bankName,
     account_holder: profile.accountHolder,
-    tax_rate: profile.taxRate,
+    tax_rate: profile.taxRate || 0, // Valeur par défaut à 0 si non définie
     tax_region: profile.taxRegion,
     tax_configuration: profile.taxConfiguration,
     business_type: profile.businessType,
@@ -163,6 +163,11 @@ export function useCompanyProfile() {
             parsedProfile.userId = user.id;
           }
           
+          // S'assurer que taxRate est défini pour éviter les erreurs de type
+          if (parsedProfile.taxRate === undefined) {
+            parsedProfile.taxRate = 0;
+          }
+          
           await saveCompanyProfile(parsedProfile);
         }
       }
@@ -185,6 +190,11 @@ export function useCompanyProfile() {
 
       // S'assurer que le profil est associé à l'utilisateur actuel
       profile.userId = user.id;
+      
+      // S'assurer que taxRate est défini pour éviter les erreurs de type
+      if (profile.taxRate === undefined) {
+        profile.taxRate = 0;
+      }
       
       // Convertir le profil au format compatible avec la base de données
       const rawProfile = mapCompanyProfileToRaw(profile);
