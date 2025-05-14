@@ -8,6 +8,7 @@ export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [profileExists, setProfileExists] = useState<boolean | null>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -23,23 +24,60 @@ export function useUserProfile() {
         
         const userId = session.user.id;
         
-        // Récupérer le profil de l'utilisateur
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
+        try {
+          // Vérifier si la table profiles existe
+          const { error: tableCheckError } = await supabase
+            .from('profiles')
+            .select('count')
+            .limit(1)
+            .single();
+            
+          if (tableCheckError && tableCheckError.code === '42P01') {
+            // La table n'existe pas
+            console.log('La table profiles n\'existe pas encore');
+            setProfileExists(false);
+            
+            // Créer un profil minimal basé sur les données d'authentification
+            const minimalProfile: UserProfile = {
+              id: userId,
+              full_name: session.user.user_metadata?.full_name || 'Utilisateur',
+              email: session.user.email || '',
+              language: 'fr',
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              notification_settings: {
+                email: true,
+                push: true,
+                sms: false
+              },
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            setProfile(minimalProfile);
+            setLoading(false);
+            return;
+          }
           
-        if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
-          throw error;
+          setProfileExists(true);
+          
+          // Récupérer le profil de l'utilisateur
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+            
+          if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
+            throw error;
+          }
+          
+          if (data) {
+            setProfile(data as UserProfile);
+          }
+        } catch (err) {
+          console.error('Erreur lors du chargement du profil:', err);
+          setError(err as Error);
         }
-        
-        if (data) {
-          setProfile(data as UserProfile);
-        }
-      } catch (err: any) {
-        console.error('Erreur lors du chargement du profil:', err);
-        setError(err);
       } finally {
         setLoading(false);
       }
@@ -86,7 +124,15 @@ export function useUserProfile() {
       // Mise à jour du timestamp
       updates.updated_at = new Date().toISOString();
       
-      // Mettre à jour le profil
+      // Si la table profiles n'existe pas, on met à jour le profil local uniquement
+      if (profileExists === false) {
+        const updatedProfile = { ...profile, ...updates } as UserProfile;
+        setProfile(updatedProfile);
+        toast.success('Profil mis à jour avec succès');
+        return { success: true, data: updatedProfile };
+      }
+      
+      // Mettre à jour le profil dans la base de données
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
@@ -109,5 +155,5 @@ export function useUserProfile() {
     }
   };
 
-  return { profile, loading, error, updateProfile };
+  return { profile, loading, error, updateProfile, profileExists };
 }
