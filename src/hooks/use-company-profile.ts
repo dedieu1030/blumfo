@@ -149,7 +149,7 @@ export function useCompanyProfile() {
         // S'assurer que data contient toutes les propriétés requises pour CompanyProfileRaw
         const rawData: CompanyProfileRaw = {
           ...data,
-          tax_rate: data.tax_rate ?? 0,
+          tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0,
           company_name: data.company_name || '',
           address: data.address || '',
           email: data.email || '',
@@ -249,7 +249,7 @@ export function useCompanyProfile() {
         // S'assurer que data contient toutes les propriétés requises
         const rawResult: CompanyProfileRaw = {
           ...data,
-          tax_rate: data.tax_rate ?? 0,
+          tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0,
           company_name: data.company_name || '',
           address: data.address || '',
           email: data.email || '',
@@ -293,7 +293,7 @@ export function useCompanyProfile() {
         // S'assurer que data contient toutes les propriétés requises
         const rawResult: CompanyProfileRaw = {
           ...data,
-          tax_rate: data.tax_rate ?? 0,
+          tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0,
           company_name: data.company_name || '',
           address: data.address || '',
           email: data.email || '',
