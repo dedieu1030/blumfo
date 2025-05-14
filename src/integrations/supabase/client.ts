@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+// Utiliser explicitement les bonnes URL et clé
 const SUPABASE_URL = "https://svrsfzpkqleyzfllmkcd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2cnNmenBrcWxleXpmbGxta2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0MzE3MzcsImV4cCI6MjA2MjAwNzczN30.KhbPDaYJqameZXw-NqOl9TQvTBXB7NpkveY92v_gHPI";
 
@@ -16,3 +17,19 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage
   }
 });
+
+// Fonction utilitaire pour vérifier la connexion à Supabase
+export const checkSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('profiles').select('count').limit(1);
+    if (error) {
+      console.error('Erreur de connexion Supabase:', error);
+      return false;
+    }
+    console.log('Connexion Supabase réussie');
+    return true;
+  } catch (err) {
+    console.error('Exception lors de la connexion Supabase:', err);
+    return false;
+  }
+};
