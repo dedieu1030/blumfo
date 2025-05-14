@@ -3,16 +3,39 @@ import React from 'react';
 import { Header } from '@/components/Header';
 import { UserProfile } from '@/components/user/UserProfile';
 import { MobileNavigation } from '@/components/MobileNavigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
 
 export default function Profile() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAuthenticated, loading, user, error } = useAuth();
-  const [showError, setShowError] = useState(!!error);
+  const [showError, setShowError] = useState<boolean>(false);
+  const [initAttempt, setInitAttempt] = useState(0);
+  
+  // Vérifier les erreurs après le chargement et montrer la boîte de dialogue si nécessaire
+  useEffect(() => {
+    if (!loading && error) {
+      setShowError(true);
+      toast.error("Un problème est survenu lors du chargement de votre profil");
+    }
+  }, [loading, error]);
+  
+  // Gérer les tentatives d'initialisation pour éviter les boucles infinies
+  useEffect(() => {
+    if (initAttempt > 3) {
+      console.error("Trop de tentatives d'initialisation du profil");
+      return;
+    }
+    
+    // Cette logique ne s'exécute que pendant le premier rendu
+    if (initAttempt === 0) {
+      setInitAttempt(prev => prev + 1);
+    }
+  }, [initAttempt]);
 
   // Afficher un indicateur de chargement pendant la vérification de l'authentification
   if (loading) {
@@ -53,11 +76,13 @@ export default function Profile() {
               <AlertDialogTitle>Problème avec le profil</AlertDialogTitle>
               <AlertDialogDescription>
                 Un problème est survenu lors du chargement de votre profil. 
-                La table de profils n'existe peut-être pas encore dans votre base de données Supabase.
+                Veuillez rafraîchir la page ou contacter le support si le problème persiste.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogAction>Compris</AlertDialogAction>
+              <AlertDialogAction onClick={() => window.location.reload()}>
+                Rafraîchir la page
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

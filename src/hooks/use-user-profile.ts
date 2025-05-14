@@ -11,7 +11,7 @@ export function useUserProfile() {
   const [profileExists, setProfileExists] = useState<boolean | null>(null);
 
   useEffect(() => {
-    async function fetchProfile() {
+    const fetchProfileWithRetry = async (retryCount = 0, maxRetries = 3) => {
       try {
         setLoading(true);
         
@@ -24,23 +24,21 @@ export function useUserProfile() {
         
         const userId = session.user.id;
         
-        try {
-          // Vérifier si la table profiles existe
-          const { error: tableCheckError } = await supabase
-            .from('profiles')
-            .select('count')
-            .limit(1)
-            .single();
-            
-          if (tableCheckError && tableCheckError.code === '42P01') {
-            // La table n'existe pas
-            console.log('La table profiles n\'existe pas encore');
-            setProfileExists(false);
+        // Récupérer le profil de l'utilisateur
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        
+        if (error) {
+          if (error.code === 'PGRST116') { // No rows found
+            console.log('Aucun profil trouvé pour cet utilisateur');
             
             // Créer un profil minimal basé sur les données d'authentification
             const minimalProfile: UserProfile = {
               id: userId,
-              full_name: session.user.user_metadata?.full_name || 'Utilisateur',
+              full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Utilisateur',
               email: session.user.email || '',
               language: 'fr',
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -54,49 +52,39 @@ export function useUserProfile() {
             };
             
             setProfile(minimalProfile);
-            setLoading(false);
-            return;
-          }
-          
-          setProfileExists(true);
-          
-          // Récupérer le profil de l'utilisateur
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
             
-          if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
-            throw error;
+            // Tenter de créer le profil dans la base de données
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert(minimalProfile);
+            
+            if (insertError) {
+              console.warn('Impossible de créer le profil:', insertError);
+            } else {
+              console.log('Profil utilisateur créé avec succès');
+            }
+            
+          } else if (retryCount < maxRetries) {
+            console.log(`Erreur lors du chargement du profil, tentative ${retryCount + 1}/${maxRetries}:`, error);
+            setTimeout(() => fetchProfileWithRetry(retryCount + 1, maxRetries), 1000);
+            return;
+          } else {
+            console.error('Erreur persistante lors du chargement du profil:', error);
+            setError(error);
           }
-          
-          if (data) {
-            setProfile(data as UserProfile);
-          }
-        } catch (err) {
-          console.error('Erreur lors du chargement du profil:', err);
-          setError(err as Error);
+        } else if (data) {
+          setProfile(data as UserProfile);
+          setProfileExists(true);
         }
+      } catch (err) {
+        console.error('Erreur inattendue:', err);
+        setError(err as Error);
       } finally {
         setLoading(false);
       }
-    }
+    };
     
-    fetchProfile();
-    
-    // Configurer un listener pour les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event) => {
-        if (event === 'SIGNED_IN') {
-          fetchProfile();
-        } else if (event === 'SIGNED_OUT') {
-          setProfile(null);
-        }
-      }
-    );
-    
-    return () => subscription.unsubscribe();
+    fetchProfileWithRetry();
   }, []);
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
@@ -123,14 +111,6 @@ export function useUserProfile() {
       
       // Mise à jour du timestamp
       updates.updated_at = new Date().toISOString();
-      
-      // Si la table profiles n'existe pas, on met à jour le profil local uniquement
-      if (profileExists === false) {
-        const updatedProfile = { ...profile, ...updates } as UserProfile;
-        setProfile(updatedProfile);
-        toast.success('Profil mis à jour avec succès');
-        return { success: true, data: updatedProfile };
-      }
       
       // Mettre à jour le profil dans la base de données
       const { data, error } = await supabase

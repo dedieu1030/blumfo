@@ -23,26 +23,34 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       return;
     }
     
-    // Configurer l'écouteur d'authentification AVANT de vérifier la session existante
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log("Auth state changed:", event, currentSession?.user?.id);
-      setSession(currentSession);
-      setIsSignedIn(!!currentSession);
-      setIsLoaded(true);
-    });
-    
-    // Ensuite, vérifier s'il y a déjà une session existante
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log("Current session:", currentSession?.user?.id);
-      setSession(currentSession);
-      setIsSignedIn(!!currentSession);
-      setIsLoaded(true);
-      setLoadAttempts(prev => prev + 1);
-    });
-    
-    return () => {
-      subscription.unsubscribe();
+    const checkAuth = async () => {
+      try {
+        // Configurer l'écouteur d'authentification AVANT de vérifier la session existante
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+          console.log("Auth state changed:", event, currentSession?.user?.id);
+          setSession(currentSession);
+          setIsSignedIn(!!currentSession);
+          setIsLoaded(true);
+        });
+        
+        // Ensuite, vérifier s'il y a déjà une session existante
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Current session:", currentSession?.user?.id);
+        setSession(currentSession);
+        setIsSignedIn(!!currentSession);
+        setIsLoaded(true);
+        
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Erreur lors de la vérification de l'authentification:", error);
+        setIsLoaded(true);
+        setLoadAttempts(prev => prev + 1);
+      }
     };
+    
+    checkAuth();
   }, [loadAttempts]);
   
   // Affichage pendant le chargement
