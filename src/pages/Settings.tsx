@@ -68,6 +68,18 @@ export default function Settings() {
     });
   };
 
+  // Function to handle profile deletion
+  const handleDeleteProfile = () => {
+    localStorage.removeItem('companyProfile');
+    setCompanyProfile(null);
+    setHasProfile(false);
+    
+    toast({
+      title: "Profil supprimé",
+      description: "Votre profil a été supprimé avec succès."
+    });
+  };
+
   return (
     <>
       <Header 
@@ -132,6 +144,7 @@ export default function Settings() {
             <ProfileViewer 
               profile={companyProfile as CompanyProfile}
               onEdit={() => setIsEditingProfile(true)}
+              onDelete={handleDeleteProfile}
             />
           )}
         </TabsContent>

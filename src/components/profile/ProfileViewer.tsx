@@ -2,14 +2,16 @@
 import { CompanyProfile } from "@/types/invoice";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Building2, UsersRound, UserIcon, Scale, Briefcase, Building, CircleDot } from "lucide-react";
+import { Edit, Building2, UsersRound, UserIcon, Scale, Briefcase, Building, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface ProfileViewerProps {
   profile: CompanyProfile;
   onEdit: () => void;
+  onDelete?: () => void;
 }
 
-export function ProfileViewer({ profile, onEdit }: ProfileViewerProps) {
+export function ProfileViewer({ profile, onEdit, onDelete }: ProfileViewerProps) {
   // Détermine l'icône à afficher en fonction du type de profil
   const getProfileIcon = () => {
     const type = profile.profileType || (profile.businessType === "company" ? "business" : "personal");
@@ -86,14 +88,44 @@ export function ProfileViewer({ profile, onEdit }: ProfileViewerProps) {
               <CardDescription>{profile.name}</CardDescription>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={onEdit}
-            className="flex items-center"
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Modifier
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={onEdit}
+              className="flex items-center"
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Modifier
+            </Button>
+            
+            {onDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    className="flex items-center text-destructive border-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Supprimer
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce profil ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Cette action est irréversible. Le profil sera définitivement supprimé.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">
+                      Supprimer
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
       </CardHeader>
       
