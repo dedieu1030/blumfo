@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import * as React from "react";
 
 interface ToastState {
   id: string;
@@ -18,9 +18,9 @@ export interface ToastFunctions {
 }
 
 export const useToast = () => {
-  const [toasts, setToasts] = useState<ToastState[]>([]);
+  const [toasts, setToasts] = React.useState<ToastState[]>([]);
 
-  const toast = useCallback(
+  const toast = React.useCallback(
     (props: Omit<ToastState, "id">) => {
       const id = Math.random().toString(36).slice(2, 9);
       setToasts((prev) => [...prev, { id, ...props }]);
@@ -29,7 +29,7 @@ export const useToast = () => {
     [setToasts]
   );
 
-  const dismiss = useCallback(
+  const dismiss = React.useCallback(
     (id: string) => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     },
@@ -56,4 +56,3 @@ const toastFunction = ((props: Omit<ToastState, "id">) => {
 export const toast = toastFunction;
 
 // Les méthodes d'aide (success, error, info) sont définies dans components/ui/use-toast.ts
-
