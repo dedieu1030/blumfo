@@ -107,14 +107,14 @@ export const useCompanyProfile = () => {
 
       if (data) {
         // Transform data to our frontend format and ensure tax_rate is handled
-        const dataWithTypes: CompanyProfileRaw = {
+        const processedData = {
           ...data,
           email_type: (data.email_type as EmailType) || 'professional',
           profile_type: (data.profile_type as ProfileType) || 'business',
-          tax_rate: data.tax_rate !== undefined ? data.tax_rate : (data.taxRate !== undefined ? data.taxRate : 0)
+          tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0
         };
         
-        const mappedProfile = mapDatabaseToFrontend(dataWithTypes);
+        const mappedProfile = mapDatabaseToFrontend(processedData);
         
         setProfile(mappedProfile);
         // Also store in localStorage for faster access
@@ -148,23 +148,19 @@ export const useCompanyProfile = () => {
       });
 
       // Make sure we have the correct type for email_type and profile_type
-      const dbProfileWithCorrectTypes: CompanyProfileRaw = {
+      const dbDataToSave = {
         ...dbProfile,
-        email_type: dbProfile.email_type as EmailType,
-        profile_type: dbProfile.profile_type as ProfileType,
-        tax_rate: dbProfile.tax_rate !== undefined ? dbProfile.tax_rate : 0
+        email_type: dbProfile.email_type,
+        profile_type: dbProfile.profile_type,
+        tax_rate: typeof dbProfile.tax_rate === 'number' ? dbProfile.tax_rate : 0,
+        user_id: user.user.id,
+        updated_at: new Date().toISOString()
       };
 
       // Save to database
       const { data, error } = await supabase
         .from('companies')
-        .upsert({
-          ...dbProfileWithCorrectTypes,
-          user_id: user.user.id,
-          // Ensure tax_rate is properly set
-          tax_rate: dbProfileWithCorrectTypes.tax_rate,
-          updated_at: new Date().toISOString()
-        })
+        .upsert(dbDataToSave)
         .select()
         .single();
 
@@ -176,14 +172,14 @@ export const useCompanyProfile = () => {
       }
 
       // Map data back to our frontend format with correct types
-      const dataWithTypes: CompanyProfileRaw = {
+      const processedResponse = {
         ...data,
         email_type: (data.email_type as EmailType) || 'professional',
         profile_type: (data.profile_type as ProfileType) || 'business',
         tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0
       };
       
-      const updatedProfile = mapDatabaseToFrontend(dataWithTypes);
+      const updatedProfile = mapDatabaseToFrontend(processedResponse);
 
       setProfile(updatedProfile);
       // Update localStorage
