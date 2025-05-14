@@ -10,15 +10,28 @@ export function useUserProfile() {
   const [error, setError] = useState<Error | null>(null);
   const [profileExists, setProfileExists] = useState<boolean | null>(null);
   const [connectionIssue, setConnectionIssue] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
   
   useEffect(() => {
     const fetchProfileWithRetry = async (retryCount = 0, maxRetries = 3) => {
+      if (retryCount > maxRetries) {
+        console.error(`Maximum de ${maxRetries} tentatives atteint pour le chargement du profil`);
+        setConnectionIssue(true);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         console.log(`Tentative de chargement du profil ${retryCount + 1}/${maxRetries + 1}`);
         
         // Vérifier si l'utilisateur est connecté via Supabase
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error('Erreur lors de la récupération de la session:', sessionError);
+          throw sessionError;
+        }
+        
         if (!session || !session.user) {
           console.log('Aucun utilisateur connecté');
           setLoading(false);
@@ -28,7 +41,7 @@ export function useUserProfile() {
         const userId = session.user.id;
         console.log('User ID:', userId);
         
-        // Récupérer le profil de l'utilisateur
+        // Récupérer le profil de l'utilisateur avec un délai entre les tentatives
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -38,16 +51,8 @@ export function useUserProfile() {
         if (error) {
           console.error('Erreur lors de la récupération du profil:', error);
           
-          if (error.code === 'PGRST116' || error.code === '42P01') { // No rows found OU table doesn't exist
-            console.log('Aucun profil trouvé ou table manquante');
-            
-            if (error.code === '42P01') {
-              console.error('La table profiles n\'existe pas dans la base de données');
-              setConnectionIssue(true);
-              setError(new Error('La table profiles n\'existe pas dans la base de données'));
-              setLoading(false);
-              return;
-            }
+          if (error.code === 'PGRST116') {
+            console.log('Aucun profil trouvé, nous allons en créer un');
             
             // Créer un profil minimal basé sur les données d'authentification
             const minimalProfile: UserProfile = {
@@ -86,9 +91,30 @@ export function useUserProfile() {
             } catch (insertErr) {
               console.error('Exception lors de la création du profil:', insertErr);
             }
+            return;
+          } else if (error.code === '42P01') {
+            console.error('La table profiles n\'existe pas dans la base de données');
+            setConnectionIssue(true);
+            setError(new Error('La table profiles n\'existe pas dans la base de données'));
+            setLoading(false);
+            
+            // Essayer de nouveau après un certain délai
+            if (retryCount < maxRetries) {
+              const delayMs = Math.min(1000 * (2 ** retryCount), 10000); // Backoff exponentiel
+              console.log(`Nouvelle tentative dans ${delayMs}ms...`);
+              setTimeout(() => {
+                setRetryCount(retryCount + 1);
+                fetchProfileWithRetry(retryCount + 1, maxRetries);
+              }, delayMs);
+            }
+            return;
           } else if (retryCount < maxRetries) {
-            console.log(`Erreur lors du chargement du profil, tentative ${retryCount + 1}/${maxRetries}:`, error);
-            setTimeout(() => fetchProfileWithRetry(retryCount + 1, maxRetries), 1000);
+            const delayMs = Math.min(1000 * (2 ** retryCount), 10000);
+            console.log(`Erreur lors du chargement du profil, nouvelle tentative dans ${delayMs}ms:`, error);
+            setTimeout(() => {
+              setRetryCount(retryCount + 1);
+              fetchProfileWithRetry(retryCount + 1, maxRetries);
+            }, delayMs);
             return;
           } else {
             console.error('Erreur persistante lors du chargement du profil:', error);
@@ -107,8 +133,12 @@ export function useUserProfile() {
         setConnectionIssue(true);
         
         if (retryCount < maxRetries) {
-          console.log(`Nouvelle tentative ${retryCount + 1}/${maxRetries} dans 1 seconde...`);
-          setTimeout(() => fetchProfileWithRetry(retryCount + 1, maxRetries), 1000);
+          const delayMs = Math.min(1000 * (2 ** retryCount), 10000);
+          console.log(`Nouvelle tentative ${retryCount + 1}/${maxRetries} dans ${delayMs}ms...`);
+          setTimeout(() => {
+            setRetryCount(retryCount + 1);
+            fetchProfileWithRetry(retryCount + 1, maxRetries);
+          }, delayMs);
           return;
         } else {
           toast.error('Erreur de connexion. Veuillez réessayer plus tard.');
@@ -118,18 +148,20 @@ export function useUserProfile() {
       }
     };
     
-    fetchProfileWithRetry();
-  }, []);
+    fetchProfileWithRetry(retryCount);
+  }, [retryCount]);
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     try {
       setLoading(true);
       
       // Vérifier si l'utilisateur est connecté
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      
       if (!session || !session.user) {
         toast.error('Vous devez être connecté pour mettre à jour votre profil');
-        return { success: false };
+        return { success: false, error: new Error('Non connecté') };
       }
       
       const userId = session.user.id;
@@ -154,7 +186,33 @@ export function useUserProfile() {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur lors de la mise à jour du profil:', error);
+        
+        // Si le profil n'existe pas encore, essayer de l'insérer
+        if (error.code === 'PGRST116') {
+          const fullProfile = {
+            id: userId,
+            ...updates,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          const { data: insertData, error: insertError } = await supabase
+            .from('profiles')
+            .insert(fullProfile)
+            .select()
+            .single();
+          
+          if (insertError) throw insertError;
+          
+          setProfile(insertData as UserProfile);
+          toast.success('Profil créé avec succès');
+          return { success: true, data: insertData };
+        }
+        
+        throw error;
+      }
       
       setProfile(data as UserProfile);
       toast.success('Profil mis à jour avec succès');
@@ -168,6 +226,11 @@ export function useUserProfile() {
       setLoading(false);
     }
   };
+  
+  // Fonction pour forcer le rechargement du profil
+  const reloadProfile = () => {
+    setRetryCount(prev => prev + 1);
+  };
 
   return { 
     profile, 
@@ -175,6 +238,7 @@ export function useUserProfile() {
     error, 
     updateProfile, 
     profileExists, 
-    connectionIssue 
+    connectionIssue,
+    reloadProfile
   };
 }

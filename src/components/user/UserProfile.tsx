@@ -1,20 +1,31 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { Button } from '@/components/ui/button';
-import { UserCircle, Mail, Phone, Globe, Clock, LogOut } from 'lucide-react';
+import { UserCircle, Mail, Phone, Globe, Clock, LogOut, RefreshCcw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { checkSupabaseConnection } from '@/integrations/supabase/client';
 
 export function UserProfile() {
-  const { profile, loading, updateProfile } = useUserProfile();
+  const { profile, loading, error, connectionIssue, reloadProfile } = useUserProfile();
   const { isAuthenticated, signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [showError, setShowError] = React.useState(false);
+  const [isVerifying, setIsVerifying] = React.useState(false);
+  
+  // Afficher la boîte de dialogue d'erreur si un problème de connexion est détecté
+  useEffect(() => {
+    if (connectionIssue || error) {
+      setShowError(true);
+    }
+  }, [connectionIssue, error]);
   
   // Si on est encore en train de charger, afficher un squelette
   if (loading) {
@@ -72,11 +83,33 @@ export function UserProfile() {
     );
   }
   
+  // Fonction pour vérifier la connexion à Supabase
+  const verifyConnection = async () => {
+    setIsVerifying(true);
+    try {
+      const result = await checkSupabaseConnection();
+      if (result.success) {
+        toast.success("La connexion à la base de données est fonctionnelle");
+        setShowError(false);
+        
+        // Recharger le profil
+        reloadProfile();
+      } else {
+        toast.error(result.message || "Problème de connexion à la base de données");
+      }
+    } catch (err) {
+      console.error("Erreur lors de la vérification de la connexion:", err);
+      toast.error("Erreur lors de la vérification de la connexion");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+  
   // Si nous avons un utilisateur mais pas de profil complet, utiliser les données minimales
   const displayProfile = profile || {
     full_name: user?.email ? user.email.split('@')[0] : 'Utilisateur',
     email: user?.email || '',
-    phone: '', // Ajout de la propriété phone avec une valeur par défaut vide
+    phone: '', 
     language: 'fr',
     timezone: 'Europe/Paris',
     notification_settings: {
@@ -240,6 +273,47 @@ export function UserProfile() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Boîte de dialogue d'erreur */}
+      <AlertDialog open={showError} onOpenChange={setShowError}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Problème avec le profil</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>{error?.message || "Un problème est survenu lors du chargement de votre profil."}</p>
+              <p>Cela peut être dû à un problème de connexion à la base de données ou au service d'authentification.</p>
+              <div className="flex items-center justify-center mt-4">
+                <Button 
+                  onClick={verifyConnection} 
+                  disabled={isVerifying}
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                >
+                  {isVerifying ? (
+                    <>
+                      <RefreshCcw className="h-4 w-4 animate-spin" />
+                      Vérification...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw className="h-4 w-4" />
+                      Vérifier la connexion
+                    </>
+                  )}
+                </Button>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowError(false)}>
+              Fermer
+            </AlertDialogAction>
+            <AlertDialogAction onClick={() => window.location.reload()}>
+              Rafraîchir la page
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
