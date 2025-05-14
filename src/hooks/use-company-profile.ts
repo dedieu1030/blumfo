@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CompanyProfile, CompanyProfileRaw, EmailType, ProfileType } from '@/types/user';
@@ -51,7 +50,7 @@ const mapFrontendToDatabase = (profile: CompanyProfile): CompanyProfileRaw => {
     account_holder: profile.accountHolder,
     profile_type: profile.profileType,
     // Ensure tax_rate is included
-    tax_rate: profile.taxRate,
+    tax_rate: typeof profile.taxRate === 'number' ? profile.taxRate : 0,
     taxRegion: profile.taxRegion,
     termsAndConditions: profile.termsAndConditions,
     thankYouMessage: profile.thankYouMessage,
@@ -106,15 +105,15 @@ export const useCompanyProfile = () => {
       }
 
       if (data) {
-        // Transform data to our frontend format and ensure tax_rate is handled
-        const processedData: CompanyProfileRaw = {
+        // Make a copy of the data to ensure we can safely modify it
+        const dataWithDefaults = {
           ...data,
           email_type: (data.email_type as EmailType) || 'professional',
           profile_type: (data.profile_type as ProfileType) || 'business',
           tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0
         };
         
-        const mappedProfile = mapDatabaseToFrontend(processedData);
+        const mappedProfile = mapDatabaseToFrontend(dataWithDefaults);
         
         setProfile(mappedProfile);
         // Also store in localStorage for faster access
@@ -141,18 +140,19 @@ export const useCompanyProfile = () => {
         return null;
       }
 
-      // Prepare data for database
-      const dbProfile = mapFrontendToDatabase({
+      // Prepare data for database, ensuring it has the tax_rate property 
+      const dbProfileBase = mapFrontendToDatabase({
         ...profileData,
         userId: user.user.id
       });
 
       // Make sure we have the correct type for email_type and profile_type
+      // and that tax_rate is properly set
       const dbDataToSave: CompanyProfileRaw = {
-        ...dbProfile,
-        email_type: dbProfile.email_type,
-        profile_type: dbProfile.profile_type,
-        tax_rate: typeof dbProfile.tax_rate === 'number' ? dbProfile.tax_rate : 0,
+        ...dbProfileBase,
+        email_type: dbProfileBase.email_type,
+        profile_type: dbProfileBase.profile_type,
+        tax_rate: typeof dbProfileBase.tax_rate === 'number' ? dbProfileBase.tax_rate : 0,
         user_id: user.user.id,
         updated_at: new Date().toISOString()
       };
@@ -171,15 +171,15 @@ export const useCompanyProfile = () => {
         return null;
       }
 
-      // Map data back to our frontend format with correct types
-      const processedResponse: CompanyProfileRaw = {
+      // Add missing properties to the database response to ensure it matches our expected structure
+      const dataWithDefaults = {
         ...data,
         email_type: (data.email_type as EmailType) || 'professional',
         profile_type: (data.profile_type as ProfileType) || 'business',
         tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0
       };
       
-      const updatedProfile = mapDatabaseToFrontend(processedResponse);
+      const updatedProfile = mapDatabaseToFrontend(dataWithDefaults);
 
       setProfile(updatedProfile);
       // Update localStorage
