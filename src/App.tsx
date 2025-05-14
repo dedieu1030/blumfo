@@ -137,10 +137,10 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <Toaster />
+      <Sonner />
       <AuthProvider>
         <NotificationsProvider>
-          <Toaster />
-          <Sonner />
           <AppContent />
         </NotificationsProvider>
       </AuthProvider>
