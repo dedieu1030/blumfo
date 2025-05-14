@@ -107,11 +107,14 @@ export const useCompanyProfile = () => {
 
       if (data) {
         // Transform data to our frontend format and ensure tax_rate is handled
-        const mappedProfile = mapDatabaseToFrontend({
+        const dataWithTypes: CompanyProfileRaw = {
           ...data,
-          // Handle tax_rate explicitly to avoid TypeScript errors
+          email_type: (data.email_type as EmailType) || 'professional',
+          profile_type: (data.profile_type as ProfileType) || 'business',
           tax_rate: data.tax_rate !== undefined ? data.tax_rate : (data.taxRate !== undefined ? data.taxRate : 0)
-        });
+        };
+        
+        const mappedProfile = mapDatabaseToFrontend(dataWithTypes);
         
         setProfile(mappedProfile);
         // Also store in localStorage for faster access
@@ -144,14 +147,22 @@ export const useCompanyProfile = () => {
         userId: user.user.id
       });
 
+      // Make sure we have the correct type for email_type and profile_type
+      const dbProfileWithCorrectTypes: CompanyProfileRaw = {
+        ...dbProfile,
+        email_type: dbProfile.email_type as EmailType,
+        profile_type: dbProfile.profile_type as ProfileType,
+        tax_rate: dbProfile.tax_rate !== undefined ? dbProfile.tax_rate : 0
+      };
+
       // Save to database
       const { data, error } = await supabase
         .from('companies')
         .upsert({
-          ...dbProfile,
+          ...dbProfileWithCorrectTypes,
           user_id: user.user.id,
           // Ensure tax_rate is properly set
-          tax_rate: dbProfile.tax_rate !== undefined ? dbProfile.tax_rate : (dbProfile.taxRate !== undefined ? dbProfile.taxRate : 0),
+          tax_rate: dbProfileWithCorrectTypes.tax_rate,
           updated_at: new Date().toISOString()
         })
         .select()
@@ -164,12 +175,15 @@ export const useCompanyProfile = () => {
         return null;
       }
 
-      // Map data back to our frontend format
-      const updatedProfile = mapDatabaseToFrontend({
+      // Map data back to our frontend format with correct types
+      const dataWithTypes: CompanyProfileRaw = {
         ...data,
-        // Handle tax_rate explicitly to avoid TypeScript errors
-        tax_rate: data.tax_rate !== undefined ? data.tax_rate : (data.taxRate !== undefined ? data.taxRate : 0)
-      });
+        email_type: (data.email_type as EmailType) || 'professional',
+        profile_type: (data.profile_type as ProfileType) || 'business',
+        tax_rate: data.tax_rate !== undefined ? data.tax_rate : 0
+      };
+      
+      const updatedProfile = mapDatabaseToFrontend(dataWithTypes);
 
       setProfile(updatedProfile);
       // Update localStorage
