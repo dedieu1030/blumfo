@@ -107,7 +107,7 @@ export const useCompanyProfile = () => {
 
       if (data) {
         // Transform data to our frontend format and ensure tax_rate is handled
-        const processedData = {
+        const processedData: CompanyProfileRaw = {
           ...data,
           email_type: (data.email_type as EmailType) || 'professional',
           profile_type: (data.profile_type as ProfileType) || 'business',
@@ -148,7 +148,7 @@ export const useCompanyProfile = () => {
       });
 
       // Make sure we have the correct type for email_type and profile_type
-      const dbDataToSave = {
+      const dbDataToSave: CompanyProfileRaw = {
         ...dbProfile,
         email_type: dbProfile.email_type,
         profile_type: dbProfile.profile_type,
@@ -172,7 +172,7 @@ export const useCompanyProfile = () => {
       }
 
       // Map data back to our frontend format with correct types
-      const processedResponse = {
+      const processedResponse: CompanyProfileRaw = {
         ...data,
         email_type: (data.email_type as EmailType) || 'professional',
         profile_type: (data.profile_type as ProfileType) || 'business',

@@ -43,8 +43,8 @@ export interface CompanyProfileRaw {
   business_type_custom?: string;
   account_holder: string;
   profile_type: ProfileType;
-  taxRate?: number;  // Add taxRate property
-  tax_rate?: number; // Add tax_rate property for compatibility with database records
+  taxRate?: number;
+  tax_rate?: number; // Add tax_rate property explicitly for database compatibility
   taxRegion?: string;
   termsAndConditions?: string;
   thankYouMessage?: string;
