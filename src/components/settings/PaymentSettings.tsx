@@ -17,7 +17,7 @@ export function PaymentSettings({ companyProfile }: PaymentSettingsProps) {
   // Mettre à jour l'état en fonction du profil d'entreprise
   useEffect(() => {
     if (companyProfile) {
-      setIsStripeConnected(companyProfile.stripe_connected || false);
+      setIsStripeConnected(companyProfile.stripeConnected || false);
     }
   }, [companyProfile]);
 
