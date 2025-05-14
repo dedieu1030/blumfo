@@ -191,9 +191,22 @@ export function useUserProfile() {
         
         // Si le profil n'existe pas encore, essayer de l'insérer
         if (error.code === 'PGRST116') {
+          // Correction ici: S'assurer que tous les champs requis sont présents
+          // avant d'insérer un nouveau profil
           const fullProfile = {
             id: userId,
-            ...updates,
+            email: updates.email || (session.user.email || ''), // S'assurer que email est défini
+            full_name: updates.full_name || 
+                     (session.user.user_metadata?.full_name || 
+                     session.user.email?.split('@')[0] || 
+                     'Utilisateur'), // S'assurer que full_name est défini
+            language: updates.language || 'fr',
+            timezone: updates.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+            notification_settings: updates.notification_settings || {
+              email: true,
+              push: false,
+              sms: false
+            },
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
