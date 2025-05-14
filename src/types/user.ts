@@ -23,6 +23,6 @@ export interface NotificationSettings {
   sms: boolean;
 }
 
-// Add EmailType enum for type safety
+// Email type et profile type pour la sécurité de typage
 export type EmailType = 'personal' | 'professional' | 'company';
 export type ProfileType = 'personal' | 'business';

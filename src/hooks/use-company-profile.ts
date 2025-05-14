@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CompanyProfile } from '@/types/invoice';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { EmailType, ProfileType } from '@/types/user';
 
 // Interface pour représenter les données brutes de la table companies dans Supabase
 interface CompanyProfileRaw {
@@ -12,7 +13,7 @@ interface CompanyProfileRaw {
   company_name: string;
   address: string;
   email: string;
-  email_type: 'personal' | 'professional' | 'company';
+  email_type: EmailType;
   phone: string;
   bank_account: string;
   bank_name: string;
@@ -38,7 +39,7 @@ interface CompanyProfileRaw {
   created_at?: string;
   updated_at?: string;
   website?: string;
-  profile_type?: 'personal' | 'business';
+  profile_type?: ProfileType;
   profile_subtype?: string;
 }
 
@@ -89,7 +90,7 @@ function mapCompanyProfileToRaw(profile: CompanyProfile): CompanyProfileRaw {
     company_name: profile.name,
     address: profile.address,
     email: profile.email,
-    email_type: profile.emailType as 'personal' | 'professional' | 'company',
+    email_type: profile.emailType as EmailType || 'professional',
     phone: profile.phone,
     bank_account: profile.bankAccount,
     bank_name: profile.bankName,
@@ -113,7 +114,7 @@ function mapCompanyProfileToRaw(profile: CompanyProfile): CompanyProfileRaw {
     stripe_connected: profile.stripeConnected,
     stripe_account_id: profile.stripeAccountId,
     website: profile.website,
-    profile_type: profile.profileType as 'personal' | 'business',
+    profile_type: profile.profileType as ProfileType,
     profile_subtype: profile.profileSubtype,
   };
 }
@@ -145,21 +146,22 @@ export function useCompanyProfile() {
       }
 
       if (data) {
-        // Ensure data has all required properties for CompanyProfileRaw
+        // S'assurer que data contient toutes les propriétés requises pour CompanyProfileRaw
         const rawData: CompanyProfileRaw = {
           ...data,
           tax_rate: data.tax_rate ?? 0,
           company_name: data.company_name || '',
           address: data.address || '',
           email: data.email || '',
-          email_type: (data.email_type as 'personal' | 'professional' | 'company') || 'professional',
+          email_type: (data.email_type as EmailType) || 'professional',
           phone: data.phone || '',
           bank_account: data.bank_account || '',
           bank_name: data.bank_name || '',
           business_type: data.business_type || '',
           default_currency: data.default_currency || 'EUR',
           terms_and_conditions: data.terms_and_conditions || '',
-          thank_you_message: data.thank_you_message || ''
+          thank_you_message: data.thank_you_message || '',
+          profile_type: (data.profile_type as ProfileType) || 'personal'
         };
         
         // Convertir les données brutes vers le format CompanyProfile
@@ -234,7 +236,8 @@ export function useCompanyProfile() {
             business_type: rawProfile.business_type || '',
             default_currency: rawProfile.default_currency || 'EUR',
             terms_and_conditions: rawProfile.terms_and_conditions || '',
-            thank_you_message: rawProfile.thank_you_message || ''
+            thank_you_message: rawProfile.thank_you_message || '',
+            profile_type: rawProfile.profile_type || 'personal'
           })
           .eq('id', profile.id)
           .eq('user_id', user.id) // S'assurer que l'utilisateur ne modifie que son propre profil
@@ -243,21 +246,22 @@ export function useCompanyProfile() {
 
         if (updateError) throw updateError;
         
-        // Ensure data has all required properties
+        // S'assurer que data contient toutes les propriétés requises
         const rawResult: CompanyProfileRaw = {
           ...data,
           tax_rate: data.tax_rate ?? 0,
           company_name: data.company_name || '',
           address: data.address || '',
           email: data.email || '',
-          email_type: (data.email_type as 'personal' | 'professional' | 'company') || 'professional',
+          email_type: (data.email_type as EmailType) || 'professional',
           phone: data.phone || '',
           bank_account: data.bank_account || '',
           bank_name: data.bank_name || '',
           business_type: data.business_type || '',
           default_currency: data.default_currency || 'EUR',
           terms_and_conditions: data.terms_and_conditions || '',
-          thank_you_message: data.thank_you_message || ''
+          thank_you_message: data.thank_you_message || '',
+          profile_type: (data.profile_type as ProfileType) || 'personal'
         };
         
         result = mapRawToCompanyProfile(rawResult);
@@ -278,28 +282,30 @@ export function useCompanyProfile() {
             business_type: rawProfile.business_type || '',
             default_currency: rawProfile.default_currency || 'EUR',
             terms_and_conditions: rawProfile.terms_and_conditions || '',
-            thank_you_message: rawProfile.thank_you_message || ''
+            thank_you_message: rawProfile.thank_you_message || '',
+            profile_type: rawProfile.profile_type || 'personal'
           })
           .select()
           .single();
 
         if (insertError) throw insertError;
         
-        // Ensure data has all required properties
+        // S'assurer que data contient toutes les propriétés requises
         const rawResult: CompanyProfileRaw = {
           ...data,
           tax_rate: data.tax_rate ?? 0,
           company_name: data.company_name || '',
           address: data.address || '',
           email: data.email || '',
-          email_type: (data.email_type as 'personal' | 'professional' | 'company') || 'professional',
+          email_type: (data.email_type as EmailType) || 'professional',
           phone: data.phone || '',
           bank_account: data.bank_account || '',
           bank_name: data.bank_name || '',
           business_type: data.business_type || '',
           default_currency: data.default_currency || 'EUR',
           terms_and_conditions: data.terms_and_conditions || '',
-          thank_you_message: data.thank_you_message || ''
+          thank_you_message: data.thank_you_message || '',
+          profile_type: (data.profile_type as ProfileType) || 'personal'
         };
         
         result = mapRawToCompanyProfile(rawResult);
