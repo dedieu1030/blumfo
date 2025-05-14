@@ -21,7 +21,7 @@ const mapDatabaseToFrontend = (profile: CompanyProfileRaw): CompanyProfile => {
     // Handle profile_type with proper type casting
     profileType: (profile.profile_type as ProfileType) || 'business',
     // Handle tax_rate property which might be undefined
-    taxRate: profile.tax_rate !== undefined ? Number(profile.tax_rate) : (profile.taxRate !== undefined ? Number(profile.taxRate) : 0),
+    taxRate: profile.tax_rate !== undefined ? Number(profile.tax_rate) : 0,
     taxRegion: profile.taxRegion,
     termsAndConditions: profile.termsAndConditions,
     thankYouMessage: profile.thankYouMessage,
