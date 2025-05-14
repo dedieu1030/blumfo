@@ -10,8 +10,6 @@ import { useSearchParams } from "react-router-dom";
 import { ProfileWizard } from "@/components/profile/ProfileWizard";
 import { ProfileViewer } from "@/components/profile/ProfileViewer";
 import { Plus } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { useCompanyProfile } from "@/hooks/use-company-profile";
 
 // Import des composants de paramètres
 import { PaymentSettings } from "@/components/settings/PaymentSettings";
@@ -24,51 +22,49 @@ export default function Settings() {
   const initialTab = searchParams.get('tab') || 'profile';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
   
-  // Utiliser le hook pour charger le profil d'entreprise
-  const { companyProfile, loading, saveCompanyProfile } = useCompanyProfile();
-  
-  // États pour gérer l'interface utilisateur
+  // État du profil
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
+  const [hasProfile, setHasProfile] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
+  // Récupérer les données du profil d'entreprise
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('companyProfile');
+    if (savedProfile) {
+      try {
+        const profileData = JSON.parse(savedProfile);
+        setCompanyProfile(profileData);
+        setHasProfile(true);
+      } catch (e) {
+        console.error("Erreur lors du parsing du profil d'entreprise", e);
+      }
+    }
+  }, []);
+
   // Function to handle profile updates
   const handleProfileUpdate = (updatedProfile: CompanyProfile) => {
-    saveCompanyProfile(updatedProfile).then(({ success }) => {
-      if (success) {
-        toast({
-          title: "Profil mis à jour",
-          description: "Vos modifications ont été enregistrées avec succès."
-        });
-      } else {
-        toast({
-          title: "Erreur",
-          description: "Une erreur est survenue lors de la mise à jour du profil.",
-          variant: "destructive"
-        });
-      }
+    setCompanyProfile(updatedProfile);
+    localStorage.setItem('companyProfile', JSON.stringify(updatedProfile));
+    
+    toast({
+      title: "Profil mis à jour",
+      description: "Vos modifications ont été enregistrées avec succès."
     });
   };
 
   // Function to handle profile creation/save
   const handleSaveProfile = (profile: CompanyProfile) => {
-    saveCompanyProfile(profile).then(({ success }) => {
-      if (success) {
-        setIsCreatingProfile(false);
-        setIsEditingProfile(false);
-        
-        toast({
-          title: "Profil créé",
-          description: "Votre profil a été créé avec succès."
-        });
-      } else {
-        toast({
-          title: "Erreur",
-          description: "Une erreur est survenue lors de la création du profil.",
-          variant: "destructive"
-        });
-      }
+    setCompanyProfile(profile);
+    setHasProfile(true);
+    setIsCreatingProfile(false);
+    setIsEditingProfile(false);
+    localStorage.setItem('companyProfile', JSON.stringify(profile));
+    
+    toast({
+      title: "Profil créé",
+      description: "Votre profil a été créé avec succès."
     });
   };
 
@@ -109,11 +105,7 @@ export default function Settings() {
         </TabsList>
         
         <TabsContent value="profile">
-          {loading ? (
-            <div className="text-center py-8">
-              <p>Chargement de votre profil...</p>
-            </div>
-          ) : !companyProfile && !isCreatingProfile ? (
+          {!hasProfile && !isCreatingProfile ? (
             <div className="text-center py-16">
               <h2 className="text-2xl font-bold mb-4">Vous n'avez pas encore de profil</h2>
               <p className="text-muted-foreground mb-8">

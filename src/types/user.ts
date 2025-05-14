@@ -22,7 +22,3 @@ export interface NotificationSettings {
   push: boolean;
   sms: boolean;
 }
-
-// Email type et profile type pour la sécurité de typage
-export type EmailType = 'personal' | 'professional' | 'company';
-export type ProfileType = 'personal' | 'business';
