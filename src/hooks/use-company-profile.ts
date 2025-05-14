@@ -145,8 +145,25 @@ export function useCompanyProfile() {
       }
 
       if (data) {
+        // Ensure data has all required properties for CompanyProfileRaw
+        const rawData: CompanyProfileRaw = {
+          ...data,
+          tax_rate: data.tax_rate ?? 0,
+          company_name: data.company_name || '',
+          address: data.address || '',
+          email: data.email || '',
+          email_type: data.email_type || 'professional',
+          phone: data.phone || '',
+          bank_account: data.bank_account || '',
+          bank_name: data.bank_name || '',
+          business_type: data.business_type || '',
+          default_currency: data.default_currency || 'EUR',
+          terms_and_conditions: data.terms_and_conditions || '',
+          thank_you_message: data.thank_you_message || ''
+        };
+        
         // Convertir les données brutes vers le format CompanyProfile
-        const profileData = mapRawToCompanyProfile(data as CompanyProfileRaw);
+        const profileData = mapRawToCompanyProfile(rawData);
         setCompanyProfile(profileData);
         
         // Mise à jour du localStorage pour maintenir la compatibilité avec le reste de l'app
@@ -204,24 +221,88 @@ export function useCompanyProfile() {
         // Mise à jour d'un profil existant
         const { data, error: updateError } = await supabase
           .from('companies')
-          .update(rawProfile)
+          .update({
+            ...rawProfile,
+            tax_rate: rawProfile.tax_rate, // Explicitly set tax_rate to ensure it's included
+            company_name: rawProfile.company_name || profile.name || '',
+            address: rawProfile.address || '',
+            email: rawProfile.email || '',
+            email_type: rawProfile.email_type || 'professional',
+            phone: rawProfile.phone || '',
+            bank_account: rawProfile.bank_account || '',
+            bank_name: rawProfile.bank_name || '',
+            business_type: rawProfile.business_type || '',
+            default_currency: rawProfile.default_currency || 'EUR',
+            terms_and_conditions: rawProfile.terms_and_conditions || '',
+            thank_you_message: rawProfile.thank_you_message || ''
+          })
           .eq('id', profile.id)
           .eq('user_id', user.id) // S'assurer que l'utilisateur ne modifie que son propre profil
           .select()
           .single();
 
         if (updateError) throw updateError;
-        result = mapRawToCompanyProfile(data as CompanyProfileRaw);
+        
+        // Ensure data has all required properties
+        const rawResult: CompanyProfileRaw = {
+          ...data,
+          tax_rate: data.tax_rate ?? 0,
+          company_name: data.company_name || '',
+          address: data.address || '',
+          email: data.email || '',
+          email_type: data.email_type || 'professional',
+          phone: data.phone || '',
+          bank_account: data.bank_account || '',
+          bank_name: data.bank_name || '',
+          business_type: data.business_type || '',
+          default_currency: data.default_currency || 'EUR',
+          terms_and_conditions: data.terms_and_conditions || '',
+          thank_you_message: data.thank_you_message || ''
+        };
+        
+        result = mapRawToCompanyProfile(rawResult);
       } else {
         // Création d'un nouveau profil
         const { data, error: insertError } = await supabase
           .from('companies')
-          .insert(rawProfile)
+          .insert({
+            ...rawProfile,
+            tax_rate: rawProfile.tax_rate, // Explicitly set tax_rate to ensure it's included
+            company_name: rawProfile.company_name || profile.name || '',
+            address: rawProfile.address || '',
+            email: rawProfile.email || '',
+            email_type: rawProfile.email_type || 'professional',
+            phone: rawProfile.phone || '',
+            bank_account: rawProfile.bank_account || '',
+            bank_name: rawProfile.bank_name || '',
+            business_type: rawProfile.business_type || '',
+            default_currency: rawProfile.default_currency || 'EUR',
+            terms_and_conditions: rawProfile.terms_and_conditions || '',
+            thank_you_message: rawProfile.thank_you_message || ''
+          })
           .select()
           .single();
 
         if (insertError) throw insertError;
-        result = mapRawToCompanyProfile(data as CompanyProfileRaw);
+        
+        // Ensure data has all required properties
+        const rawResult: CompanyProfileRaw = {
+          ...data,
+          tax_rate: data.tax_rate ?? 0,
+          company_name: data.company_name || '',
+          address: data.address || '',
+          email: data.email || '',
+          email_type: data.email_type || 'professional',
+          phone: data.phone || '',
+          bank_account: data.bank_account || '',
+          bank_name: data.bank_name || '',
+          business_type: data.business_type || '',
+          default_currency: data.default_currency || 'EUR',
+          terms_and_conditions: data.terms_and_conditions || '',
+          thank_you_message: data.thank_you_message || ''
+        };
+        
+        result = mapRawToCompanyProfile(rawResult);
       }
 
       // Mettre à jour l'état local et le localStorage
