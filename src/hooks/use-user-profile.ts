@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, tableExists } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/user';
 import { toast } from 'sonner';
 
@@ -15,23 +15,36 @@ export function useUserProfile() {
         setLoading(true);
         
         // Vérifier si l'utilisateur est connecté via Supabase
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          throw sessionError;
+        }
+
         if (!session || !session.user) {
+          console.log("Aucun utilisateur connecté");
           setLoading(false);
           return;
         }
         
         const userId = session.user.id;
         
+        // Vérifier si la table profiles existe avant de faire la requête
+        const profilesExist = await tableExists('profiles');
+        if (!profilesExist) {
+          console.error("La table profiles n'existe pas ou n'est pas accessible");
+          setLoading(false);
+          return;
+        }
+
         // Récupérer le profil de l'utilisateur
-        const { data, error } = await supabase
+        const { data, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
           .single();
           
-        if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
-          throw error;
+        if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = No rows found
+          throw profileError;
         }
         
         if (data) {
@@ -66,13 +79,24 @@ export function useUserProfile() {
       setLoading(true);
       
       // Vérifier si l'utilisateur est connecté
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        throw sessionError;
+      }
+
       if (!session || !session.user) {
         toast.error('Vous devez être connecté pour mettre à jour votre profil');
         return { success: false };
       }
       
       const userId = session.user.id;
+      
+      // Vérifier si la table profiles existe avant de faire la requête
+      const profilesExist = await tableExists('profiles');
+      if (!profilesExist) {
+        toast.error("Impossible d'accéder à votre profil");
+        return { success: false };
+      }
       
       // S'assurer que les champs requis sont présents
       if (!updates.email && profile?.email) {

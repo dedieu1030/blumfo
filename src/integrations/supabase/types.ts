@@ -1418,6 +1418,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_table_exists: {
+        Args: { table_name: string }
+        Returns: boolean
+      }
       get_client_categories: {
         Args: { p_client_id: string }
         Returns: {

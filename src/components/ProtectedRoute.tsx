@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -23,12 +24,20 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     });
     
     // Ensuite, vérifier s'il y a déjà une session existante
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log("Current session:", currentSession?.user?.id);
-      setSession(currentSession);
-      setIsSignedIn(!!currentSession);
-      setIsLoaded(true);
-    });
+    const checkSession = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Current session:", currentSession?.user?.id);
+        setSession(currentSession);
+        setIsSignedIn(!!currentSession);
+        setIsLoaded(true);
+      } catch (error) {
+        console.error("Erreur lors de la récupération de la session:", error);
+        setIsLoaded(true);
+      }
+    };
+    
+    checkSession();
     
     return () => {
       subscription.unsubscribe();
@@ -39,7 +48,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin h-8 w-8 border-4 border-violet rounded-full border-t-transparent"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

@@ -16,3 +16,27 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage
   }
 });
+
+/**
+ * Vérifie si une table existe de manière sécurisée
+ * Note: Ne pas utiliser cette fonction avec rpc car ça provoque des erreurs TS
+ */
+export async function tableExists(tableName: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from(tableName as any)
+      .select('*')
+      .limit(1);
+    
+    if (error && error.code === '42P01') {
+      // Le code 42P01 est l'erreur PostgreSQL "relation does not exist"
+      console.log(`Table '${tableName}' does not exist`);
+      return false;
+    }
+    
+    return !error;
+  } catch (err) {
+    console.error(`Erreur lors de la vérification de la table ${tableName}:`, err);
+    return false;
+  }
+}
