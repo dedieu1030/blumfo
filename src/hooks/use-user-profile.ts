@@ -38,20 +38,27 @@ export function useUserProfile() {
       const userId = session.user.id;
       console.log('Session utilisateur trouvée avec ID:', userId);
       
+      // Vérifier d'abord si la table profiles existe
+      const { data: tableExists } = await supabase.rpc('check_table_exists', { table_name: 'profiles' });
+      
+      if (!tableExists) {
+        console.error('La table profiles n\'existe pas');
+        setError(new Error('La table profiles n\'existe pas dans la base de données'));
+        setSessionChecked(true);
+        setLoading(false);
+        return;
+      }
+      
       // Récupérer le profil de l'utilisateur
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
           
       if (error) {
-        if (error.code === 'PGRST116') {
-          console.log('Profil non trouvé, création possible nécessaire');
-        } else {
-          console.error('Erreur lors de la récupération du profil:', error);
-          setError(error);
-        }
+        console.error('Erreur lors de la récupération du profil:', error);
+        setError(error);
       } else if (data) {
         console.log('Profil récupéré avec succès');
         setProfile(data as UserProfile);

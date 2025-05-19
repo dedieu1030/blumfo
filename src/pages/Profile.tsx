@@ -8,7 +8,7 @@ import { Navigate } from 'react-router-dom';
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { supabase, checkTableExists } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Profile() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -22,10 +22,14 @@ export default function Profile() {
     async function checkTables() {
       if (isAuthenticated && !tablesChecked) {
         try {
-          const companiesExist = await checkTableExists('companies');
-          const profilesExist = await checkTableExists('profiles');
+          // Vérifier si les tables existent avec une requête SQL directe
+          const { data: companiesExist, error: companiesError } = await supabase
+            .rpc('check_table_exists', { table_name: 'companies' });
+            
+          const { data: profilesExist, error: profilesError } = await supabase
+            .rpc('check_table_exists', { table_name: 'profiles' });
           
-          if (!companiesExist || !profilesExist) {
+          if (companiesError || profilesError || !companiesExist || !profilesExist) {
             setError(`Les tables requises n'existent pas dans la base de données. Veuillez configurer votre base de données.`);
           }
           
@@ -47,11 +51,14 @@ export default function Profile() {
       // Rafraîchir la session
       await supabase.auth.refreshSession();
       
-      // Rafraîchir les vérifications de table
-      const companiesExist = await checkTableExists('companies');
-      const profilesExist = await checkTableExists('profiles');
+      // Rafraîchir les vérifications de table avec la nouvelle approche SQL
+      const { data: companiesExist, error: companiesError } = await supabase
+        .rpc('check_table_exists', { table_name: 'companies' });
+        
+      const { data: profilesExist, error: profilesError } = await supabase
+        .rpc('check_table_exists', { table_name: 'profiles' });
       
-      if (!companiesExist || !profilesExist) {
+      if (companiesError || profilesError || !companiesExist || !profilesExist) {
         setError(`Les tables requises n'existent pas dans la base de données. Veuillez configurer votre base de données.`);
       } else {
         setError(null);

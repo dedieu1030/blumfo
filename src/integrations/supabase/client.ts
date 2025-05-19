@@ -32,13 +32,17 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Fonction utilitaire pour vérifier les tables
 export async function checkTableExists(tableName: string): Promise<boolean> {
   try {
-    const { count, error } = await supabase
-      .from(tableName)
-      .select('*', { count: 'exact', head: true });
-      
-    return error ? false : true;
+    // Utiliser une requête SQL pour vérifier si la table existe
+    const { data, error } = await supabase.rpc('check_table_exists', { table_name: tableName });
+    
+    if (error) {
+      console.error(`Erreur lors de la vérification de la table ${tableName}:`, error);
+      return false;
+    }
+    
+    return data;
   } catch (e) {
-    console.error(`Erreur lors de la vérification de la table ${tableName}:`, e);
+    console.error(`Exception lors de la vérification de la table ${tableName}:`, e);
     return false;
   }
 }
