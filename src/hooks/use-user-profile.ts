@@ -8,99 +8,59 @@ export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  const [sessionChecked, setSessionChecked] = useState<boolean>(false);
 
-  // Fonction pour récupérer le profil utilisateur
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Vérifier si l'utilisateur est connecté via Supabase
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      // Gestion des erreurs de session
-      if (sessionError) {
-        console.error('Erreur de session:', sessionError);
-        setError(sessionError);
-        setSessionChecked(true);
-        return;
-      }
-
-      // Si pas de session, on arrête
-      if (!session || !session.user) {
-        console.log('Aucune session utilisateur active');
-        setSessionChecked(true);
-        setLoading(false);
-        return;
-      }
-      
-      const userId = session.user.id;
-      console.log('Session utilisateur trouvée avec ID:', userId);
-      
-      // Vérifier d'abord si la table profiles existe
-      const { data: tableExists } = await supabase.rpc('check_table_exists', { table_name: 'profiles' });
-      
-      if (!tableExists) {
-        console.error('La table profiles n\'existe pas');
-        setError(new Error('La table profiles n\'existe pas dans la base de données'));
-        setSessionChecked(true);
-        setLoading(false);
-        return;
-      }
-      
-      // Récupérer le profil de l'utilisateur
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-          
-      if (error) {
-        console.error('Erreur lors de la récupération du profil:', error);
-        setError(error);
-      } else if (data) {
-        console.log('Profil récupéré avec succès');
-        setProfile(data as UserProfile);
-      }
-    } catch (err: any) {
-      console.error('Exception lors du chargement du profil:', err);
-      setError(err);
-    } finally {
-      setSessionChecked(true);
-      setLoading(false);
-    }
-  };
-  
-  // Effet pour configurer les listeners et charger le profil
   useEffect(() => {
-    console.log('Initialisation du hook useUserProfile');
-
+    async function fetchProfile() {
+      try {
+        setLoading(true);
+        
+        // Vérifier si l'utilisateur est connecté via Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) {
+          setLoading(false);
+          return;
+        }
+        
+        const userId = session.user.id;
+        
+        // Récupérer le profil de l'utilisateur
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+          
+        if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
+          throw error;
+        }
+        
+        if (data) {
+          setProfile(data as UserProfile);
+        }
+      } catch (err: any) {
+        console.error('Erreur lors du chargement du profil:', err);
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchProfile();
+    
     // Configurer un listener pour les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Événement auth détecté:', event);
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          console.log('Utilisateur connecté ou token rafraîchi, chargement du profil');
+      (event) => {
+        if (event === 'SIGNED_IN') {
           fetchProfile();
         } else if (event === 'SIGNED_OUT') {
-          console.log('Utilisateur déconnecté');
           setProfile(null);
-          setSessionChecked(true);
         }
       }
     );
     
-    // Charger le profil au montage
-    fetchProfile();
-    
-    return () => {
-      console.log('Nettoyage du hook useUserProfile');
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Fonction pour mettre à jour le profil utilisateur
   const updateProfile = async (updates: Partial<UserProfile>) => {
     try {
       setLoading(true);
@@ -149,6 +109,5 @@ export function useUserProfile() {
     }
   };
 
-  // On expose également si la session a été vérifiée pour aider à la gestion des états
-  return { profile, loading, error, updateProfile, sessionChecked };
+  return { profile, loading, error, updateProfile };
 }

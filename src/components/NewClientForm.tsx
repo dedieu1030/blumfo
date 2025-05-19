@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { supabase, checkTableExists } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Client } from "./ClientSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
@@ -35,7 +35,6 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
-  const [tablesChecked, setTablesChecked] = useState<{[key: string]: boolean}>({});
   const { isAuthenticated, loading: authLoading, user } = useAuth();
 
   // Réinitialiser les états lorsque la modal s'ouvre
@@ -49,7 +48,6 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       setAuthError(null);
       setCompanyId(null);
       setDebugInfo(null);
-      setTablesChecked({});
 
       if (!authLoading && isAuthenticated) {
         fetchUserCompany();
@@ -65,25 +63,6 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
     setAuthError(null);
     setCompanyId(null);
     setDebugInfo(null);
-    setTablesChecked({});
-    
-    // Force reconnection check
-    try {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        const { error } = await supabase.auth.refreshSession();
-        if (error) {
-          console.error("Erreur de rafraîchissement de session:", error);
-          setAuthError("Impossible de rafraîchir votre session. Veuillez vous reconnecter.");
-          setDebugInfo(`Erreur session: ${error.message}`);
-          setIsRefreshing(false);
-          return;
-        }
-      }
-    } catch (err) {
-      console.error("Erreur lors de la vérification de la session:", err);
-    }
-    
     await fetchUserCompany(true);
     setIsRefreshing(false);
   };
@@ -91,24 +70,29 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
   // Vérifier l'existence de la table companies
   const checkCompaniesTable = async (): Promise<boolean> => {
     try {
-      if (tablesChecked.companies) {
-        return tablesChecked.companies;
-      }
-      
       // Log pour vérification
       console.log("Vérification de la table companies...");
       
       // Test simple pour vérifier si la table companies existe
-      const tableExists = await checkTableExists('companies');
-      console.log("La table companies existe-t-elle ?", tableExists);
+      const { data: testData, error: testError } = await supabase
+        .from('companies')
+        .select('id')
+        .limit(1);
       
-      setTablesChecked(prev => ({...prev, companies: tableExists}));
+      console.log("Résultat du test de la table companies:", { data: testData, error: testError });
       
-      if (!tableExists) {
-        console.error("La table companies n'existe pas");
-        setAuthError("La table des entreprises n'existe pas. Veuillez configurer votre base de données.");
-        setDebugInfo(`La vérification de la structure de la base de données a échoué.`);
-        return false;
+      if (testError) {
+        if (testError.message.includes('does not exist')) {
+          console.error("La table companies n'existe pas:", testError);
+          setAuthError("La table des entreprises n'existe pas. Veuillez configurer votre base de données.");
+          setDebugInfo(`Erreur table: ${JSON.stringify(testError)}`);
+          return false;
+        }
+        
+        // Autre erreur mais la table existe
+        console.error("Erreur lors de la vérification de la table companies mais la table existe:", testError);
+        setDebugInfo(`Erreur accès: ${testError.message}`);
+        return true;
       }
       
       // Si pas d'erreur, la table existe
@@ -212,15 +196,8 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       
       if (companiesError) {
         console.error("Erreur détaillée lors de la récupération de l'entreprise:", companiesError);
-        
-        if (companiesError.code === '42P01') {
-          setAuthError("La table des entreprises n'existe pas encore. Veuillez exécuter la migration SQL pour configurer votre base de données.");
-          setDebugInfo(`Erreur table: ${JSON.stringify(companiesError)}`);
-        } else {
-          setAuthError(`Erreur lors de la récupération de votre entreprise: ${companiesError.message || 'Erreur inconnue'}`);
-          setDebugInfo(`Erreur récupération: ${JSON.stringify(companiesError)}`);
-        }
-        
+        setAuthError(`Erreur lors de la récupération de votre entreprise: ${companiesError.message || 'Erreur inconnue'}`);
+        setDebugInfo(`Erreur récupération: ${JSON.stringify(companiesError)}`);
         setIsCompanyLoading(false);
         return;
       }
