@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError, isAuthenticated } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { UserPlus, Trash2, Edit, Mail, Phone, Tag, Plus, MoreHorizontal, User, CheckSquare } from "lucide-react";
+import { UserPlus, Trash2, Edit, Mail, Phone, Tag, Plus, MoreHorizontal, User, CheckSquare, AlertCircle } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { ClientSelector } from "@/components/ClientSelector";
 import { NewClientForm } from "@/components/NewClientForm";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Header } from "@/components/Header";
 import MobileNavigation from "@/components/MobileNavigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Define Client type
 interface Client {
@@ -53,20 +54,94 @@ const Clients = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [isClientSelectorOpen, setIsClientSelectorOpen] = useState(false);
   const [isNewClientFormOpen, setIsNewClientFormOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    // Vérifier l'authentification avant de charger les données
+    const checkAuthAndFetchData = async () => {
+      try {
+        setIsLoading(true);
+        const isUserAuthenticated = await isAuthenticated();
+        setAuthenticated(isUserAuthenticated);
+        
+        if (isUserAuthenticated) {
+          await checkTablesAndFetchData();
+        } else {
+          console.log("Utilisateur non authentifié, redirection vers /auth");
+          navigate("/auth");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification de l'authentification:", error);
+        setError("Une erreur est survenue lors de la vérification de votre session.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuthAndFetchData();
+  }, [navigate]);
+
+  const checkTablesAndFetchData = async () => {
+    try {
+      // Vérifier si les tables nécessaires existent
+      console.log("Vérification des tables nécessaires...");
+      
+      const [clientsTableExists, companiesTableExists] = await Promise.all([
+        checkTable('clients'),
+        checkTable('companies')
+      ]);
+      
+      if (!clientsTableExists) {
+        setError("La table des clients n'existe pas ou n'est pas accessible. Veuillez contacter l'administrateur.");
+        return;
+      }
+      
+      if (!companiesTableExists) {
+        toast.warning("La table des entreprises semble manquante. Certaines fonctionnalités pourraient être limitées.");
+      }
+      
+      // Si les tables nécessaires existent, charger les données
+      await fetchClients();
+    } catch (error) {
+      console.error("Erreur lors de la vérification des tables:", error);
+      setError("Une erreur est survenue lors de la vérification des tables.");
+    }
+  };
+  
+  const checkTable = async (tableName: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from(tableName as any)
+        .select('count(*)', { count: 'exact', head: true });
+        
+      if (error) {
+        console.error(`Erreur lors de la vérification de la table ${tableName}:`, error);
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error(`Erreur lors de la vérification de la table ${tableName}:`, err);
+      return false;
+    }
+  };
 
   const fetchClients = async () => {
     setIsLoading(true);
     try {
+      console.log("Récupération des clients...");
       const { data, error } = await supabase
         .from('clients')
         .select('*')
         .order('client_name');
 
-      if (error) throw error;
+      if (error) {
+        handleSupabaseError(error, "chargement des clients");
+        setError("Impossible de charger la liste des clients.");
+        return;
+      }
 
       // Adapter les données de Supabase au format Client attendu
       const adaptedClients = (data || []).map(client => ({
@@ -75,10 +150,11 @@ const Clients = () => {
         user_id: client.company_id // Utilisation de company_id comme user_id
       }));
 
+      console.log(`${adaptedClients.length} clients récupérés avec succès`);
       setClients(adaptedClients as Client[]);
     } catch (error) {
       console.error('Error fetching clients:', error);
-      toast.error('Erreur lors du chargement des clients');
+      setError("Une erreur est survenue lors du chargement des clients.");
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +165,10 @@ const Clients = () => {
       const { data, error } = await supabase
         .rpc('get_client_categories', { p_client_id: clientId });
 
-      if (error) throw error;
+      if (error) {
+        handleSupabaseError(error, "récupération des catégories");
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error('Error fetching client categories:', error);
@@ -111,7 +190,10 @@ const Clients = () => {
         .delete()
         .eq('id', selectedClient.id);
 
-      if (error) throw error;
+      if (error) {
+        handleSupabaseError(error, "suppression du client");
+        return;
+      }
 
       toast.success('Client supprimé avec succès');
       setClients(clients.filter(client => client.id !== selectedClient.id));
@@ -158,7 +240,10 @@ const Clients = () => {
         .eq('id', selectedClient.id)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        handleSupabaseError(error, "mise à jour du client");
+        return;
+      }
 
       toast.success('Client mis à jour avec succès');
 
@@ -183,18 +268,37 @@ const Clients = () => {
   };
 
   const handleClientSelect = (client: Client) => {
-    // Handle the selected client here
     console.log('Selected client:', client);
-    // You can perform any action with the selected client, such as displaying details or associating it with an invoice.
     setIsClientSelectorOpen(false);
   };
 
   const handleNewClientCreated = (newClient: Client) => {
-    // Add the new client to the clients list
     setClients(prevClients => [...prevClients, newClient]);
-    // Close the form dialog
     setIsNewClientFormOpen(false);
   };
+  
+  // Affichage en cas d'erreur
+  if (error) {
+    return (
+      <>
+        <Header
+          title="Clients"
+          description="Gérez vos clients"
+          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+        />
+        <div className="container mx-auto px-4 py-8">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+        <MobileNavigation
+          isOpen={isMobileMenuOpen}
+          onOpenChange={setIsMobileMenuOpen}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -228,7 +332,12 @@ const Clients = () => {
         </div>
 
         {isLoading ? (
-          <div className="text-center">Chargement des clients...</div>
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
+              <p className="text-sm text-muted-foreground">Chargement des clients...</p>
+            </div>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -275,6 +384,13 @@ const Clients = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+                {clients.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      Aucun client trouvé
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>

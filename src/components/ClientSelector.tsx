@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError, isAuthenticated } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NewClientForm } from "@/components/NewClientForm";
-import { UserPlus } from "lucide-react";
+import { UserPlus, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export interface Client {
   id: string;
@@ -35,36 +37,80 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isNewClientFormOpen, setIsNewClientFormOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const fetchClients = async () => {
+    // Vérifier l'authentification avant de charger les données
+    async function checkAuthAndLoadData() {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('clients')
-          .select('*')
-          .order('client_name');
+        const isUserAuthenticated = await isAuthenticated();
+        setAuthenticated(isUserAuthenticated);
         
-        if (error) throw error;
-        
-        // Adapter les données de Supabase au format Client attendu
-        const adaptedClients = (data || []).map(client => ({
-          ...client,
-          name: client.client_name, // Mapping client_name à name pour la compatibilité
-          user_id: client.company_id // Utilisation de company_id comme user_id
-        }));
-        
-        setClients(adaptedClients as Client[]);
-        setFilteredClients(adaptedClients as Client[]);
-      } catch (error) {
-        console.error('Error fetching clients:', error);
+        if (isUserAuthenticated) {
+          await fetchClients();
+        } else {
+          setError("Vous devez être connecté pour accéder à cette fonctionnalité.");
+          console.log("Utilisateur non authentifié dans ClientSelector");
+        }
+      } catch (err) {
+        console.error("Erreur lors de la vérification de l'authentification:", err);
+        setError("Erreur lors du chargement des données.");
       } finally {
         setIsLoading(false);
       }
-    };
+    }
     
-    fetchClients();
+    checkAuthAndLoadData();
   }, []);
+  
+  const fetchClients = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      console.log("Tentative de récupération des clients...");
+      
+      // Vérifier si la table clients existe avant de faire la requête
+      const clientsTableExists = await supabase
+        .from('clients')
+        .select('count(*)', { count: 'exact', head: true })
+        .then(({ error }) => !error);
+        
+      if (!clientsTableExists) {
+        console.error("La table clients n'existe pas ou n'est pas accessible");
+        setError("La table des clients n'est pas accessible. Veuillez contacter l'administrateur.");
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('client_name');
+      
+      if (error) {
+        handleSupabaseError(error, "chargement des clients");
+        setError("Impossible de charger la liste des clients.");
+        return;
+      }
+      
+      // Adapter les données de Supabase au format Client attendu
+      const adaptedClients = (data || []).map(client => ({
+        ...client,
+        name: client.client_name, // Mapping client_name à name pour la compatibilité
+        user_id: client.company_id // Utilisation de company_id comme user_id
+      }));
+      
+      console.log(`${adaptedClients.length} clients récupérés avec succès`);
+      setClients(adaptedClients as Client[]);
+      setFilteredClients(adaptedClients as Client[]);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      setError("Une erreur est survenue lors du chargement des clients.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -83,7 +129,40 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
     setClients(prevClients => [...prevClients, newClient]);
     onClientSelect(newClient);
     setIsNewClientFormOpen(false);
+    toast.success("Nouveau client créé avec succès");
   };
+
+  // Si l'authentification est en cours de vérification
+  if (authenticated === null && isLoading) {
+    return (
+      <div className="text-center p-4">
+        <span className="animate-spin inline-block h-6 w-6 border-t-2 border-primary rounded-full" />
+        <p className="mt-2">Vérification de votre session...</p>
+      </div>
+    );
+  }
+
+  // Si l'utilisateur n'est pas authentifié
+  if (authenticated === false) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Vous devez être connecté pour accéder à cette fonctionnalité.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Si une erreur s'est produite
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -100,6 +179,7 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
       {isLoading ? (
         <div className="text-center p-4">
           <span className="animate-spin inline-block h-6 w-6 border-t-2 border-primary rounded-full" />
+          <p className="mt-2">Chargement des clients...</p>
         </div>
       ) : filteredClients.length > 0 ? (
         <div className="border rounded-md overflow-hidden max-h-[300px] overflow-y-auto">
@@ -156,4 +236,3 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
     </div>
   );
 };
-
