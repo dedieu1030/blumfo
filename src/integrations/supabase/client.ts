@@ -13,6 +13,32 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    storage: localStorage
+    storage: typeof window !== 'undefined' ? localStorage : undefined,
+    detectSessionInUrl: true,
+    flowType: 'implicit'
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  },
+  global: {
+    headers: {
+      'x-client-info': 'lovable-app'
+    }
   }
 });
+
+// Fonction utilitaire pour vérifier les tables
+export async function checkTableExists(tableName: string): Promise<boolean> {
+  try {
+    const { count, error } = await supabase
+      .from(tableName)
+      .select('*', { count: 'exact', head: true });
+      
+    return error ? false : true;
+  } catch (e) {
+    console.error(`Erreur lors de la vérification de la table ${tableName}:`, e);
+    return false;
+  }
+}
