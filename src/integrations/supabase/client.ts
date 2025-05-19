@@ -19,96 +19,26 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 });
 
 /**
- * Vérifie si une table existe et si l'utilisateur a les droits d'accès
- * Retourne true si la table existe et est accessible, false sinon
+ * Vérifie si une table existe de manière sécurisée
+ * Note: Ne pas utiliser cette fonction avec rpc car ça provoque des erreurs TS
  */
 export async function tableExists(tableName: string): Promise<boolean> {
   try {
-    console.log(`Vérification de l'existence et de l'accès à la table '${tableName}'...`);
     const { error } = await supabase
       .from(tableName as any)
-      .select('count(*)', { count: 'exact', head: true });
+      .select('*')
+      .limit(1);
     
-    if (error) {
+    if (error && error.code === '42P01') {
       // Le code 42P01 est l'erreur PostgreSQL "relation does not exist"
-      if (error.code === '42P01') {
-        console.error(`La table '${tableName}' n'existe pas dans la base de données.`);
-        return false;
-      }
-      
-      // Le code PGRST301 indique une erreur d'autorisation
-      if (error.code === 'PGRST301') {
-        console.error(`Problème d'autorisation pour accéder à la table '${tableName}'.`);
-        return false;
-      }
-      
-      console.error(`Erreur lors de la vérification de la table ${tableName}:`, error);
+      console.log(`Table '${tableName}' does not exist`);
       return false;
     }
     
-    console.log(`Table '${tableName}' existe et est accessible.`);
-    return true;
+    return !error;
   } catch (err) {
-    console.error(`Exception lors de la vérification de la table ${tableName}:`, err);
+    console.error(`Erreur lors de la vérification de la table ${tableName}:`, err);
     return false;
-  }
-}
-
-/**
- * Vérifie l'existence et l'accès à la table companies, essentielle pour l'application
- * Retourne { exists, message } indiquant si la table existe et un message explicatif
- */
-export async function verifyCompaniesTable(): Promise<{ exists: boolean; message: string | null }> {
-  try {
-    // Vérifier d'abord l'authentification
-    const isUserAuth = await isAuthenticated();
-    if (!isUserAuth) {
-      return { 
-        exists: false, 
-        message: "Vous devez être connecté pour accéder aux données des entreprises." 
-      };
-    }
-    
-    const { data: session } = await supabase.auth.getSession();
-    const userId = session?.session?.user.id;
-    
-    // Vérifier si la table companies existe
-    const companiesExist = await tableExists('companies');
-    if (!companiesExist) {
-      return { 
-        exists: false, 
-        message: "La table des entreprises n'existe pas ou n'est pas accessible." 
-      };
-    }
-    
-    // Vérifier si l'utilisateur a au moins une entreprise associée
-    const { data: companies, error: companyError } = await supabase
-      .from('companies')
-      .select('id, company_name')
-      .eq('user_id', userId);
-      
-    if (companyError) {
-      console.error("Erreur lors de la recherche d'entreprises:", companyError);
-      return { 
-        exists: true, 
-        message: "Impossible de récupérer vos entreprises. Veuillez réessayer." 
-      };
-    }
-    
-    if (!companies || companies.length === 0) {
-      return { 
-        exists: true, 
-        message: "Aucune entreprise associée à votre compte. Veuillez créer une entreprise d'abord." 
-      };
-    }
-    
-    return { exists: true, message: null };
-  } catch (err) {
-    console.error("Erreur lors de la vérification de la table companies:", err);
-    return { 
-      exists: false, 
-      message: "Une erreur est survenue lors de l'accès aux données des entreprises." 
-    };
   }
 }
 

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { supabase, verifyCompaniesTable } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,7 +16,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [companyError, setCompanyError] = useState<string | null>(null);
   
   useEffect(() => {
     // Configurer l'écouteur d'authentification AVANT de vérifier la session existante
@@ -36,7 +35,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     });
     
     // Ensuite, vérifier s'il y a déjà une session existante
-    const checkSessionAndTables = async () => {
+    const checkSession = async () => {
       try {
         console.log("Vérification de la session existante...");
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
@@ -51,42 +50,56 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         console.log("Session actuelle:", currentSession?.user?.id || "Aucune session");
         setSession(currentSession);
         setIsSignedIn(!!currentSession);
+        setIsLoaded(true);
         
-        // Vérifier si l'utilisateur est authentifié avant de vérifier les tables
+        // Vérifier si les tables nécessaires existent
         if (currentSession) {
-          // Vérifier si la table companies existe et contient des données pour l'utilisateur
-          const { exists, message } = await verifyCompaniesTable();
-          if (!exists || message) {
-            console.warn("Problème avec la table companies:", message);
-            setCompanyError(message || "Problème avec la configuration de l'entreprise");
-          }
+          const tablesCheck = await Promise.all([
+            checkTable('profiles'),
+            checkTable('companies'),
+            checkTable('clients')
+          ]);
           
-          // Vérifier si la table clients existe
-          const clientsExist = await supabase
-            .from('clients')
-            .select('count(*)', { count: 'exact', head: true })
-            .then(({ error }) => !error);
-            
-          if (!clientsExist) {
-            console.warn("La table clients n'existe pas ou n'est pas accessible");
-            toast.warning("La table des clients semble inaccessible. Certaines fonctionnalités pourraient être limitées.");
+          const missingTables = ['profiles', 'companies', 'clients'].filter((_, index) => !tablesCheck[index]);
+          
+          if (missingTables.length > 0) {
+            console.warn(`Tables manquantes: ${missingTables.join(', ')}`);
+            // Ne pas bloquer l'utilisateur, juste l'avertir
+            if (missingTables.includes('companies')) {
+              toast.warning("La table des entreprises semble manquante. Certaines fonctionnalités pourraient être limitées.");
+            }
+            if (missingTables.includes('clients')) {
+              toast.warning("La table des clients semble manquante. Certaines fonctionnalités pourraient être limitées.");
+            }
           }
         }
-        
-        setIsLoaded(true);
       } catch (error) {
-        console.error("Erreur lors de la vérification de la session:", error);
+        console.error("Erreur lors de la récupération de la session:", error);
         setError("Une erreur est survenue lors de la vérification de votre session.");
         setIsLoaded(true);
       }
     };
     
-    checkSessionAndTables();
+    checkSession();
     
     return () => {
       subscription.unsubscribe();
     };
   }, []);
+  
+  // Fonction pour vérifier l'existence d'une table
+  const checkTable = async (tableName: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from(tableName as any)
+        .select('count(*)', { count: 'exact', head: true });
+      
+      return !error;
+    } catch (err) {
+      console.error(`Erreur lors de la vérification de la table ${tableName}:`, err);
+      return false;
+    }
+  };
   
   // Affichage pendant le chargement
   if (!isLoaded) {
@@ -98,7 +111,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
   
-  // Affichage en cas d'erreur d'authentification
+  // Affichage en cas d'erreur
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -117,19 +130,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth" replace />;
   }
   
-  // Si authentifié mais problème avec la table companies
-  if (companyError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Alert variant="warning" className="max-w-md">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Configuration requise</AlertTitle>
-          <AlertDescription>{companyError}</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-  
-  // Rendu des enfants si authentifié et pas de problème majeur
+  // Rendu des enfants si authentifié
   return <>{children}</>;
 }

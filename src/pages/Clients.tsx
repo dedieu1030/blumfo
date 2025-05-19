@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase, handleSupabaseError, isAuthenticated } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,6 @@ import {
 import { Header } from "@/components/Header";
 import MobileNavigation from "@/components/MobileNavigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ClientTableStatus } from "@/components/ClientTableStatus";
 
 // Define Client type
 interface Client {
@@ -309,11 +309,6 @@ const Clients = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Ajout du composant de statut de la table clients */}
-        <div className="mb-6">
-          <ClientTableStatus />
-        </div>
-
         <div className="flex flex-col space-y-6">
           <h2 className="text-2xl font-bold">Liste des clients</h2>
           

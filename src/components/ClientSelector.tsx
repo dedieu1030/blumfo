@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase, handleSupabaseError, isAuthenticated, verifyCompaniesTable } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError, isAuthenticated } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NewClientForm } from "@/components/NewClientForm";
-import { UserPlus, AlertCircle, Loader2 } from "lucide-react";
+import { UserPlus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -41,7 +41,7 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Vérifier l'authentification et les tables nécessaires avant de charger les données
+    // Vérifier l'authentification avant de charger les données
     async function checkAuthAndLoadData() {
       setIsLoading(true);
       try {
@@ -49,34 +49,13 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
         setAuthenticated(isUserAuthenticated);
         
         if (isUserAuthenticated) {
-          // Vérifier si la table companies existe et contient des données pour l'utilisateur
-          const { exists, message } = await verifyCompaniesTable();
-          if (!exists) {
-            setError(message || "Configuration d'entreprise requise avant d'accéder aux clients.");
-            console.log("Problème avec la table companies:", message);
-            return;
-          }
-          
-          // Vérifier si la table clients existe avant de tenter de la requêter
-          const clientsExist = await supabase
-            .from('clients')
-            .select('count(*)', { count: 'exact', head: true })
-            .then(({ error }) => !error);
-            
-          if (!clientsExist) {
-            setError("La table des clients n'existe pas ou n'est pas accessible. Veuillez contacter l'administrateur.");
-            console.error("La table clients n'existe pas ou n'est pas accessible");
-            return;
-          }
-          
-          // Si toutes les vérifications sont passées, charger les clients
           await fetchClients();
         } else {
           setError("Vous devez être connecté pour accéder à cette fonctionnalité.");
           console.log("Utilisateur non authentifié dans ClientSelector");
         }
       } catch (err) {
-        console.error("Erreur lors de la vérification de l'authentification ou des tables:", err);
+        console.error("Erreur lors de la vérification de l'authentification:", err);
         setError("Erreur lors du chargement des données.");
       } finally {
         setIsLoading(false);
@@ -90,37 +69,23 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
     setIsLoading(true);
     setError(null);
     try {
-      console.log("Récupération des clients...");
+      console.log("Tentative de récupération des clients...");
       
-      // Récupérer d'abord l'entreprise associée à l'utilisateur actuel
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user.id;
-      
-      const { data: companies, error: companiesError } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
+      // Vérifier si la table clients existe avant de faire la requête
+      const clientsTableExists = await supabase
+        .from('clients')
+        .select('count(*)', { count: 'exact', head: true })
+        .then(({ error }) => !error);
         
-      if (companiesError) {
-        handleSupabaseError(companiesError, "récupération de l'entreprise");
-        setError("Impossible de déterminer votre entreprise. Veuillez vérifier la configuration.");
+      if (!clientsTableExists) {
+        console.error("La table clients n'existe pas ou n'est pas accessible");
+        setError("La table des clients n'est pas accessible. Veuillez contacter l'administrateur.");
         return;
       }
       
-      if (!companies || companies.length === 0) {
-        setError("Aucune entreprise trouvée pour votre compte. Veuillez créer une entreprise d'abord.");
-        return;
-      }
-      
-      const companyId = companies[0].id;
-      console.log(`Récupération des clients pour l'entreprise ${companyId}`);
-      
-      // Maintenant récupérer les clients associés à cette entreprise
       const { data, error } = await supabase
         .from('clients')
         .select('*')
-        .eq('company_id', companyId)
         .order('client_name');
       
       if (error) {
@@ -171,7 +136,7 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
   if (authenticated === null && isLoading) {
     return (
       <div className="text-center p-4">
-        <Loader2 className="h-6 w-6 animate-spin inline-block text-primary" />
+        <span className="animate-spin inline-block h-6 w-6 border-t-2 border-primary rounded-full" />
         <p className="mt-2">Vérification de votre session...</p>
       </div>
     );
@@ -213,7 +178,7 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
 
       {isLoading ? (
         <div className="text-center p-4">
-          <Loader2 className="h-6 w-6 animate-spin inline-block text-primary" />
+          <span className="animate-spin inline-block h-6 w-6 border-t-2 border-primary rounded-full" />
           <p className="mt-2">Chargement des clients...</p>
         </div>
       ) : filteredClients.length > 0 ? (
