@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Client } from "@/components/ClientSelector";
+import { Json } from "@/integrations/supabase/types";
 
 /**
  * Associe les clients sans entreprise à une entreprise spécifiée
@@ -146,7 +146,7 @@ interface StripeInvoice {
   updated_at: string;
   user_id: string | null;
   client_id: string | null;
-  metadata: Record<string, any> | null;
+  metadata: Json | null; // Using Json type from Supabase types
 }
 
 /**
@@ -178,14 +178,8 @@ export async function getStripeInvoicesByClient(clientId: string): Promise<Strip
       return [];
     }
 
-    // On spécifie explicitement le type du résultat pour éviter les inférences excessives
-    type StripeInvoiceResult = {
-      data: StripeInvoice[] | null,
-      error: any
-    };
-
     // Récupérer les factures Stripe pour ce client
-    const { data: invoices, error: invoicesError }: StripeInvoiceResult = await supabase
+    const { data: invoices, error: invoicesError } = await supabase
       .from('stripe_invoices')
       .select('*')
       .eq('stripe_customer_id', stripeCustomer.stripe_customer_id)
@@ -196,7 +190,7 @@ export async function getStripeInvoicesByClient(clientId: string): Promise<Strip
       return [];
     }
 
-    return invoices || [];
+    return (invoices || []) as StripeInvoice[];
   } catch (error) {
     console.error("Erreur lors de la récupération des factures Stripe:", error);
     return [];
