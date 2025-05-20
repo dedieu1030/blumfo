@@ -1178,6 +1178,8 @@ export type Database = {
       }
       stripe_invoices: {
         Row: {
+          amount_due: number | null
+          amount_paid: number | null
           amount_total: number
           client_id: string | null
           created_at: string
@@ -1186,11 +1188,17 @@ export type Database = {
           id: string
           invoice_number: string
           issued_date: string
+          metadata: Json | null
           paid_date: string | null
           status: string
+          stripe_hosted_invoice_url: string | null
+          stripe_invoice_id: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
+          amount_due?: number | null
+          amount_paid?: number | null
           amount_total?: number
           client_id?: string | null
           created_at?: string
@@ -1199,11 +1207,17 @@ export type Database = {
           id?: string
           invoice_number: string
           issued_date?: string
+          metadata?: Json | null
           paid_date?: string | null
           status?: string
+          stripe_hosted_invoice_url?: string | null
+          stripe_invoice_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          amount_due?: number | null
+          amount_paid?: number | null
           amount_total?: number
           client_id?: string | null
           created_at?: string
@@ -1212,9 +1226,13 @@ export type Database = {
           id?: string
           invoice_number?: string
           issued_date?: string
+          metadata?: Json | null
           paid_date?: string | null
           status?: string
+          stripe_hosted_invoice_url?: string | null
+          stripe_invoice_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {

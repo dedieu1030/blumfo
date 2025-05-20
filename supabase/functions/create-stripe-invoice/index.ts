@@ -166,6 +166,11 @@ const handleRequest = async (req: Request): Promise<Response> => {
     // Envoyer la facture
     const sentInvoice = await stripe.invoices.send(invoice.id);
     
+    // Calculer les montants
+    const amountDue = sentInvoice.amount_due ? sentInvoice.amount_due / 100 : 0;
+    const amountPaid = sentInvoice.amount_paid ? sentInvoice.amount_paid / 100 : 0;
+    const amountTotal = sentInvoice.total ? sentInvoice.total / 100 : 0;
+    
     // Enregistrer la facture dans la base de données stripe_invoices
     const { data: invoiceRecord, error: invoiceError } = await supabase
       .from('stripe_invoices')
@@ -178,9 +183,9 @@ const handleRequest = async (req: Request): Promise<Response> => {
         stripe_invoice_id: sentInvoice.id,
         stripe_hosted_invoice_url: sentInvoice.hosted_invoice_url,
         status: 'sent',
-        amount_due: sentInvoice.amount_due ? sentInvoice.amount_due / 100 : 0,
-        amount_paid: sentInvoice.amount_paid ? sentInvoice.amount_paid / 100 : 0,
-        amount_total: sentInvoice.total ? sentInvoice.total / 100 : 0,
+        amount_due: amountDue,
+        amount_paid: amountPaid,
+        amount_total: amountTotal,
         currency: sentInvoice.currency || 'eur',
         metadata: {
           notes: notes || null,
@@ -207,7 +212,7 @@ const handleRequest = async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({
       id: sentInvoice.id,
       invoiceNumber: sentInvoice.number,
-      amountDue: sentInvoice.amount_due ? sentInvoice.amount_due / 100 : 0,
+      amountDue: amountDue,
       currency: sentInvoice.currency,
       status: sentInvoice.status,
       dueDate: sentInvoice.due_date,

@@ -15,6 +15,8 @@ interface CreateInvoiceParams {
   notes?: string;
 }
 
+// Interface alignée avec l'interface StripeInvoice dans stripeInvoiceService.ts
+// mais avec des noms en camelCase pour l'utilisation frontend
 interface StripeInvoice {
   id: string;
   invoiceNumber: string;
@@ -23,6 +25,7 @@ interface StripeInvoice {
   status: string;
   dueDate: string | null;
   hostedInvoiceUrl: string | null;
+  stripeInvoiceId?: string;
 }
 
 export function useStripeInvoice() {
