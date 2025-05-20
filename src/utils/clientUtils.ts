@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Client } from "@/components/ClientSelector";
@@ -126,11 +125,35 @@ export async function getCountInvoicesByClient(clientId: string): Promise<number
 }
 
 /**
+ * Interface pour les factures Stripe
+ */
+interface StripeInvoice {
+  id: string;
+  stripe_invoice_id: string | null;
+  stripe_customer_id: string | null;
+  invoice_number: string;
+  amount_total: number;
+  amount_due: number;
+  amount_paid: number;
+  currency: string;
+  status: string;
+  issued_date: string;
+  due_date: string | null;
+  paid_date: string | null;
+  stripe_hosted_invoice_url: string | null;
+  created_at: string;
+  updated_at: string;
+  user_id: string | null;
+  client_id: string | null;
+  metadata: Record<string, any> | null;
+}
+
+/**
  * Récupère les factures Stripe pour un client spécifique
  * @param {string} clientId - ID du client
- * @returns {Promise<any[]>} Liste des factures
+ * @returns {Promise<StripeInvoice[]>} Liste des factures
  */
-export async function getStripeInvoicesByClient(clientId: string): Promise<any[]> {
+export async function getStripeInvoicesByClient(clientId: string): Promise<StripeInvoice[]> {
   try {
     if (!clientId) {
       console.error("ID client requis pour récupérer les factures");
