@@ -101,3 +101,26 @@ export function formatClientForDisplay(client: Client): Client {
     user_id: client.user_id || client.company_id
   };
 }
+
+/**
+ * Récupère le nombre de factures pour un client spécifique
+ * @param {string} clientId - ID du client
+ * @returns {Promise<number>} Nombre de factures
+ */
+export async function getCountInvoicesByClient(clientId: string): Promise<number> {
+  try {
+    // Utiliser la fonction RPC existante dans Supabase
+    const { data, error } = await supabase
+      .rpc('get_client_invoice_count', { client_id: clientId });
+
+    if (error) {
+      console.error("Erreur lors de la récupération du nombre de factures:", error);
+      return 0;
+    }
+
+    return data || 0;
+  } catch (error) {
+    console.error("Erreur lors de la récupération du nombre de factures:", error);
+    return 0;
+  }
+}
