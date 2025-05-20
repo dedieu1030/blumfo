@@ -40,6 +40,7 @@ const Clients = () => {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [isFixingClients, setIsFixingClients] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [isFixingAccess, setIsFixingAccess] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,7 +83,7 @@ const Clients = () => {
       ]);
       
       if (!clientsTableExists) {
-        setError("La table des clients n'existe pas ou n'est pas accessible. Veuillez contacter l'administrateur.");
+        setError("La table des clients n'existe pas ou n'est pas accessible. Veuillez contacter l'administrateur ou utiliser le bouton 'Réparer l'accès'.");
         return;
       }
       
@@ -100,6 +101,7 @@ const Clients = () => {
   
   const checkTable = async (tableName: string): Promise<boolean> => {
     try {
+      console.log(`Vérification de la table ${tableName}...`);
       const { error } = await supabase
         .from(tableName as any)
         .select('count(*)', { count: 'exact', head: true });
@@ -121,20 +123,17 @@ const Clients = () => {
     try {
       console.log("Récupération des clients...");
       
-      // Si nous avons un ID d'entreprise et que nous sommes sûrs des politiques RLS,
-      // nous pouvons filtrer côté serveur
-      const query = supabase.from('clients').select('*');
-      
-      if (userCompanyId) {
-        // Nous pouvons soit filtrer par company_id, soit inclure les clients sans company_id
-        query.or(`company_id.eq.${userCompanyId},company_id.is.null`);
-      }
-      
-      const { data, error } = await query.order('client_name');
+      // Tenter de récupérer tous les clients sans filtre d'abord
+      // Cela permet de contourner les éventuelles restrictions RLS problématiques
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('client_name');
 
       if (error) {
+        console.error('Error fetching clients:', error);
         handleSupabaseError(error, "chargement des clients");
-        setError("Impossible de charger la liste des clients.");
+        setError("Impossible de charger la liste des clients. Utilisez le bouton 'Réparer l'accès'.");
         return;
       }
 
@@ -185,33 +184,22 @@ const Clients = () => {
     }
   };
 
-  // Nouvelle fonction pour réparer les politiques RLS et l'accès aux clients
+  // Fonction pour réparer les politiques RLS et l'accès aux clients
   const handleFixAccess = async () => {
+    setIsFixingAccess(true);
     try {
       const success = await fixClientAccess();
       if (success) {
         // Recharger les clients après la réparation
+        toast.success("Accès réparé avec succès! Rechargement des données...");
         await fetchClients(companyId);
+        setError(null); // Effacer l'erreur si la réparation a réussi
       }
     } catch (error) {
       console.error("Erreur lors de la réparation de l'accès:", error);
       toast.error("La réparation de l'accès a échoué");
-    }
-  };
-
-  const fetchClientCategories = async (clientId: string) => {
-    try {
-      const { data, error } = await supabase
-        .rpc('get_client_categories', { p_client_id: clientId });
-
-      if (error) {
-        handleSupabaseError(error, "récupération des catégories");
-        return [];
-      }
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching client categories:', error);
-      return [];
+    } finally {
+      setIsFixingAccess(false);
     }
   };
 
@@ -354,9 +342,19 @@ const Clients = () => {
                   variant="outline" 
                   size="sm"
                   onClick={handleFixAccess}
+                  disabled={isFixingAccess}
                 >
-                  <Wrench className="h-4 w-4 mr-2" />
-                  Réparer l'accès
+                  {isFixingAccess ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Réparation en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Wrench className="h-4 w-4 mr-2" />
+                      Réparer l'accès
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -388,9 +386,19 @@ const Clients = () => {
               <Button 
                 variant="outline" 
                 onClick={handleFixAccess}
+                disabled={isFixingAccess}
               >
-                <Wrench className="h-4 w-4 mr-2" />
-                Réparer l'accès
+                {isFixingAccess ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Réparation en cours...
+                  </>
+                ) : (
+                  <>
+                    <Wrench className="h-4 w-4 mr-2" />
+                    Réparer l'accès
+                  </>
+                )}
               </Button>
               
               {/* Bouton pour associer tous les clients sans entreprise */}
