@@ -171,11 +171,11 @@ const handleRequest = async (req: Request): Promise<Response> => {
       .from('stripe_invoices')
       .insert({
         client_id: clientId,
-        user_id: userId,  // Ajouter user_id explicitement
+        user_id: userId,
         invoice_number: sentInvoice.number || `INV-${Date.now()}`,
         issued_date: new Date().toISOString(),
         due_date: dueDate ? new Date(dueDate).toISOString() : null,
-        stripe_invoice_id: sentInvoice.id,  // Ajouter stripe_invoice_id explicitement
+        stripe_invoice_id: sentInvoice.id,
         stripe_hosted_invoice_url: sentInvoice.hosted_invoice_url,
         status: 'sent',
         amount_due: sentInvoice.amount_due ? sentInvoice.amount_due / 100 : 0,
@@ -212,7 +212,7 @@ const handleRequest = async (req: Request): Promise<Response> => {
       status: sentInvoice.status,
       dueDate: sentInvoice.due_date,
       hostedInvoiceUrl: sentInvoice.hosted_invoice_url,
-      stripe_invoice_id: sentInvoice.id, // Inclure explicitement dans la réponse
+      stripe_invoice_id: sentInvoice.id,
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" }

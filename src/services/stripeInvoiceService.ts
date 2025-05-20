@@ -8,8 +8,8 @@ import { toast } from "sonner";
 export interface StripeInvoice {
   id: string;
   invoice_number: string;
-  stripe_invoice_id?: string; // Ajout du champ manquant
-  stripe_hosted_invoice_url?: string; // Ajout du champ d'URL hébergée
+  stripe_invoice_id?: string;
+  stripe_hosted_invoice_url?: string;
   amount_due: number;
   amount_paid?: number;
   amount_total?: number;
@@ -62,7 +62,24 @@ export async function getStripeInvoiceById(invoiceId: string): Promise<StripeInv
       return null;
     }
     
-    return data as StripeInvoice;
+    // Assurer que toutes les propriétés requises sont présentes
+    return {
+      id: data.id,
+      invoice_number: data.invoice_number,
+      stripe_invoice_id: data.stripe_invoice_id,
+      stripe_hosted_invoice_url: data.stripe_hosted_invoice_url,
+      amount_due: data.amount_due || data.amount_total || 0,
+      amount_paid: data.amount_paid || 0,
+      amount_total: data.amount_total || 0,
+      currency: data.currency,
+      status: data.status,
+      issued_date: data.issued_date,
+      due_date: data.due_date,
+      paid_date: data.paid_date,
+      client_id: data.client_id,
+      user_id: data.user_id,
+      metadata: data.metadata
+    };
   } catch (error) {
     console.error("Erreur lors de la récupération de la facture:", error);
     toast.error("Impossible de récupérer les détails de la facture");
@@ -92,7 +109,24 @@ export async function getStripeInvoiceByStripeId(stripeInvoiceId: string): Promi
       return null;
     }
     
-    return data as StripeInvoice;
+    // Assurer que toutes les propriétés requises sont présentes
+    return {
+      id: data.id,
+      invoice_number: data.invoice_number,
+      stripe_invoice_id: data.stripe_invoice_id,
+      stripe_hosted_invoice_url: data.stripe_hosted_invoice_url,
+      amount_due: data.amount_due || data.amount_total || 0,
+      amount_paid: data.amount_paid || 0,
+      amount_total: data.amount_total || 0,
+      currency: data.currency,
+      status: data.status,
+      issued_date: data.issued_date,
+      due_date: data.due_date,
+      paid_date: data.paid_date,
+      client_id: data.client_id,
+      user_id: data.user_id,
+      metadata: data.metadata
+    };
   } catch (error) {
     console.error("Erreur lors de la récupération de la facture par ID Stripe:", error);
     toast.error("Impossible de récupérer les détails de la facture");
@@ -121,11 +155,11 @@ export async function listStripeInvoices(userId?: string): Promise<StripeInvoice
     return data.map(invoice => ({
       id: invoice.id,
       invoice_number: invoice.invoice_number,
-      stripe_invoice_id: invoice.stripe_invoice_id, // Utilisation du champ correctement
+      stripe_invoice_id: invoice.stripe_invoice_id,
       stripe_hosted_invoice_url: invoice.stripe_hosted_invoice_url,
-      amount_due: invoice.amount_due,
-      amount_paid: invoice.amount_paid,
-      amount_total: invoice.amount_total,
+      amount_due: invoice.amount_due || invoice.amount_total || 0,
+      amount_paid: invoice.amount_paid || 0,
+      amount_total: invoice.amount_total || 0,
       currency: invoice.currency,
       status: invoice.status,
       issued_date: invoice.issued_date,
@@ -172,7 +206,25 @@ export async function updateInvoiceStatus(
     }
     
     toast.success(`Statut de la facture mis à jour: ${status}`);
-    return data as StripeInvoice;
+    
+    // Formater correctement la réponse selon l'interface
+    return {
+      id: data.id,
+      invoice_number: data.invoice_number,
+      stripe_invoice_id: data.stripe_invoice_id,
+      stripe_hosted_invoice_url: data.stripe_hosted_invoice_url,
+      amount_due: data.amount_due || data.amount_total || 0,
+      amount_paid: data.amount_paid || 0,
+      amount_total: data.amount_total || 0,
+      currency: data.currency,
+      status: data.status,
+      issued_date: data.issued_date,
+      due_date: data.due_date,
+      paid_date: data.paid_date,
+      client_id: data.client_id,
+      user_id: data.user_id,
+      metadata: data.metadata
+    };
   } catch (error) {
     console.error("Erreur lors de la mise à jour du statut de la facture:", error);
     toast.error("Impossible de mettre à jour le statut de la facture");
