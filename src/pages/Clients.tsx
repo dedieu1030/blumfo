@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase, handleSupabaseError, isAuthenticated } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { UserPlus, Trash2, Edit, AlertCircle, RefreshCw, MoreHorizontal } from "lucide-react";
+import { UserPlus, Trash2, Edit, AlertCircle, RefreshCw, MoreHorizontal, Wrench } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { ClientSelector, Client } from "@/components/ClientSelector";
 import { NewClientForm } from "@/components/NewClientForm";
@@ -23,6 +22,7 @@ import { Header } from "@/components/Header";
 import MobileNavigation from "@/components/MobileNavigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { associateClientsToCompany, getCurrentUserCompanyId } from "@/utils/clientUtils";
+import { fixClientAccess } from "@/utils/accessUtils";
 
 const Clients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -184,6 +184,20 @@ const Clients = () => {
     }
   };
 
+  // Nouvelle fonction pour réparer les politiques RLS et l'accès aux clients
+  const handleFixAccess = async () => {
+    try {
+      const success = await fixClientAccess();
+      if (success) {
+        // Recharger les clients après la réparation
+        await fetchClients(companyId);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la réparation de l'accès:", error);
+      toast.error("La réparation de l'accès a échoué");
+    }
+  };
+
   const fetchClientCategories = async (clientId: string) => {
     try {
       const { data, error } = await supabase
@@ -326,14 +340,24 @@ const Clients = () => {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleRefresh}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Réessayer
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleRefresh}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Réessayer
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleFixAccess}
+                >
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Réparer l'accès
+                </Button>
+              </div>
             </div>
           </Alert>
         </div>
@@ -358,26 +382,37 @@ const Clients = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h2 className="text-2xl font-bold">Liste des clients</h2>
             
-            {/* Bouton pour associer tous les clients sans entreprise */}
-            {companyId && (
+            <div className="flex flex-wrap gap-2">
+              {/* Bouton pour réparer l'accès aux clients */}
               <Button 
                 variant="outline" 
-                onClick={handleFixClients}
-                disabled={isFixingClients}
+                onClick={handleFixAccess}
               >
-                {isFixingClients ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Association en cours...
-                  </>
-                ) : (
-                  <>
-                    <CheckSquare className="h-4 w-4 mr-2" />
-                    Associer les clients sans entreprise
-                  </>
-                )}
+                <Wrench className="h-4 w-4 mr-2" />
+                Réparer l'accès
               </Button>
-            )}
+              
+              {/* Bouton pour associer tous les clients sans entreprise */}
+              {companyId && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleFixClients}
+                  disabled={isFixingClients}
+                >
+                  {isFixingClients ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Association en cours...
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                      Associer les clients sans entreprise
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
           
           <div className="flex flex-wrap gap-3 w-full">

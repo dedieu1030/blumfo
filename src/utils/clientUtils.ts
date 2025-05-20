@@ -124,3 +124,50 @@ export async function getCountInvoicesByClient(clientId: string): Promise<number
     return 0;
   }
 }
+
+/**
+ * Type pour les factures Stripe
+ */
+interface StripeInvoice {
+  id: string;
+  invoice_number: string;
+  stripe_invoice_id: string | null;
+  stripe_hosted_invoice_url: string | null;
+  amount_total: number;
+  amount_due: number;
+  amount_paid: number;
+  status: string;
+  issued_date: string;
+  due_date: string | null;
+  paid_date: string | null;
+  metadata: any;
+  currency: string;
+  client_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Récupère les factures Stripe pour un client spécifique
+ * @param {string} clientId - ID du client
+ * @returns {Promise<StripeInvoice[]>} Liste des factures Stripe
+ */
+export async function getStripeInvoicesByClient(clientId: string): Promise<StripeInvoice[]> {
+  try {
+    const { data, error } = await supabase
+      .from('stripe_invoices')
+      .select('*')
+      .eq('client_id', clientId);
+
+    if (error) {
+      console.error("Erreur lors de la récupération des factures Stripe:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des factures Stripe:", error);
+    return [];
+  }
+}

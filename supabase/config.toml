@@ -38,3 +38,5 @@ port = 54333
 [functions.process-payment]
 verify_jwt = true
 
+[functions.fix-client-access]
+verify_jwt = true
