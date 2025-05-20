@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase, handleSupabaseError, isAuthenticated } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";

@@ -1440,6 +1440,14 @@ export type Database = {
         Args: { table_name: string }
         Returns: boolean
       }
+      clear_client_policies: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_client_access_policies: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_client_categories: {
         Args: { p_client_id: string }
         Returns: {
