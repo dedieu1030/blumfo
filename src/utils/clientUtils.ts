@@ -124,3 +124,51 @@ export async function getCountInvoicesByClient(clientId: string): Promise<number
     return 0;
   }
 }
+
+/**
+ * Récupère les factures Stripe pour un client spécifique
+ * @param {string} clientId - ID du client
+ * @returns {Promise<any[]>} Liste des factures
+ */
+export async function getStripeInvoicesByClient(clientId: string): Promise<any[]> {
+  try {
+    if (!clientId) {
+      console.error("ID client requis pour récupérer les factures");
+      return [];
+    }
+
+    // Récupérer le client Stripe associé au client
+    const { data: stripeCustomer, error: customerError } = await supabase
+      .from('stripe_customers')
+      .select('stripe_customer_id')
+      .eq('client_id', clientId)
+      .single();
+
+    if (customerError) {
+      console.error("Erreur lors de la récupération du client Stripe:", customerError);
+      return [];
+    }
+
+    if (!stripeCustomer?.stripe_customer_id) {
+      console.log("Aucun client Stripe associé à ce client");
+      return [];
+    }
+
+    // Récupérer les factures Stripe pour ce client
+    const { data: invoices, error: invoicesError } = await supabase
+      .from('stripe_invoices')
+      .select('*')
+      .eq('stripe_customer_id', stripeCustomer.stripe_customer_id)
+      .order('issued_date', { ascending: false });
+
+    if (invoicesError) {
+      console.error("Erreur lors de la récupération des factures Stripe:", invoicesError);
+      return [];
+    }
+
+    return invoices || [];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des factures Stripe:", error);
+    return [];
+  }
+}
