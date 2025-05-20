@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
         .from("devis")
         .select(`
           *,
-          client:clients (id, client_name, email),
+          client:clients (id, name, email),
           company:companies (id, company_name)
         `)
         .order("created_at", { ascending: false });
@@ -60,7 +61,19 @@ export const QuoteList = ({ limit, showActions = true, onRefresh }: QuoteListPro
       }
 
       console.log("Quotes data received:", data);
-      setQuotes(data as Quote[]);
+
+      // Adapter les données pour correspondre au type Quote attendu
+      const adaptedQuotes = data.map(quote => {
+        return {
+          ...quote,
+          client: quote.client ? {
+            ...quote.client,
+            client_name: quote.client.name, // Pour compatibilité
+          } : null
+        } as unknown as Quote;
+      });
+
+      setQuotes(adaptedQuotes);
     } catch (error) {
       console.error("Error fetching quotes:", error);
       setError("Erreur lors du chargement des devis");

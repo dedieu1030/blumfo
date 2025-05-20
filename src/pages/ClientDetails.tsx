@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -71,12 +72,18 @@ export default function ClientDetails() {
           
           // Fetch client categories
           const { data: categoryData, error: categoryError } = await supabase
-            .rpc('get_client_categories', { p_client_id: id });
+            .rpc('get_client_tags', { p_client_id: id });
           
           if (categoryError) {
             console.error("Error fetching client categories:", categoryError);
           } else {
-            setClientCategories(categoryData || []);
+            // Adapter les noms des propriétés au format attendu
+            const formattedCategories = (categoryData || []).map(tag => ({
+              category_id: tag.tag_id,
+              category_name: tag.tag_name,
+              category_color: tag.tag_color
+            }));
+            setClientCategories(formattedCategories);
           }
         }
       } catch (error) {
@@ -131,7 +138,7 @@ export default function ClientDetails() {
     try {
       // First remove all existing mappings
       const { error: deleteError } = await supabase
-        .from('client_category_mappings')
+        .from('client_tag_mappings')
         .delete()
         .eq('client_id', client.id);
       
@@ -141,11 +148,11 @@ export default function ClientDetails() {
       if (categoryIds.length > 0) {
         const mappings = categoryIds.map(categoryId => ({
           client_id: client.id,
-          category_id: categoryId
+          tag_id: categoryId
         }));
         
         const { error: insertError } = await supabase
-          .from('client_category_mappings')
+          .from('client_tag_mappings')
           .insert(mappings);
         
         if (insertError) throw insertError;
@@ -153,11 +160,17 @@ export default function ClientDetails() {
       
       // Refetch categories
       const { data: categoryData, error: categoryError } = await supabase
-        .rpc('get_client_categories', { p_client_id: client.id });
+        .rpc('get_client_tags', { p_client_id: client.id });
       
       if (categoryError) throw categoryError;
       
-      setClientCategories(categoryData || []);
+      // Adapter les noms des propriétés au format attendu
+      const formattedCategories = (categoryData || []).map(tag => ({
+        category_id: tag.tag_id,
+        category_name: tag.tag_name,
+        category_color: tag.tag_color
+      }));
+      setClientCategories(formattedCategories);
       
       toast({
         title: "Catégories mises à jour",

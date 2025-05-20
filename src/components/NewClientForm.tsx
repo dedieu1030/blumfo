@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -261,7 +260,7 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       const { data, error } = await supabase
         .from('clients')
         .insert({
-          client_name: clientName,
+          name: clientName,
           email: email || null,
           phone: phone || null,
           address: address || null,
@@ -280,8 +279,8 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
       // Mapper les propriétés pour assurer la compatibilité
       const clientData: Client = {
         ...data,
-        name: data.client_name,
-        user_id: data.company_id
+        client_name: data.name, // Pour compatibilité
+        user_id: data.company_id // Pour compatibilité
       };
       
       // Pass the new client back to parent component

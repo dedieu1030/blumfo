@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -66,7 +67,7 @@ export function ClientCategorySelector({
     const fetchCategories = async () => {
       try {
         const { data, error } = await supabase
-          .from('client_categories')
+          .from('client_tags')
           .select('id, name, color')
           .order('name');
         
@@ -119,12 +120,23 @@ export function ClientCategorySelector({
         throw new Error("Utilisateur non authentifié");
       }
       
+      // Récupérer l'entreprise de l'utilisateur
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (companyError || !companyData) {
+        throw new Error("Entreprise non trouvée");
+      }
+      
       const { data, error } = await supabase
-        .from('client_categories')
+        .from('client_tags')
         .insert({
           name: newCategoryName.trim(),
           color: newCategoryColor,
-          user_id: user.id
+          company_id: companyData.id
         })
         .select()
         .single();

@@ -112,7 +112,7 @@ export async function getCountInvoicesByClient(clientId: string): Promise<number
   try {
     // Utiliser la fonction RPC existante dans Supabase
     const { data, error } = await supabase
-      .rpc('get_client_invoice_count', { client_id: clientId });
+      .rpc('get_client_invoice_count', { p_client_id: clientId });
 
     if (error) {
       console.error("Erreur lors de la récupération du nombre de factures:", error);
