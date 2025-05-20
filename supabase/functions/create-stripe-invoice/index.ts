@@ -166,35 +166,43 @@ const handleRequest = async (req: Request): Promise<Response> => {
     // Envoyer la facture
     const sentInvoice = await stripe.invoices.send(invoice.id);
     
-    // Enregistrer la facture dans la base de données
+    // Enregistrer la facture dans la base de données stripe_invoices
     const { data: invoiceRecord, error: invoiceError } = await supabase
-      .from('invoices')
+      .from('stripe_invoices')
       .insert({
         client_id: clientId,
-        company_id: company?.id,
+        user_id: userId,  // Ajouter user_id explicitement
         invoice_number: sentInvoice.number || `INV-${Date.now()}`,
-        issue_date: new Date().toISOString(),
+        issued_date: new Date().toISOString(),
         due_date: dueDate ? new Date(dueDate).toISOString() : null,
-        notes: notes || null,
-        stripe_invoice_id: sentInvoice.id,
+        stripe_invoice_id: sentInvoice.id,  // Ajouter stripe_invoice_id explicitement
         stripe_hosted_invoice_url: sentInvoice.hosted_invoice_url,
         status: 'sent',
-        subtotal: sentInvoice.subtotal ? sentInvoice.subtotal / 100 : 0,
-        tax_amount: sentInvoice.tax ? sentInvoice.tax / 100 : 0,
-        total_amount: sentInvoice.total ? sentInvoice.total / 100 : 0,
         amount_due: sentInvoice.amount_due ? sentInvoice.amount_due / 100 : 0,
+        amount_paid: sentInvoice.amount_paid ? sentInvoice.amount_paid / 100 : 0,
+        amount_total: sentInvoice.total ? sentInvoice.total / 100 : 0,
+        currency: sentInvoice.currency || 'eur',
+        metadata: {
+          notes: notes || null,
+          company_id: company?.id || null
+        }
       })
       .select()
       .single();
     
     if (invoiceError) {
       console.error("Erreur lors de l'enregistrement de la facture:", invoiceError);
+      // Continue malgré l'erreur pour retourner l'ID de la facture Stripe
     }
     
     // Déclencher une notification
-    await supabase.functions.invoke("generate-invoice-notifications", {
-      body: { invoice_id: invoiceRecord?.id },
-    });
+    try {
+      await supabase.functions.invoke("generate-invoice-notifications", {
+        body: { invoice_id: invoiceRecord?.id },
+      });
+    } catch (notifError) {
+      console.error("Erreur lors de la génération des notifications:", notifError);
+    }
     
     return new Response(JSON.stringify({
       id: sentInvoice.id,
@@ -204,6 +212,7 @@ const handleRequest = async (req: Request): Promise<Response> => {
       status: sentInvoice.status,
       dueDate: sentInvoice.due_date,
       hostedInvoiceUrl: sentInvoice.hosted_invoice_url,
+      stripe_invoice_id: sentInvoice.id, // Inclure explicitement dans la réponse
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
