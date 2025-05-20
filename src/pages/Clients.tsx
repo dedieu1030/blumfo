@@ -3,12 +3,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { supabase, handleSupabaseError, isAuthenticated } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { UserPlus, Trash2, Edit, Mail, Phone, Tag, Plus, MoreHorizontal, User, CheckSquare, AlertCircle } from "lucide-react";
+import { UserPlus, Trash2, Edit, AlertCircle, RefreshCw, MoreHorizontal } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import { ClientSelector } from "@/components/ClientSelector";
+import { ClientSelector, Client } from "@/components/ClientSelector";
 import { NewClientForm } from "@/components/NewClientForm";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,25 +22,7 @@ import {
 import { Header } from "@/components/Header";
 import MobileNavigation from "@/components/MobileNavigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-// Define Client type
-interface Client {
-  id: string;
-  name?: string;
-  email: string | null;
-  phone?: string | null;
-  address?: string | null;
-  notes?: string | null;
-  created_at: string;
-  updated_at: string;
-  user_id?: string;
-  invoiceCount?: number;
-  // Champs de la table clients dans Supabase
-  client_name?: string;
-  company_id?: string | null;
-  group_id?: string | null;
-  reference_number?: string | null;
-}
+import { associateClientsToCompany, getCurrentUserCompanyId } from "@/utils/clientUtils";
 
 const Clients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -56,6 +37,8 @@ const Clients = () => {
   const [isNewClientFormOpen, setIsNewClientFormOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [isFixingClients, setIsFixingClients] = useState(false);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -85,6 +68,10 @@ const Clients = () => {
 
   const checkTablesAndFetchData = async () => {
     try {
+      // Récupérer l'ID de l'entreprise de l'utilisateur
+      const userCompanyId = await getCurrentUserCompanyId();
+      setCompanyId(userCompanyId);
+      
       // Vérifier si les tables nécessaires existent
       console.log("Vérification des tables nécessaires...");
       
@@ -103,7 +90,7 @@ const Clients = () => {
       }
       
       // Si les tables nécessaires existent, charger les données
-      await fetchClients();
+      await fetchClients(userCompanyId);
     } catch (error) {
       console.error("Erreur lors de la vérification des tables:", error);
       setError("Une erreur est survenue lors de la vérification des tables.");
@@ -128,19 +115,33 @@ const Clients = () => {
     }
   };
 
-  const fetchClients = async () => {
+  const fetchClients = async (userCompanyId: string | null = null) => {
     setIsLoading(true);
     try {
       console.log("Récupération des clients...");
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('client_name');
+      
+      // Si nous avons un ID d'entreprise et que nous sommes sûrs des politiques RLS,
+      // nous pouvons filtrer côté serveur
+      const query = supabase.from('clients').select('*');
+      
+      if (userCompanyId) {
+        // Nous pouvons soit filtrer par company_id, soit inclure les clients sans company_id
+        query.or(`company_id.eq.${userCompanyId},company_id.is.null`);
+      }
+      
+      const { data, error } = await query.order('client_name');
 
       if (error) {
         handleSupabaseError(error, "chargement des clients");
         setError("Impossible de charger la liste des clients.");
         return;
+      }
+
+      // Vérifier s'il y a des clients sans company_id
+      const clientsWithoutCompany = data?.filter(client => !client.company_id).length || 0;
+      if (clientsWithoutCompany > 0 && userCompanyId) {
+        console.warn(`${clientsWithoutCompany} clients n'ont pas d'entreprise associée`);
+        toast.warning(`${clientsWithoutCompany} clients n'ont pas d'entreprise associée. Utilisez "Associer les clients" pour les rattacher à votre entreprise.`);
       }
 
       // Adapter les données de Supabase au format Client attendu
@@ -157,6 +158,29 @@ const Clients = () => {
       setError("Une erreur est survenue lors du chargement des clients.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFixClients = async () => {
+    if (!companyId) {
+      toast.error("Impossible d'associer les clients sans entreprise");
+      return;
+    }
+
+    setIsFixingClients(true);
+    try {
+      const updatedCount = await associateClientsToCompany(companyId);
+      if (updatedCount > 0) {
+        toast.success(`${updatedCount} clients ont été associés à votre entreprise`);
+        fetchClients(companyId);
+      } else {
+        toast.info("Aucun client à associer");
+      }
+    } catch (error: any) {
+      console.error('Error fixing clients:', error);
+      toast.error(error.message || "Erreur lors de l'association des clients");
+    } finally {
+      setIsFixingClients(false);
     }
   };
 
@@ -210,12 +234,13 @@ const Clients = () => {
     setSelectedClient(client);
     setEditForm({
       id: client.id,
-      name: client.name,
+      name: client.name || client.client_name,
       email: client.email,
       phone: client.phone,
       address: client.address,
       notes: client.notes,
-      reference_number: client.reference_number
+      reference_number: client.reference_number,
+      company_id: client.company_id || companyId  // Assurez-vous que company_id est défini
     });
     setIsEditModalOpen(true);
   };
@@ -226,17 +251,20 @@ const Clients = () => {
     setUpdateLoading(true);
 
     try {
+      // S'assurer que company_id est défini
+      const updateData = {
+        client_name: editForm.name,
+        email: editForm.email,
+        phone: editForm.phone,
+        address: editForm.address,
+        notes: editForm.notes,
+        reference_number: editForm.reference_number,
+        company_id: editForm.company_id || companyId // Utiliser l'ID de l'entreprise actuelle si non défini
+      };
+
       const { data, error } = await supabase
         .from('clients')
-        .update({
-          client_name: editForm.name,
-          email: editForm.email,
-          phone: editForm.phone,
-          address: editForm.address,
-          notes: editForm.notes,
-          reference_number: editForm.reference_number,
-          // Les autres champs si nécessaire
-        })
+        .update(updateData)
         .eq('id', selectedClient.id)
         .select();
 
@@ -276,6 +304,11 @@ const Clients = () => {
     setClients(prevClients => [...prevClients, newClient]);
     setIsNewClientFormOpen(false);
   };
+
+  const handleRefresh = async () => {
+    setError(null);
+    await checkTablesAndFetchData();
+  };
   
   // Affichage en cas d'erreur
   if (error) {
@@ -288,8 +321,20 @@ const Clients = () => {
         />
         <div className="container mx-auto px-4 py-8">
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <div className="flex justify-between items-center w-full">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleRefresh}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Réessayer
+              </Button>
+            </div>
           </Alert>
         </div>
         <MobileNavigation
@@ -310,7 +355,30 @@ const Clients = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col space-y-6">
-          <h2 className="text-2xl font-bold">Liste des clients</h2>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <h2 className="text-2xl font-bold">Liste des clients</h2>
+            
+            {/* Bouton pour associer tous les clients sans entreprise */}
+            {companyId && (
+              <Button 
+                variant="outline" 
+                onClick={handleFixClients}
+                disabled={isFixingClients}
+              >
+                {isFixingClients ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Association en cours...
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="h-4 w-4 mr-2" />
+                    Associer les clients sans entreprise
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
           
           <div className="flex flex-wrap gap-3 w-full">
             <Button 
@@ -346,6 +414,7 @@ const Clients = () => {
                   <TableHead>Nom</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Téléphone</TableHead>
+                  <TableHead>Entreprise</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -354,11 +423,24 @@ const Clients = () => {
                   <TableRow key={client.id}>
                     <TableCell className="font-medium">
                       <Link to={`/clients/${client.id}`} className="hover:underline">
-                        {client.name}
+                        {client.name || client.client_name}
                       </Link>
                     </TableCell>
                     <TableCell>{client.email}</TableCell>
                     <TableCell>{client.phone}</TableCell>
+                    <TableCell>
+                      {client.company_id ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <CheckSquare className="h-3 w-3 mr-1" />
+                          Associé
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          Non associé
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -386,7 +468,7 @@ const Clients = () => {
                 ))}
                 {clients.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       Aucun client trouvé
                     </TableCell>
                   </TableRow>
@@ -521,5 +603,24 @@ const Clients = () => {
     </>
   );
 };
+
+// Ajouter l'icône manquante pour le bouton d'association de clients
+const CheckSquare = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="m9 11 3 3L22 4" />
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+  </svg>
+);
 
 export default Clients;

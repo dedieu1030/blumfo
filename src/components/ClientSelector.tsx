@@ -4,7 +4,7 @@ import { supabase, handleSupabaseError, isAuthenticated } from "@/integrations/s
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NewClientForm } from "@/components/NewClientForm";
-import { UserPlus, AlertCircle } from "lucide-react";
+import { UserPlus, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -39,6 +39,7 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
   const [isNewClientFormOpen, setIsNewClientFormOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     // Vérifier l'authentification avant de charger les données
@@ -82,7 +83,34 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
         setError("La table des clients n'est pas accessible. Veuillez contacter l'administrateur.");
         return;
       }
+
+      // Récupérer l'ID de l'entreprise de l'utilisateur actuel
+      const { data: sessionData } = await supabase.auth.getSession();
+      let userId = sessionData.session?.user?.id;
       
+      if (!userId) {
+        setError("Impossible d'identifier l'utilisateur actuel.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Récupérer l'entreprise de l'utilisateur
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+      
+      if (companyError && companyError.code !== 'PGRST116') {
+        console.error("Erreur lors de la récupération de l'entreprise:", companyError);
+        setError("Erreur lors de la récupération de votre entreprise.");
+        setIsLoading(false);
+        return;
+      }
+      
+      const companyId = companyData?.id;
+      
+      // Récupérer tous les clients, filtrer côté client si company_id est disponible
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -95,13 +123,47 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
       }
       
       // Adapter les données de Supabase au format Client attendu
-      const adaptedClients = (data || []).map(client => ({
-        ...client,
-        name: client.client_name, // Mapping client_name à name pour la compatibilité
-        user_id: client.company_id // Utilisation de company_id comme user_id
-      }));
+      // Si company_id est disponible, filtrer les clients par company_id
+      const adaptedClients = (data || [])
+        .map(client => ({
+          ...client,
+          name: client.client_name, // Mapping client_name à name pour la compatibilité
+          user_id: client.company_id // Utilisation de company_id comme user_id
+        }))
+        .filter(client => !companyId || client.company_id === null || client.company_id === companyId);
       
       console.log(`${adaptedClients.length} clients récupérés avec succès`);
+      
+      // Afficher un avertissement si des clients n'ont pas de company_id
+      const clientsWithoutCompany = adaptedClients.filter(client => !client.company_id).length;
+      if (clientsWithoutCompany > 0 && companyId) {
+        console.warn(`${clientsWithoutCompany} clients n'ont pas d'entreprise associée`);
+        // Optionnel: associer automatiquement ces clients à l'entreprise actuelle
+        try {
+          const clientsToUpdate = data?.filter(c => !c.company_id).map(c => c.id) || [];
+          if (clientsToUpdate.length > 0) {
+            const { error: updateError } = await supabase
+              .from('clients')
+              .update({ company_id: companyId })
+              .in('id', clientsToUpdate);
+              
+            if (!updateError) {
+              console.log(`${clientsToUpdate.length} clients ont été associés à votre entreprise`);
+              toast.success(`${clientsToUpdate.length} clients ont été associés à votre entreprise`);
+              
+              // Mettre à jour les données locales
+              adaptedClients.forEach(client => {
+                if (!client.company_id && clientsToUpdate.includes(client.id)) {
+                  client.company_id = companyId;
+                }
+              });
+            }
+          }
+        } catch (updateErr) {
+          console.error("Erreur lors de l'association des clients:", updateErr);
+        }
+      }
+      
       setClients(adaptedClients as Client[]);
       setFilteredClients(adaptedClients as Client[]);
     } catch (error) {
@@ -110,6 +172,13 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Fonction pour forcer la mise à jour des données
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchClients();
+    setIsRefreshing(false);
   };
   
   useEffect(() => {
@@ -158,8 +227,21 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
+        <div className="flex justify-between items-center w-full">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Réessayer
+          </Button>
+        </div>
       </Alert>
     );
   }

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "./ClientSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -116,6 +116,8 @@ export function NewClientForm({ open, onOpenChange, onClientCreated }: NewClient
         .insert({
           company_name: 'Mon Entreprise',
           user_id: userId,
+          country: 'FR',
+          default_currency: 'EUR'
         })
         .select()
         .single();
