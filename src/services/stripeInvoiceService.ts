@@ -1,6 +1,7 @@
 
 import { supabase, handleSupabaseError, tableExists } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Json } from "@/integrations/supabase/types";
 
 /**
  * Interface représentant une facture Stripe
@@ -20,7 +21,7 @@ export interface StripeInvoice {
   paid_date?: string | null;
   client_id?: string;
   user_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any> | null;
 }
 
 /**
@@ -78,7 +79,7 @@ export async function getStripeInvoiceById(invoiceId: string): Promise<StripeInv
       paid_date: data.paid_date,
       client_id: data.client_id,
       user_id: data.user_id,
-      metadata: data.metadata
+      metadata: data.metadata as Record<string, any> | null
     };
   } catch (error) {
     console.error("Erreur lors de la récupération de la facture:", error);
@@ -125,7 +126,7 @@ export async function getStripeInvoiceByStripeId(stripeInvoiceId: string): Promi
       paid_date: data.paid_date,
       client_id: data.client_id,
       user_id: data.user_id,
-      metadata: data.metadata
+      metadata: data.metadata as Record<string, any> | null
     };
   } catch (error) {
     console.error("Erreur lors de la récupération de la facture par ID Stripe:", error);
@@ -167,7 +168,7 @@ export async function listStripeInvoices(userId?: string): Promise<StripeInvoice
       paid_date: invoice.paid_date,
       client_id: invoice.client_id,
       user_id: invoice.user_id,
-      metadata: invoice.metadata
+      metadata: invoice.metadata as Record<string, any> | null
     }));
   } catch (error) {
     console.error("Erreur lors de la récupération des factures:", error);
@@ -223,7 +224,7 @@ export async function updateInvoiceStatus(
       paid_date: data.paid_date,
       client_id: data.client_id,
       user_id: data.user_id,
-      metadata: data.metadata
+      metadata: data.metadata as Record<string, any> | null
     };
   } catch (error) {
     console.error("Erreur lors de la mise à jour du statut de la facture:", error);
