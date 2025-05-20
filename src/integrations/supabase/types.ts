@@ -1456,6 +1456,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_user_company_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       client_group_type: "vip" | "regular" | "monthly" | "project"
