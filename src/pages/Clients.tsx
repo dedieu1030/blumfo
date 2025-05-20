@@ -128,7 +128,7 @@ const Clients = () => {
       const { data, error } = await supabase
         .from('clients')
         .select('*')
-        .order('client_name');
+        .order('name');
 
       if (error) {
         console.error('Error fetching clients:', error);
@@ -147,7 +147,7 @@ const Clients = () => {
       // Adapter les données de Supabase au format Client attendu
       const adaptedClients = (data || []).map(client => ({
         ...client,
-        name: client.client_name, // Mapping client_name à name pour la compatibilité
+        client_name: client.name, // Pour compatibilité avec ancien code
         user_id: client.company_id // Utilisation de company_id comme user_id
       }));
 
@@ -242,7 +242,7 @@ const Clients = () => {
       phone: client.phone,
       address: client.address,
       notes: client.notes,
-      reference_number: client.reference_number,
+      reference: client.reference || client.reference_number,
       company_id: client.company_id || companyId  // Assurez-vous que company_id est défini
     });
     setIsEditModalOpen(true);
@@ -256,12 +256,12 @@ const Clients = () => {
     try {
       // S'assurer que company_id est défini
       const updateData = {
-        client_name: editForm.name,
+        name: editForm.name,
         email: editForm.email,
         phone: editForm.phone,
         address: editForm.address,
         notes: editForm.notes,
-        reference_number: editForm.reference_number,
+        reference: editForm.reference,
         company_id: editForm.company_id || companyId // Utiliser l'ID de l'entreprise actuelle si non défini
       };
 
@@ -281,7 +281,7 @@ const Clients = () => {
       // Mettre à jour la liste des clients avec les données mises à jour
       const updatedClient = {
         ...data[0],
-        name: data[0].client_name, // Ajout du champ name pour la compatibilité
+        client_name: data[0].name, // Ajout du champ client_name pour la compatibilité
         user_id: data[0].company_id // Ajout du champ user_id pour la compatibilité
       };
 
@@ -591,11 +591,11 @@ const Clients = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reference_number">Numéro de référence</Label>
+                <Label htmlFor="reference">Numéro de référence</Label>
                 <Input
-                  id="reference_number"
-                  value={editForm.reference_number || ""}
-                  onChange={(e) => setEditForm({ ...editForm, reference_number: e.target.value })}
+                  id="reference"
+                  value={editForm.reference || ""}
+                  onChange={(e) => setEditForm({ ...editForm, reference: e.target.value })}
                 />
               </div>
             </div>

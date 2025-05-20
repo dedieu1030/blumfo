@@ -9,23 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      client_categories: {
+      client_tag_mappings: {
         Row: {
-          color: string | null
+          client_id: string
+          tag_id: string
+        }
+        Insert: {
+          client_id: string
+          tag_id: string
+        }
+        Update: {
+          client_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_tag_mappings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_tag_mappings_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "client_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_tags: {
+        Row: {
+          color: string
+          company_id: string
           created_at: string
           id: string
           name: string
           updated_at: string
         }
         Insert: {
-          color?: string | null
+          color?: string
+          company_id: string
           created_at?: string
           id?: string
           name: string
           updated_at?: string
         }
         Update: {
-          color?: string | null
+          color?: string
+          company_id?: string
           created_at?: string
           id?: string
           name?: string
@@ -33,130 +66,47 @@ export type Database = {
         }
         Relationships: []
       }
-      client_category_mappings: {
-        Row: {
-          category_id: string
-          client_id: string
-        }
-        Insert: {
-          category_id: string
-          client_id: string
-        }
-        Update: {
-          category_id?: string
-          client_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_category_mappings_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "client_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "client_category_mappings_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      client_groups: {
-        Row: {
-          company_id: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          name: string
-          type: Database["public"]["Enums"]["client_group_type"] | null
-          updated_at: string | null
-        }
-        Insert: {
-          company_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name: string
-          type?: Database["public"]["Enums"]["client_group_type"] | null
-          updated_at?: string | null
-        }
-        Update: {
-          company_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-          type?: Database["public"]["Enums"]["client_group_type"] | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_groups_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       clients: {
         Row: {
           address: string | null
-          client_name: string
-          company_id: string | null
-          created_at: string | null
+          company_id: string
+          created_at: string
           email: string | null
-          group_id: string | null
           id: string
+          name: string
           notes: string | null
           phone: string | null
-          reference_number: string | null
-          updated_at: string | null
+          reference: string | null
+          status: string
+          updated_at: string
         }
         Insert: {
           address?: string | null
-          client_name: string
-          company_id?: string | null
-          created_at?: string | null
+          company_id: string
+          created_at?: string
           email?: string | null
-          group_id?: string | null
           id?: string
+          name: string
           notes?: string | null
           phone?: string | null
-          reference_number?: string | null
-          updated_at?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
         }
         Update: {
           address?: string | null
-          client_name?: string
-          company_id?: string | null
-          created_at?: string | null
+          company_id?: string
+          created_at?: string
           email?: string | null
-          group_id?: string | null
           id?: string
+          name?: string
           notes?: string | null
           phone?: string | null
-          reference_number?: string | null
-          updated_at?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "clients_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "client_groups"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       companies: {
         Row: {
@@ -319,13 +269,6 @@ export type Database = {
           validity_date?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "devis_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "devis_company_id_fkey"
             columns: ["company_id"]
@@ -629,13 +572,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "invoices_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "invoices_company_id_fkey"
             columns: ["company_id"]
@@ -969,13 +905,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "payments_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "payments_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
@@ -1166,15 +1095,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "stripe_customers_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       stripe_invoices: {
         Row: {
@@ -1234,15 +1155,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "stripe_invoices_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       stripe_products: {
         Row: {
@@ -1398,15 +1311,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       template_mappings: {
         Row: {
@@ -1440,25 +1345,17 @@ export type Database = {
         Args: { table_name: string }
         Returns: boolean
       }
-      clear_client_policies: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
+      get_client_invoice_count: {
+        Args: { p_client_id: string }
+        Returns: number
       }
-      create_client_access_policies: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_client_categories: {
+      get_client_tags: {
         Args: { p_client_id: string }
         Returns: {
-          category_id: string
-          category_name: string
-          category_color: string
+          tag_id: string
+          tag_name: string
+          tag_color: string
         }[]
-      }
-      get_client_invoice_count: {
-        Args: { client_id: string }
-        Returns: number
       }
       get_current_user_profile: {
         Args: Record<PropertyKey, never>

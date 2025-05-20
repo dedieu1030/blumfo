@@ -98,7 +98,8 @@ export function formatClientForDisplay(client: Client): Client {
   return {
     ...client,
     name: client.name || client.client_name || "Client sans nom",
-    user_id: client.user_id || client.company_id
+    user_id: client.user_id || client.company_id,
+    client_name: client.client_name || client.name // Assurer la compatibilité avec l'ancien format
   };
 }
 

@@ -12,19 +12,19 @@ import { formatClientForDisplay, clientBelongsToCompany } from "@/utils/clientUt
 export interface Client {
   id: string;
   name?: string;
+  client_name?: string; // Pour compatibilité avec l'ancien format
   email: string | null;
   phone?: string | null;
   address?: string | null;
   notes?: string | null;
   created_at: string;
   updated_at: string;
-  user_id?: string;
-  invoiceCount?: number;
-  // Champs de la table clients dans Supabase
-  client_name?: string;
+  user_id?: string; // Pour compatibilité avec l'ancien format
   company_id?: string | null;
-  group_id?: string | null;
-  reference_number?: string | null;
+  invoiceCount?: number;
+  reference?: string | null;
+  reference_number?: string | null; // Pour compatibilité avec l'ancien format
+  status?: string;
 }
 
 export interface ClientSelectorProps {
@@ -89,7 +89,7 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
       const { data, error } = await supabase
         .from('clients')
         .select('*')
-        .order('client_name');
+        .order('name');
       
       if (error) {
         handleSupabaseError(error, "chargement des clients");
@@ -101,7 +101,7 @@ export const ClientSelector = ({ onClientSelect, buttonText }: ClientSelectorPro
       const adaptedClients = (data || [])
         .map(client => formatClientForDisplay({
           ...client,
-          name: client.client_name, 
+          client_name: client.name, 
           user_id: client.company_id
         } as Client));
       
