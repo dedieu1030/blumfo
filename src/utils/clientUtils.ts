@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Client } from "@/components/ClientSelector";
@@ -130,7 +131,7 @@ export async function getCountInvoicesByClient(clientId: string): Promise<number
 interface StripeInvoice {
   id: string;
   stripe_invoice_id: string | null;
-  stripe_customer_id?: string | null; // Rendu optionnel avec ?
+  stripe_customer_id?: string | null;
   invoice_number: string;
   amount_total: number;
   amount_due: number;
@@ -177,8 +178,14 @@ export async function getStripeInvoicesByClient(clientId: string): Promise<Strip
       return [];
     }
 
+    // On spécifie explicitement le type du résultat pour éviter les inférences excessives
+    type StripeInvoiceResult = {
+      data: StripeInvoice[] | null,
+      error: any
+    };
+
     // Récupérer les factures Stripe pour ce client
-    const { data: invoices, error: invoicesError } = await supabase
+    const { data: invoices, error: invoicesError }: StripeInvoiceResult = await supabase
       .from('stripe_invoices')
       .select('*')
       .eq('stripe_customer_id', stripeCustomer.stripe_customer_id)
@@ -189,8 +196,7 @@ export async function getStripeInvoicesByClient(clientId: string): Promise<Strip
       return [];
     }
 
-    // Assurons-nous que les données correspondent à l'interface StripeInvoice
-    return (invoices || []) as StripeInvoice[];
+    return invoices || [];
   } catch (error) {
     console.error("Erreur lors de la récupération des factures Stripe:", error);
     return [];
