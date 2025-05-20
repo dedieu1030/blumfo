@@ -130,7 +130,7 @@ export async function getCountInvoicesByClient(clientId: string): Promise<number
 interface StripeInvoice {
   id: string;
   stripe_invoice_id: string | null;
-  stripe_customer_id: string | null;
+  stripe_customer_id?: string | null; // Rendu optionnel avec ?
   invoice_number: string;
   amount_total: number;
   amount_due: number;
@@ -189,7 +189,8 @@ export async function getStripeInvoicesByClient(clientId: string): Promise<Strip
       return [];
     }
 
-    return invoices || [];
+    // Assurons-nous que les données correspondent à l'interface StripeInvoice
+    return (invoices || []) as StripeInvoice[];
   } catch (error) {
     console.error("Erreur lors de la récupération des factures Stripe:", error);
     return [];
